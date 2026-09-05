@@ -62,13 +62,7 @@ is not a false-green.
 ## Proving a snapshot actually restores
 
 Do not trust a byte count. Restore it and open it. Run on a **scratch copy** —
-never over the live file.
-
-⚠️ **`integrity_check` alone cannot catch the worst case.** Measured 2026-09-05: a
-**0-byte** SQLite file returns `integrity_check` = **`ok`**. That is why the table
-counts and the world-row deserialization below are not decoration — they are the
-checks that actually go red on an empty or truncated database. The same reasoning is
-what makes `tools/moon_verify_world.js` refuse before an install, not after.
+never over the live file:
 
 ```bash
 SNAP=data/durability/moon-astra/moon-astra-world-20260905T174711Z.sqlite.gz
@@ -112,41 +106,23 @@ its `-wal`/`-shm` companions — restore all three together or lose the tail.
 
 ## Rollback
 
-> ### 🚨 THE TWO COMMANDS THAT USED TO BE HERE WERE UNSAFE. Corrected 2026-09-05 (Codex finding 8).
->
-> Both swapped to **`49f6d88`**, which **predates economy v2**. It starts cleanly, serves requests and
-> returns `ok:true` while simulating the wrong economy; the only outward tell is a **missing
-> `economyVersion`** in `/api/v1/health`. The world command also untarred straight over `/var/lib`,
-> destroying the live world before any check could refuse the archive.
->
-> **The gated procedures live in `OPS.md` §5.1 (code) and §5.2 (code + world). Use those.** What
-> follows is the shape, not a recipe to paste.
-
 ```bash
 # CODE ONLY — the world is untouched. Try this first; it is reversible.
-# NEVER hardcode the target. A release is a valid rollback target only for worlds
-# it can still simulate; run the OPS.md §5.1 compatibility pre-flight first.
-TARGET=<compatibility-verified release>          # NOT 49f6d88
-ssh root@87.99.131.49 "set -eu
-  test -f /srv/moon-astra/releases/$TARGET/src/industry.js || { echo 'REFUSE: predates economy v2'; exit 1; }
-  ln -sfn releases/$TARGET /srv/moon-astra/current && systemctl restart moon-astra"
+ssh root@87.99.131.49 \
+  'ln -sfn releases/49f6d88 /srv/moon-astra/current && systemctl restart moon-astra'
 ```
 
 Both release directories are on disk on **both** services right now
-(`49f6d88` 32M, `f372e8c` 55M) — but **on disk is not eligible**. As of 2026-09-05
-`49f6d88` fails the pre-flight and `f372e8c` is already live, so **`TARGET` has no
-valid value and a code-only rollback is not currently available.** Owner for cutting
-a staged, compatibility-verified `n-1` release: fleet-lead.
-
-Retaining both directories is still why `--preserve-symlinks-main` was chosen over
-hardcoding the release path in the unit: hardcoding also fixes the entrypoint guard,
-and silently removes any future one-line rollback.
+(`49f6d88` 32M, `f372e8c` 55M). This is the only reason the one-line rollback
+exists, and it is why `--preserve-symlinks-main` was chosen over hardcoding the
+release path in the unit: hardcoding also fixes the entrypoint guard, and silently
+removes this.
 
 ```bash
 # CODE + WORLD — destroys all play since the snapshot. Only for a damaged world.
-# DO NOT untar over /var/lib. Verify first, extract to scratch, install last.
-# The full gated procedure is OPS.md §5.2; the mandatory first step is:
-ssh root@87.99.131.49 'cd /var/backups/moon-astra && sha256sum -c pre-f372e8c-20260905T171404Z.tgz.sha256'
+ssh root@87.99.131.49 'systemctl stop moon-astra && \
+  tar -xzf /var/backups/moon-astra/pre-f372e8c-20260905T171404Z.tgz -C /var/lib && \
+  ln -sfn releases/49f6d88 /srv/moon-astra/current && systemctl start moon-astra'
 ```
 
 Then run `verify/verify-moon-deploy.sh` and confirm the tick advances. A restored

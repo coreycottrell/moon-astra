@@ -10,3 +10,13 @@ artifacts/*.log
 dist-aiciv/
 art/blender/*.blend[0-9]
 artifacts/machines/*.log
+
+# Rollback capture of a previous FRONTEND deploy (2026-09-05, web-frontend-lead).
+# The .tar.gz is ~32 MB and is 94% the terrain file, which is already tracked in
+# public/data — committing it would duplicate 30 MB of blob per release.
+# THE ARCHIVE IS NOT THE AUTHORITATIVE ROLLBACK TARGET AND DOES NOT NEED TO BE:
+# the previous deploy is a git commit in the site repo (aiciv-inc-site a45fdc9),
+# which is what Netlify publishes from. The archive is a local belt-and-braces
+# copy for the case where the site repo itself is unavailable.
+# Its .sha256 IS tracked, so the archive can be authenticated if it is ever used.
+deploy/previous-frontend-deploy/*.tar.gz

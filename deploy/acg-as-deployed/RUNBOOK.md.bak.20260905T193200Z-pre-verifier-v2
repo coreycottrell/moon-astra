@@ -152,56 +152,17 @@ right up until the next reboot.
 ## 4. Verify — run the script, do not eyeball it
 
 ```bash
-./verify/verify-moon-deploy.sh --strict                       # production release gate
-./verify/verify-moon-deploy.sh --staging --strict             # staging release gate
-./verify/verify-moon-deploy.sh --site URL --build-dir DIR     # any site + any build
-# exit 0  = COMPLETE, every required check passed
-# exit N  = N checks failed
-# exit 90 = INCOMPLETE — zero failures, but required checks were SKIPPED
+./verify/verify-moon-deploy.sh              # production
+./verify/verify-moon-deploy.sh --staging    # staging
+# exit 0 = all green. exit N = N checks failed.
 ```
 
-**Use `--strict` in anything automated.** Without it the script keeps its old
-lenient behaviour and returns 0 even when required checks were skipped, which is
-exactly the acceptance hole Codex found (ACG-OPS-REVIEW-2026-09-05 finding 2/9):
-a release job reading only the exit code could accept an incomplete verification.
+Both were run at 18:38–18:40Z: **PRODUCTION 0 failed 0 skipped; STAGING 0 failed
+0 skipped.** Full output in `verify/last-run-*.txt`.
 
-`--build-dir` defaults to `dist-aiciv/` at the repo root; `--site` defaults to the
-production or preview URL for the chosen mode. The script verifies the DEPLOYED
-bytes against the BUILT bytes, so it needs the build it is supposed to be proving.
-
-Every check ships a control that can go red, and every repaired check was proven
-to go both red and green — see `verify/PROOF-MATRIX-v2.md` for the twelve runs and
-their exit codes. A gate that has never gone red is a false-green waiting to happen.
-
-### v2, 2026-09-05 — what Codex's review changed
-
-Codex reviewed v1 and found four real defects in it. All four are repaired:
-
-- **The frontend check could not accept the new build.** It hard-coded
-  `assets/index-*.js`; the new build ships `assets/game-*.js`, a shared preload
-  `assets/machines-*.js`, and a SECOND page (`machines.html`) with its own entry
-  script. v2 parses both deployed entry pages and verifies their actual scripts,
-  module preloads and stylesheets, byte-for-byte, against the build.
-- **It fetched no JavaScript and no model.** The game's procedural fallback means
-  a missing model still leaves the page playable — a broken art release looked
-  fine. v2 fetches all six GLB models and checks status, GLB magic bytes, byte
-  count and SHA-256 against both the built file and the model manifest.
-- **`--staging` never exercised the frontend at all** (the section sat inside the
-  production-only branch). v2 runs it in both modes.
-- **The backup gate demanded a historical failure to pass its own control**, so a
-  correctly functioning new backup lane would have failed it. v2 runs the same
-  gate function over synthetic healthy/stale/invalid/wrong-label fixtures on
-  every run, and filters the ledger to the intended `--backup-label` first.
-- **Tick proximity was treated as world identity.** It is a liveness signal:
-  reads happen at different moments and independent worlds can hold similar
-  counts. v2 keeps tick advancement as liveness, and proves ROUTING by sending a
-  uniquely marked request through the site and finding it in the intended vhost's
-  own access log — with a positive control on *both* logs, so "absent from the
-  other log" is a finding rather than an unreadable-file artefact.
-
-Still owed, and deliberately not claimed: **exercising the gallery in a real
-browser.** v2 verifies the gallery page, its scripts and its models over HTTP;
-it does not drive it. That belongs in the Playwright scenarios. Owner: web-frontend-lead.
+Every check ships a control that can go red, and the script itself was proven to
+fail: pointed at a host that is not the MOON API it returns **exit 6** with five
+named failures. A gate that has never gone red is a false-green waiting to happen.
 
 What the ten checks are actually for:
 

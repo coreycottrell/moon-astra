@@ -1,0 +1,91 @@
+=== MOON deploy verification — PRODUCTION (2026-09-05T19:30:55Z) ===
+site=https://ai-civ.com/moon-astra
+api=https://moon-astra-api.ai-civ.com
+build-dir=/home/corey/projects/moon-civilization/dist-aiciv
+mode=strict
+SKIP* = a REQUIRED check that did not run. In --strict it makes the run INCOMPLETE (exit 90).
+
+== 1. Service is enabled and active on the host
+  PASS  moon-astra is enabled (survives reboot)
+  PASS  moon-astra is active
+  PASS  CONTROL: is-active goes red on a nonexistent unit
+
+== 2. The process is actually LISTENING (a started service is not a serving one)
+  PASS  listening on 127.0.0.1:4180
+  PASS  CONTROL: the listener probe goes red on an unused port
+
+== 3. ExecStart names an interpreter that EXISTS on this host
+  PASS  interpreter /usr/local/bin/node exists and is executable
+  PASS  CONTROL: /usr/bin/node correctly absent (this is why the template path was wrong)
+
+== 4. --preserve-symlinks-main is present
+  PASS  --preserve-symlinks-main is on the ExecStart line
+
+== 5. Health over public HTTPS, and the world is ADVANCING (LIVENESS)
+  PASS  GET https://moon-astra-api.ai-civ.com/api/v1/health -> 200
+  PASS  tick advancing 17389 -> 17392 (simulation is alive, not just the HTTP layer)
+
+== 6. Catalog reports the economy ruleset the client was built against
+  PASS  economyVersion = 2 (expect 2)
+  PASS  production.refinery = 100 (expect 100)
+  PASS  production.standardHarvester = 300 (expect 300)
+  PASS  production.bulkHarvester = 400 (expect 400)
+  PASS  production.rockPerMetal = 2 (expect 2)
+  PASS  mind.capacityPerNode = 4 (expect 4)
+  PASS  mind.costs.replicator = 4 (expect 4)
+
+== 7. Origin gate discriminates THREE ways (not just 'it answered')
+  PASS  untrusted origin -> 403 (fails CLOSED)
+  PASS  trusted origin + invalid name -> 400 (so 403 above was ABOUT THE ORIGIN, not a blanket refusal)
+  PASS  unauthenticated observe -> 401
+
+== 8. The site proxy reaches the INTENDED world (routing, not tick identity)
+  PASS  GET https://ai-civ.com/moon-astra/api/v1/health -> 200
+  PASS  CONTROL: a direct request to https://moon-astra-api.ai-civ.com is visible in /var/log/nginx/moon-astra-api.access.log (that log is live and greppable)
+  PASS  CONTROL: a direct request to https://moon-astra-api-staging.ai-civ.com is visible in /var/log/nginx/moon-astra-staging-api.access.log (so 'absent from the other log' is a finding, not a blind spot)
+  PASS  8b ROUTING PROOF: the marked request through https://ai-civ.com/moon-astra was served by the PRODUCTION vhost (/var/log/nginx/moon-astra-api.access.log)
+  PASS  8b ROUTING PROOF: that same request did NOT reach the other world's vhost (/var/log/nginx/moon-astra-staging-api.access.log)
+  PASS  8c corroboration: proxy tick 17399 lies inside the bracketed direct reads [17398,17399] (consistent with the intended world)
+  PASS  8c corroboration: proxy tick 17399 lies outside the other world's bracket [14600,14600] (the two worlds are distinguishable right now)
+
+== 9. Entry pages, their ACTUAL assets, and the GLB models
+  ---- 9a: entry pages
+  PASS  https://ai-civ.com/moon-astra/ -> 200
+  FAIL  index.html deployed sha256 6f4b4adb0223… != built 689963e71b5c… — a DIFFERENT build is live at this URL
+  FAIL  index.html reference set differs — deployed-only ['/moon-astra/assets/index-BRsLgszM.js', '/moon-astra/assets/index-DXlFNKkB.css'] / built-only ['/moon-astra/assets/game-DXd3DGeR.js', '/moon-astra/assets/game-DXlFNKkB.css', '/moon-astra/assets/machines-BHE0n2S7.js']
+  FAIL  https://ai-civ.com/moon-astra/machines.html returned http=404 (curl rc=0) — this entry page is NOT deployed
+  ---- 9b: the actual scripts, module preloads and stylesheets
+  FAIL  [script] index-BRsLgszM.js served, but no matching file in the build dir at /home/corey/projects/moon-civilization/dist-aiciv/assets/index-BRsLgszM.js — cannot attest it
+  FAIL  [stylesheet] index-DXlFNKkB.css served, but no matching file in the build dir at /home/corey/projects/moon-civilization/dist-aiciv/assets/index-DXlFNKkB.css — cannot attest it
+  FAIL  built assets NOT referenced by either entry page or any fetched script: ['game-DXd3DGeR.js', 'game-DXlFNKkB.css', 'machines-BHE0n2S7.js', 'machines-C-PTWwDW.js', 'machines-k-ILHYTj.css'] — either the parser is blind to them or they are dead weight
+  ---- 9c: GLB models
+  FAIL  no models/<version> directory is referenced by any deployed script — the client will never request a model (procedural fallback would hide this)
+  ---- 9d: controls (each must be able to go red)
+  PASS  CONTROL: a missing asset 404s (no SPA fallback masking broken builds)
+  PASS  CONTROL: a missing MODEL 404s (kept from v1's spirit — proves the model probe can observe absence)
+  PASS  CONTROL: the GLB magic test REJECTS the 3449 B error-page body (so 'GLB magic ok' above is a real finding)
+  PASS  CONTROL: the sha256 comparator goes RED on a one-byte change at identical length (byte counts alone would not have caught it)
+
+== 10. Backup lane is ALIVE, and the gate is proven to discriminate TODAY
+  ---- gate control: the SAME evaluate() run over synthetic fixtures
+  PASS  CONTROL fixture 'healthy': gate returned GREEN, expected GREEN
+  PASS  CONTROL fixture 'stale (9h old green)': gate returned RED, expected RED
+  PASS  CONTROL fixture 'integrity not ok': gate returned RED, expected RED
+  PASS  CONTROL fixture 'sha256 mismatch': gate returned RED, expected RED
+  PASS  CONTROL fixture 'off-machine unconfirmed': gate returned RED, expected RED
+  PASS  CONTROL fixture 'no GREEN row': gate returned RED, expected RED
+  PASS  CONTROL fixture 'green belongs to ANOTHER label': gate returned RED, expected RED
+  PASS  CONTROL: the backup gate discriminates TODAY — it goes green on a healthy ledger and red on stale/invalid/wrong-label ones. No historical failure required.
+  ---- live ledger
+  PASS  newest GREEN snapshot for moon-astra-world is 0.85h old (hourly lane; >=3h means it stopped)
+  PASS  sha256_match = True
+  PASS  row_counts_match = True
+  PASS  offmachine_confirmed = True
+  PASS  local_opened = True
+  PASS  remote_opened = True
+  PASS  restored-copy integrity_check = ok
+  PASS  no MOON-ASTRA-BACKUP-FAILED.flag
+
+=== PRODUCTION: 7 failed, 0 required-checks skipped, 0 advisory skips ===
+RESULT: FAIL
+RED exit=7

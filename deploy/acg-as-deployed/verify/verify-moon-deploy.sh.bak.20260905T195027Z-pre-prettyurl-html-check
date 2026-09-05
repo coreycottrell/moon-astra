@@ -393,69 +393,6 @@ def to_url(ref):
         return m.group(1) + ref
     return SITE + "/" + ref.lstrip("./")
 
-
-# --- HTML canonicaliser (added 2026-09-05, web-frontend-lead) --------------
-# WHY THIS EXISTS. v2 compared deployed HTML bytes to built HTML bytes. That
-# check was GREEN on every previous release for a reason that had nothing to do
-# with the check: the old index.html contained NO internal .html link, so
-# Netlify's Pretty-URLs post-processing had nothing to rewrite and the bytes
-# happened to survive. The art release is the first build whose index.html links
-# to a SECOND page (machines.html). Netlify rewrote those two anchors —
-# href="/moon-astra/machines.html" -> href='/moon-astra/machines', attributes
-# reordered and requoted by its serialiser — and the byte check went red on a
-# correct deploy. Measured on the live site 2026-09-05T19:5xZ: exactly two lines
-# differ, both <a> tags, and BOTH URLs serve the same bytes (200, sha256
-# 49f1dc19e3f4…). The previous deploy's bytes matched only by that accident.
-#
-# So raw-byte equality is the WRONG assertion for an HTML entry page on this
-# host, permanently, and "just make the source link extensionless" would be
-# changing the application to satisfy a wrong check — and would make our links
-# depend on a host feature. Instead the comparison is done over a canonical
-# token stream that folds ONLY the transformations Netlify is known to apply:
-#   * attribute order and quote style
-#   * an internal "<path>.html" href rewritten to "<path>"
-# EVERYTHING ELSE STILL GOES RED — any changed text, any added or removed tag,
-# any changed asset reference, any other attribute change. Control below proves
-# it on a one-character text edit.
-from html.parser import HTMLParser as _HP
-
-class _Canon(_HP):
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.stream = []
-    def _attrs(self, attrs):
-        out = []
-        for k, v in attrs:
-            v = "" if v is None else v
-            if k.lower() == "href" and v.startswith("/") and v.endswith(".html"):
-                v = v[:-5]          # the ONLY url fold: pretty-URL .html strip
-            out.append((k.lower(), v))
-        return tuple(sorted(out))
-    def handle_starttag(self, tag, attrs):
-        self.stream.append(("<", tag.lower(), self._attrs(attrs)))
-    def handle_startendtag(self, tag, attrs):
-        self.stream.append(("<>", tag.lower(), self._attrs(attrs)))
-    def handle_endtag(self, tag):
-        self.stream.append((">", tag.lower()))
-    def handle_data(self, data):
-        t = " ".join(data.split())
-        if t:
-            self.stream.append(("t", t))
-
-def canon_html(text):
-    c = _Canon()
-    c.feed(text)
-    c.close()
-    return c.stream
-
-def canon_first_diff(a, b):
-    for i in range(max(len(a), len(b))):
-        x = a[i] if i < len(a) else None
-        y = b[i] if i < len(b) else None
-        if x != y:
-            return i, x, y
-    return None, None, None
-
 # --- 9a: both entry pages, and the reference SETS they declare --------------
 print("  ---- 9a: entry pages")
 pages = {"index.html": SITE + "/", "machines.html": SITE + "/machines.html"}
@@ -476,45 +413,12 @@ for name, url in pages.items():
         continue
     page_bodies[name] = dest
     ds, bs = sha(dest), sha(lp)
-    dtext = open(dest, encoding="utf-8", errors="replace").read()
-    btext = open(lp, encoding="utf-8", errors="replace").read()
     if ds == bs:
         ok(f"{name} deployed bytes == built bytes (sha256 {ds[:12]}…)")
     else:
-        # Bytes differ. That is only acceptable if EVERY difference is a known
-        # Netlify Pretty-URL/serialiser fold — see the canonicaliser note above.
-        ca, cb = canon_html(dtext), canon_html(btext)
-        if ca == cb:
-            ok(f"{name} deployed bytes differ from built ({ds[:12]}… vs {bs[:12]}…) but the "
-               f"documents are IDENTICAL under Netlify pretty-URL folding (attribute order/quoting "
-               f"and internal .html link stripping only) — no content, tag or asset reference differs")
-            # A folded .html link is only harmless if the folded URL actually serves
-            # the same page. Prove it rather than assume it.
-            _seen_pretty = set()
-            for _m in re.finditer(r'href=["\']((/[^"\']*?)\.html)["\']', btext):
-                full, stripped = _m.group(1), _m.group(2)
-                if stripped in _seen_pretty:
-                    continue
-                _seen_pretty.add(stripped)
-                tgt = os.path.join(BUILD, full.lstrip("/").split("/", 1)[-1]) \
-                      if full.lstrip("/").split("/")[0] == "moon-astra" \
-                      else os.path.join(BUILD, full.lstrip("/"))
-                if not os.path.isfile(tgt):
-                    continue
-                m0 = re.match(r'^(https?://[^/]+)', SITE)
-                d2 = os.path.join(TMP, "pretty_" + os.path.basename(stripped))
-                rc2, code2 = fetch(m0.group(1) + stripped, d2)
-                if rc2 == 0 and code2 == "200" and sha(d2) == sha(tgt):
-                    ok(f"pretty-URL {stripped} (rewritten from {full}) serves the BUILT bytes of "
-                       f"{os.path.basename(full)} — the rewritten link is not broken")
-                else:
-                    no(f"pretty-URL {stripped} (rewritten from {full}) returned http={code2} / "
-                       f"different bytes — Netlify rewrote a link to something that is NOT the built page")
-        else:
-            i, x, y = canon_first_diff(ca, cb)
-            no(f"{name} deployed sha256 {ds[:12]}… != built {bs[:12]}… AND the difference is NOT a "
-               f"pretty-URL fold — a DIFFERENT build is live at this URL. First divergence at token "
-               f"{i}: deployed={x!r} built={y!r}")
+        no(f"{name} deployed sha256 {ds[:12]}… != built {bs[:12]}… — a DIFFERENT build is live at this URL")
+    dtext = open(dest, encoding="utf-8", errors="replace").read()
+    btext = open(lp, encoding="utf-8", errors="replace").read()
     dr, br = refs(dtext), refs(btext)
     deployed_refs |= dr
     built_refs |= br
@@ -680,40 +584,6 @@ if probe_src and os.path.isfile(probe_src):
         no("CONTROL BROKEN: the sha256 comparator did not detect a one-byte change — every hash PASS above is meaningless")
 else:
     no("CONTROL: could not build a corruption probe — no built asset to mutate")
-
-# The HTML canonicaliser folds Netlify's pretty-URL rewriting. It must NOT fold
-# anything else — otherwise every "identical under folding" PASS above is a lie.
-# Three probes, run on the real built index.html: one content change, one tag
-# change, one asset-reference change. All three must survive folding as RED.
-_bi = os.path.join(BUILD, "index.html")
-if os.path.isfile(_bi):
-    _t = open(_bi, encoding="utf-8", errors="replace").read()
-    _base = canon_html(_t)
-    _probes = []
-    _probes.append(("one-character text change", _t.replace("MACHINE", "MACHINF", 1)))
-    _probes.append(("a removed tag", _t.replace("<div class=\"vignette\"></div>", "", 1)))
-    _probes.append(("a changed asset reference",
-                    _t.replace("game-", "gameX-", 1)))
-    _red = 0
-    for _lbl, _mut in _probes:
-        if _mut == _t:
-            no(f"CONTROL BROKEN: probe '{_lbl}' did not actually mutate the document")
-            continue
-        if canon_html(_mut) != _base:
-            _red += 1
-        else:
-            no(f"CONTROL BROKEN: the HTML canonicaliser FOLDED {_lbl} — it hides real differences")
-    # and the fold it IS supposed to do must actually fold
-    _folded = _t.replace('href="/moon-astra/machines.html"', "href='/moon-astra/machines'")
-    _folds_ok = (_folded != _t) and (canon_html(_folded) == _base)
-    if _red == len(_probes) and _folds_ok:
-        ok("CONTROL: the HTML canonicaliser goes RED on changed text, a removed tag and a changed "
-           "asset reference, and GREEN only on the pretty-URL .html fold it exists for")
-    elif _red == len(_probes) and not _folds_ok:
-        no("CONTROL BROKEN: the canonicaliser did NOT fold a pretty-URL rewrite — the fold it claims "
-           "to make is not the fold it makes")
-else:
-    no("CONTROL: no built index.html to exercise the HTML canonicaliser against")
 
 sys.exit(min(fails, 89))
 PY

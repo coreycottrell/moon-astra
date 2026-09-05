@@ -10,3 +10,31 @@
   Cache-Control: public, max-age=0, must-revalidate
 /moon-astra/assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# ── Blender art release, 2026-09-05 (ACG web-frontend-lead) ─────────────────
+# Closes the template gap Codex named in ACG-OPS-REVIEW-2026-09-05 finding 4:
+# this template covered the old entry HTML, data/ and hashed assets/ only, with
+# no rule for the gallery page or the model directory.
+
+# Second entry point, unhashed filename — revalidate like index.html.
+/moon-astra/machines.html
+  Cache-Control: no-cache
+
+# ⚠️ AND THE EXTENSIONLESS FORM. Netlify's Pretty-URLs post-processing rewrites
+# the in-page link to the gallery from machines.html to /moon-astra/machines, so
+# THAT is the URL a player actually lands on — and a rule written only for the
+# .html path does not match it. Measured live 2026-09-05: the .html path returned
+# our `no-cache`, the extensionless path returned Netlify's default
+# `public,max-age=0,must-revalidate`. Both revalidate, so nothing was broken; the
+# point is that the policy on the real landing URL was an accident, not a decision.
+/moon-astra/machines
+  Cache-Control: no-cache
+
+# Versioned model directory. The version is in the PATH, not in a per-file
+# content hash, so immutable is only safe under a rule we are bound by:
+# THE BYTES UNDER industrial-01/ ARE FROZEN. A changed model ships as a NEW
+# version directory (industrial-02/) with its own manifest and a rebuilt client.
+# Never overwrite a file at this path — cached browsers would hold the old
+# geometry for a year with no way to tell.
+/moon-astra/models/industrial-01/*
+  Cache-Control: public, max-age=31536000, immutable

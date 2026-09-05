@@ -1,3 +1,8 @@
+*** SUPERSEDED — this is a verify-moon-deploy.sh **v1** run. v1's frontend check
+*** hard-coded assets/index-*.js, fetched no JavaScript and no models, never ran in
+*** --staging, and could exit 0 with required checks skipped. A GREEN below is NOT
+*** evidence that the art release is deployed. See PROOF-MATRIX-v2.md.
+
 === MOON deploy verification — PRODUCTION (2026-09-05T18:40:48Z) ===
 
 == 1. Service is enabled and active on the host

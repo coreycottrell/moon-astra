@@ -1,0 +1,12 @@
+# Merge into the site's existing _headers if present; do not replace that file.
+# These apply to the static client. API responses set their own no-store policy.
+/moon-astra
+  Cache-Control: no-cache
+/moon-astra/
+  Cache-Control: no-cache
+/moon-astra/index.html
+  Cache-Control: no-cache
+/moon-astra/data/*
+  Cache-Control: public, max-age=0, must-revalidate
+/moon-astra/assets/*
+  Cache-Control: public, max-age=31536000, immutable

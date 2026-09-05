@@ -32,7 +32,7 @@ that art revision.
 | file | what it is |
 |---|---|
 | **`RUNBOOK.md`** | The procedure as executed, including the two things the handoff got wrong on the real host. Read §0 first. |
-| **`verify/verify-moon-deploy.sh`** | Runnable, **v2**. Ten sections, each with a control that can go red. Use `--strict` in any release gate: exit 0 = complete+passed, N = N failures, **90 = INCOMPLETE** (required checks skipped). `--site URL --build-dir DIR` to verify any deploy of any build. |
+| **`verify/verify-moon-deploy.sh`** | Runnable. Ten checks, each with a control that can go red. `./verify-moon-deploy.sh` / `--staging`. |
 | **`units/DELTA-vs-repo-template.md`** | The explicit diff between what is running and what is in this repo. |
 | **`backup/BACKUP-AND-ROLLBACK.md`** | What exists, where, and a restore that was actually performed. |
 
@@ -44,8 +44,7 @@ units/       moon-astra.service, moon-astra-staging.service   (pulled from /etc/
 nginx/       both vhosts + both location snippets              (pulled from /etc/nginx)
 netlify/     netlify.toml + the MOON section of _redirects     (from aiciv-inc-site main)
 inventory/   moon-service-inventory.json                       (ACG's fleet service registry, 2 entries)
-verify/      verify-moon-deploy.sh (v2) + PROOF-MATRIX-v2.md + recorded runs,
-             green AND red, including the run that correctly REJECTS today's site
+verify/      verify-moon-deploy.sh + three recorded runs, including one that FAILS
 backup/      BACKUP-AND-ROLLBACK.md + moon_astra_backup.py
 RUNBOOK.md
 ```

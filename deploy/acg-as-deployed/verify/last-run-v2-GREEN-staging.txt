@@ -1,0 +1,94 @@
+=== MOON deploy verification — STAGING (2026-09-05T19:31:15Z) ===
+site=http://127.0.0.1:8797/moon-astra
+api=https://moon-astra-api-staging.ai-civ.com
+build-dir=/home/corey/projects/moon-civilization/dist-aiciv
+mode=strict
+SKIP* = a REQUIRED check that did not run. In --strict it makes the run INCOMPLETE (exit 90).
+
+== 1. Service is enabled and active on the host
+  PASS  moon-astra-staging is enabled (survives reboot)
+  PASS  moon-astra-staging is active
+  PASS  CONTROL: is-active goes red on a nonexistent unit
+
+== 2. The process is actually LISTENING (a started service is not a serving one)
+  PASS  listening on 127.0.0.1:4181
+  PASS  CONTROL: the listener probe goes red on an unused port
+
+== 3. ExecStart names an interpreter that EXISTS on this host
+  PASS  interpreter /opt/node-v24.20.0-linux-x64/bin/node exists and is executable
+  PASS  CONTROL: /usr/bin/node correctly absent (this is why the template path was wrong)
+
+== 4. --preserve-symlinks-main is present
+  PASS  --preserve-symlinks-main is on the ExecStart line
+
+== 5. Health over public HTTPS, and the world is ADVANCING (LIVENESS)
+  PASS  GET https://moon-astra-api-staging.ai-civ.com/api/v1/health -> 200
+  PASS  tick advancing 14609 -> 14612 (simulation is alive, not just the HTTP layer)
+
+== 6. Catalog reports the economy ruleset the client was built against
+  PASS  economyVersion = 2 (expect 2)
+  PASS  production.refinery = 100 (expect 100)
+  PASS  production.standardHarvester = 300 (expect 300)
+  PASS  production.bulkHarvester = 400 (expect 400)
+  PASS  production.rockPerMetal = 2 (expect 2)
+  PASS  mind.capacityPerNode = 4 (expect 4)
+  PASS  mind.costs.replicator = 4 (expect 4)
+
+== 7. Origin gate discriminates THREE ways (not just 'it answered')
+  PASS  untrusted origin -> 403 (fails CLOSED)
+  PASS  trusted origin + invalid name -> 400 (so 403 above was ABOUT THE ORIGIN, not a blanket refusal)
+  PASS  unauthenticated observe -> 401
+
+== 8. The site proxy reaches the INTENDED world (routing, not tick identity)
+  PASS  GET http://127.0.0.1:8797/moon-astra/api/v1/health -> 200
+  PASS  CONTROL: a direct request to https://moon-astra-api-staging.ai-civ.com is visible in /var/log/nginx/moon-astra-staging-api.access.log (that log is live and greppable)
+  PASS  CONTROL: a direct request to https://moon-astra-api.ai-civ.com is visible in /var/log/nginx/moon-astra-api.access.log (so 'absent from the other log' is a finding, not a blind spot)
+  PASS  8b ROUTING PROOF: the marked request through http://127.0.0.1:8797/moon-astra was served by the STAGING vhost (/var/log/nginx/moon-astra-staging-api.access.log)
+  PASS  8b ROUTING PROOF: that same request did NOT reach the other world's vhost (/var/log/nginx/moon-astra-api.access.log)
+  PASS  8c corroboration: proxy tick 14618 lies inside the bracketed direct reads [14618,14619] (consistent with the intended world)
+  PASS  8c corroboration: proxy tick 14618 lies outside the other world's bracket [17418,17418] (the two worlds are distinguishable right now)
+
+== 9. Entry pages, their ACTUAL assets, and the GLB models
+  ---- 9a: entry pages
+  PASS  http://127.0.0.1:8797/moon-astra/ -> 200
+  PASS  index.html deployed bytes == built bytes (sha256 689963e71b5c…)
+  PASS  index.html references exactly the built set (3: game-DXd3DGeR.js, game-DXlFNKkB.css, machines-BHE0n2S7.js)
+  PASS  http://127.0.0.1:8797/moon-astra/machines.html -> 200
+  PASS  machines.html deployed bytes == built bytes (sha256 49f1dc19e3f4…)
+  PASS  machines.html references exactly the built set (3: machines-BHE0n2S7.js, machines-C-PTWwDW.js, machines-k-ILHYTj.css)
+  ---- 9b: the actual scripts, module preloads and stylesheets
+  PASS  [script] game-DXd3DGeR.js 200, 47689 B, sha256 3375779ebb9c… matches the build
+  PASS  [stylesheet] game-DXlFNKkB.css 200, 18483 B, sha256 1114bae79551… matches the build
+  PASS  [modulepreload] machines-BHE0n2S7.js 200, 660699 B, sha256 4f814348429e… matches the build
+  PASS  [script] machines-C-PTWwDW.js 200, 6287 B, sha256 03baf0ae78b8… matches the build
+  PASS  [stylesheet] machines-k-ILHYTj.css 200, 4274 B, sha256 31d1b5a98255… matches the build
+  PASS  all 5 built assets are reachable from the two entry pages (no unchecked chunk)
+  ---- 9c: GLB models
+  PASS  deployed scripts request model version(s) ['industrial-01'], present in the build
+  PASS  industrial-01/manifest.json declares all 6 models
+  PASS  industrial-01/manifest.json served and byte-identical to the build
+  PASS  model industrial-01/compute.glb 200, GLB magic ok, 741628 B, sha256 f466591f6526… == build == manifest
+  PASS  model industrial-01/miner.glb 200, GLB magic ok, 1192244 B, sha256 b7855553d204… == build == manifest
+  PASS  model industrial-01/refinery.glb 200, GLB magic ok, 574940 B, sha256 6fa4d40e0344… == build == manifest
+  PASS  model industrial-01/replicator.glb 200, GLB magic ok, 812420 B, sha256 a724f12596f7… == build == manifest
+  PASS  model industrial-01/seed.glb 200, GLB magic ok, 1032980 B, sha256 72aae25e6a4e… == build == manifest
+  PASS  model industrial-01/solar.glb 200, GLB magic ok, 911936 B, sha256 034e5f5569b2… == build == manifest
+  ---- 9d: controls (each must be able to go red)
+  PASS  CONTROL: a missing asset 404s (no SPA fallback masking broken builds)
+  PASS  CONTROL: a missing MODEL 404s (kept from v1's spirit — proves the model probe can observe absence)
+  PASS  CONTROL: the GLB magic test REJECTS the 335 B error-page body (so 'GLB magic ok' above is a real finding)
+  PASS  CONTROL: the sha256 comparator goes RED on a one-byte change at identical length (byte counts alone would not have caught it)
+
+== 10. Backup lane — STAGING IS DELIBERATELY NOT BACKED UP
+  NOTE  staging has NO backup lane, by decision, not by oversight: it is a
+        disposable world fed by the Netlify branch-deploy preview. Losing it
+        costs a redeploy, not player state. If that ever stops being true,
+        implement an explicit target/label/ledger in the backup tool — the
+        current tool's database, service and label are constants, so there
+        is no --label option to add (Codex finding 5). Owner: fleet-lead.
+        The manifest checked in production mode covers the PRODUCTION world
+        ONLY — do not read a green there as cover for this one.
+
+=== STAGING: 0 failed, 0 required-checks skipped, 0 advisory skips ===
+RESULT: PASS — complete, every required check ran and passed.
+STAGING exit=0
