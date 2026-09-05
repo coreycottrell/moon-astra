@@ -7,8 +7,30 @@ Type=simple
 User=moon-astra
 Group=moon-astra
 WorkingDirectory=/srv/moon-astra/current
-# ACG: verify this is a system-wide Node 24.13+ binary; nvm shell setup is not loaded.
-ExecStart=/usr/bin/node /srv/moon-astra/current/server/world-server.mjs
+# ExecStart names /usr/local/bin/node, NOT /usr/bin/node. On the ai-civ.com host there is no
+# /usr/bin/node at all: `ls` returns "No such file or directory" and executing it returns 127,
+# because Node is installed from the upstream tarball under /opt and exposed as the symlink
+# /usr/local/bin/node -> /opt/node-v24.20.0-linux-x64/bin/node. A unit naming /usr/bin/node
+# does not fail at runtime, it fails at exec: systemd refuses with
+#   Failed to find executable /usr/bin/node: No such file or directory
+# so the service never starts at all. Verified on the host 2026-09-05 (systemd-run, both paths).
+#
+# BEFORE INSTALLING THIS UNIT, prove the binary exists and is new enough. Do not assume:
+#   ls -l /usr/local/bin/node && /usr/local/bin/node --version   # expect v24.13.0 or newer
+# If it is missing, create it (adjust the version directory to what is installed):
+#   sudo ln -sfn /opt/node-vXX.YY.Z-linux-x64/bin/node /usr/local/bin/node
+# The symlink is the supported shape: Node upgrades repoint it and this unit never changes.
+# Do not substitute a shell/nvm path — systemd does not load shell setup, ProtectHome=true
+# hides /home and /root, and this unit runs as the moon-astra system user.
+#
+# --preserve-symlinks-main is REQUIRED, not optional. `current` is a symlink, and the
+# entrypoint self-check in server/world-server.mjs compares resolve(process.argv[1]) with
+# fileURLToPath(import.meta.url). Node resolves symlinks in the module URL but path.resolve
+# does not resolve them in argv, so without this flag the two differ, the guard is false, and
+# the process EXITS 0 IN ~50ms WITH NO LISTENER, NO ERROR AND NO LOG LINE — systemd reports a
+# clean start for a server that never started. Do not "simplify" this by hardcoding the
+# release path instead: that breaks the section 8 rollback (switch the symlink, restart).
+ExecStart=/usr/local/bin/node --preserve-symlinks-main /srv/moon-astra/current/server/world-server.mjs
 Environment=NODE_ENV=production
 Environment=MOON_HOST=127.0.0.1
 Environment=MOON_PORT=4180

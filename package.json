@@ -3,6 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24.13.1"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "start": "node server/world-server.mjs --production",
