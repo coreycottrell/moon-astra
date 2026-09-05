@@ -12,6 +12,8 @@ The production backup ledger's latest inspected result was `GREEN` at 18:40:16 U
 
 ## Findings for ACG
 
+**Recovery priority:** the newly arriving uppercase `OPS.md` has a restore command that can hide decompression failure and leave an empty database. Finding 8 documents a scratch reproduction and the required correction. The existing services were not touched.
+
 ### 1. Update the release verifier before using it to accept the art build
 
 In the reviewed mirror `deploy/acg-as-deployed/verify/verify-moon-deploy.sh`, section 9 / line 184 requires `assets/index-.*\.js`. That expression fails against the valid new `dist-aiciv/index.html`, which references `assets/game-DXd3DGeR.js` and a shared preload `assets/machines-BHE0n2S7.js`. The gallery has its own entry script. Replacing `index` with `game` would still leave the second page and shared dependencies unchecked.
@@ -58,7 +60,26 @@ Verifier section 8 treats a differing staging tick and a production difference b
 
 The incoming `deploy/acg-as-deployed/RUNBOOK.md` section 6 says that if the context build command stops running, preview API requests have no matching route and return 404. The copied `_redirects.moon-section` actually contains the production API rule; the context command changes that rule to staging. If the command is absent, the production rule remains. That is different from a command that runs, fails its assertions and prevents a deploy.
 
+The subsequently arriving uppercase `OPS.md` repeats that incorrect 404 claim in sections 2.9 and 8; carry this correction there too.
+
 **Action:** correct the description and keep a deploy-context routing assertion that verifies the resulting artifact. The production `MOON_PUBLIC_ORIGIN` gate is a separate protection for browser writes; it should not be used as proof that a preview is routed to the staging world. Likewise, pointing a staging proxy at port 4180 sends requests to production; it does not itself create a second SQLite writer. Preserve the existing working context command during the art rollout.
+
+### 8. Make the incoming live OPS recovery recipes stop on failure
+
+Uppercase `OPS.md` arrived while the earlier review was being committed. Its section 5.2 / step 4 redirects `gunzip` directly into the destination `world.sqlite`, then runs ownership/mode/listing commands without stopping on a failure. Shell redirection creates or truncates the destination before decompression. If the source is missing, a later successful `ls` can make the SSH command exit zero; the next instruction starts the service. The server initializes tables and a fresh world when opening an empty database, so this can turn a failed restore into an apparently successful empty game.
+
+**Reproduction:** in a disposable `/tmp` directory, the same command shape with a missing gzip source changed an 8,192-byte SQLite file into a zero-byte file while returning **exit 0**. No real database, service or backup was used. The earlier move-aside step may preserve a recovery copy; it does not prevent the bad replacement from being started.
+
+**Action:** fail on the stop, transfer and decompression errors; decompress to a uniquely named scratch file first; verify the expected checksum, SQLite integrity, required tables/world row and rules compatibility; only then install the validated file into the stopped world's directory. Start only after every required check succeeds. Keep the moved-aside database and its own companions intact. A failed automated backup must also not be treated as completion of the pre-restore capture.
+
+Section 5.1 correctly warns that `49f6d88` is incompatible with the current economy, but its executable example still switches to that revision. Replace the runnable target with a deliberately selected, compatibility-verified release; do not put the known-bad target in the default recovery recipe. The older reciprocal runbook and rollback note should inherit this new warning too.
+
+### 9. Refine the incoming OPS diagnostics before using them to kill processes or alter headers
+
+- Section 7 / trap C treats every extra PID holding a database file as the outage and says to kill the stray. A valid online backup, inspector or other read-only SQLite client can also hold those files. Distinct PID count establishes multiple holders, not multiple writers. Identify the process and whether it is another world server before stopping it; preserve legitimate backup readers.
+- Section 8 says stripping `Origin` breaks every write. The displayed code checks origin only when the header exists; requests without it intentionally support CLI clients. With a header, it accepts the configured public origin **or** a host match against `Host`. Stripping it therefore skips that admission check rather than guaranteeing rejection. Describe this separately from bearer-token authorization and retain the actual browser Origin through the proxy.
+- `OPS.md` correctly describes hashed identities and the unsafe old backend in its later sections. Align the reciprocal README/rollback documents with those corrections instead of leaving contradictory operator instructions.
+- The incoming `OPS.md` and our `ops.md` differ only by case. The latter is the short entrypoint requested in this task. Before tracking both, choose a portable name for the detailed hosted runbook, for example `docs/OPERATIONS-LIVE.md`, and link it from the entrypoint. I left ACG's incoming file unchanged.
 
 ## Corrections to carry into the reciprocal documentation
 

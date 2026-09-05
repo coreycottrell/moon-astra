@@ -91,8 +91,21 @@
     "deploy/acg-as-deployed/README.md": "4bcdadd8c89626c114ef2801c3a941b3bb4f6c5f5343c88a15b62b6e9e6cf1f8",
     "deploy/acg-as-deployed/RUNBOOK.md": "59dcc2040c2b156a58240c3116e621baa7030a23fe47c278b053f547fbea43ac",
     "deploy/acg-as-deployed/backup/BACKUP-AND-ROLLBACK.md": "ce48a47546ab4b6707923e2e3321b2e1cd5126bcfd5329c31ebe697a8dd6c36c",
-    "deploy/acg-as-deployed/units/DELTA-vs-repo-template.md": "8d2d82b9db7eaa9067ced756d8c8949b08bd78e1477f4309ac027aa6e869eed4"
+    "deploy/acg-as-deployed/units/DELTA-vs-repo-template.md": "8d2d82b9db7eaa9067ced756d8c8949b08bd78e1477f4309ac027aa6e869eed4",
+    "OPS.md": "3275fbf7f6777648ab16b0847a0346d7266cc99b86d04e273dc4c335037e50ea"
   },
   "productionUnitMatchesTemplate": true,
-  "nginxLocationMatchesTemplate": true
+  "nginxLocationMatchesTemplate": true,
+  "restoreRecipeScratchReproduction": {
+    "scope": "Disposable /tmp SQLite file only; no game data/services",
+    "missingGzipSource": true,
+    "bytesBefore": 8192,
+    "bytesAfter": 0,
+    "recipeExitCode": 0
+  },
+  "symlinkScratchCheck": {
+    "scope": "Tower /tmp only",
+    "ln_sfn_usedTemporarySymlinkAndRename": true,
+    "issueReported": false
+  }
 }
