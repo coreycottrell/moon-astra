@@ -1,0 +1,47 @@
+id,technology,knowledge_prerequisites,capability,demonstration
+T00,Lander operations,None; starting knowledge,"Construction queues, reserves, basic policies",Establish a working seed site
+T01,Local survey,T00,"Resource estimates, slope maps, route scouting",Sample multiple local sites
+T02,Connected power,T00,Local grids and priority loads,Operate a connected production line
+T03,Bulk processing,"T01, T02",Turn local feedstock into usable material baskets,Produce a measured batch from local material
+T04,Sintered construction,T03,"Foundations, paved work areas, simple fixtures",Complete a load-tested platform
+T05,Glass and ceramics,T03,"Insulation, solar substrates, optical feedstock",Meet a basic material-quality threshold
+T06,Autonomous freight,"T00, T01",Depot-to-depot operating routes,Deliver and reconcile a shipment
+T07,Maintainable machines,T00,"Spares, servicing, salvage, scheduled repair",Repair a worn machine using accounted parts
+T08,Energy reserves,"T02, T05",Storage and darkness planning,Run a priority load through a declared supply gap
+T09,Instrumented production,"T01, T06",Bottleneck measurements and calibrated observations,Predict and measure a line's actual output
+T10,Settlement models,"T09, T02",First mind-assisted diagnostics and planning,Explain and correct a real production constraint
+T11,Reliable telemetry,"T09, T02",Resilient local control and remote observation,Continue safe operation during a simulated link outage
+T12,Local control components,"T05, T03",Replace part of the finite imported electronics stock,Fabricate and test a controller batch
+T13,Precision tooling,"T04, T12","Better tolerances, interchangeable parts, test fixtures",Pass a repeatability and interchangeability test
+T14,Advanced material separation,"T03, T05","More useful conductors, coproduct recovery, improved purity",Close the mass ledger for a validated processing route
+T15,Volatile recovery,"T01, T08",Selected water and reagent supply chains,Characterize and process a surveyed deposit
+T16,Regional freight infrastructure,"T06, T04","Rail, freight yards, high-capacity routes",Sustain delivery over a regional route
+T17,Engineered heat rejection,"T02, T05",Thermal budgets and dedicated radiators,Keep a test load within its operating temperature
+T18,Managed compute,"T10, T12, T17","Allocate compute among operations, research, design",Sustain useful work under measured power and heat limits
+T19,Calibrated factory twins,"T18, T09",Bounded prediction and layout experiments,Predict a changed line within a declared error band
+T20,Modular machine design,"T13, T19","Search permitted chassis, tools, controllers, cooling",Produce a buildable candidate with explicit costs
+T21,Design certification,"T20, T07",Publish tested variants and safe retrofit plans,Independent validation on a second test configuration
+T22,Precision optical systems,"T05, T13",Long links and advanced optical components,"Align, operate, and recover a link after a fault"
+T23,Regional power transmission,"T08, T14",Connect specialized power and industrial sites,Isolate a fault while maintaining priority service
+T24,Locally manufactured solar,"T13, T14",Produce generation capacity with local industry,"Manufacture, commission, and measure a solar batch"
+T25,High-purity fabrication,"T14, T13",Advanced electronics feedstock and process control,Meet purity and yield targets without hidden imports
+T26,Advanced compute modules,"T25, T18","Denser, more capable compute families","Sustain certified useful work, not just installed capacity"
+T27,Regional thermal infrastructure,"T17, T13",Large thermal loops and specialized heat-rejection sites,Operate a dense cluster within the measured thermal envelope
+T28,Factory orchestration,"T19, T16","Coordinate production, freight, maintenance, expansion",Meet a multi-line production commitment through a disturbance
+T29,Shared engineering standards,"T21, T22","Interoperable components, plans, and exchange protocols",Integrate independently built facilities
+T30,Federated research,"T29, T26",Cross-settlement experiments and shared discoveries,Reproduce a result using independent sites and operators
+T31,Modular foundries,"T21, T28",Factories assembled from certified production modules,Reproduce a production module from its documented inputs
+T32,Closed bootstrap packages,"T31, T25, T24",A factory can make the complete kit for a daughter factory,"Audit all critical inputs, consumables, power, control, and repairs"
+T33,Long-range deployment logistics,"T16, T23, T21",High-capacity launch/receive or equivalent regional deployment,Deliver and commission a payload at a distant authorized site
+T34,Coordinated construction swarms,"T32, T29",Many builders execute one bounded construction plan,Complete a multi-stage district without violating shared constraints
+T35,Surface fission option,"T17, T21; scenario fuel supply",Steady generation independent of local sunlight,Commission and operate an accountable fuel-and-thermal system
+T36,Computronium district design,"T26, T27, T30","Integrated compute, power, thermal, maintenance architecture",Pass a sustained useful-service benchmark as a whole district
+T37,Self-deploying districts,"T32, T34, T36",Manufacture and boot a complete daughter district,Daughter district produces a qualifying granddaughter kit
+T38,Planetary coordination,"T30, T33, T37",Large-scale deployment and service coordination,Operate several separated regional clusters through a partition
+T39,Recursive commissioning,"T38, T37",Repeated district deployment with automatic evidence collection,Multiple generations meet the same acceptance criteria
+T40,Distributed repair mesh,"T39, T07",Maintain and recover a rapidly expanding surface network,Recover a disabled district using neighboring infrastructure
+T41,Planetary integration,"T39, T40",Final coverage and service commissioning,"Meet the campaign's coverage, connection, and reliability conditions"
+T42,Orbital assembly,"T33, T22",Orbital relays and industrial structures,"Launch, assemble, and account for the required hardware"
+T43,Orbital power delivery,"T42, T23",Another source of regional power with transmission constraints,Demonstrate net delivered energy and safe receiver operation
+T44,Subsurface facilities,"T13, T17",Shielded facilities and a deeper construction layer,"Survey, excavate, stabilize, and commission a site"
+T45,Experimental computing architectures,"T36, T30",Speculative high-efficiency design families,Win a declared benchmark while exposing their limitations

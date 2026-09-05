@@ -5,11 +5,31 @@ A fresh, playable 3D prototype: turn lunar rock into machines that build more ma
 **Project directory:** `/home/corey/projects/moon-astra`  
 **ACG handoff:** [`dev-ops.md`](dev-ops.md) covers Git setup, dependencies, running, verification, hosting, and backup restoration. Full backup ZIPs are stored under `/media/corey/Expansion/backups/moon-astra/`.
 
+## Resume this Codex session
+
+[Open this Moon session in Codex](codex://threads/01a06dd9-5847-7c73-b3a3-4ec974195750)
+
+**Session ID:** `01a06dd9-5847-7c73-b3a3-4ec974195750`
+
+If your Markdown viewer does not open Codex links, run this on the original machine:
+
+```bash
+codex resume 01a06dd9-5847-7c73-b3a3-4ec974195750 --cd /home/corey/projects/moon-astra
+```
+
+Resuming requires the existing Codex session history; the project ZIP does not include that history. See the [Codex resume reference](https://learn.chatgpt.com/docs/developer-commands?surface=cli#codex-resume).
+
+## Civilization design proposal
+
+Read the [illustrated proposal](docs/moon-civilization-proposal/report.html), download the [49-page PDF](docs/moon-civilization-proposal/report.pdf), or edit the [Markdown source](docs/moon-civilization-proposal/report.md).
+
+The proposal covers shared land claims, local resources, human and AICIV players, a game API and AI gym, 46 technologies, 45 buildable families, mind-driven invention, an exponential campaign finale, clearer zoom/detail levels, aesthetics, and a staged development roadmap. These are proposed extensions to the playable prototype. The folder also includes CSV catalogs, diagrams, and reproducible pacing calculations.
+
 ## Full backup on the expansion drive
 
-**Latest backup ZIP:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T010231Z.zip`  
-**SHA-256 checksum:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T010231Z.zip.sha256`  
-**File manifest:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T010231Z.manifest.json`
+**Latest backup ZIP:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.zip`  
+**SHA-256 checksum:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.zip.sha256`  
+**File manifest:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.manifest.json`
 
 This full snapshot includes the entire project folder, including this README, `dev-ops.md`, source, dependencies, prepared and original assets, compiled build, and verification artifacts. Restore instructions and ACG's Git setup steps are in [`dev-ops.md`](dev-ops.md).
 

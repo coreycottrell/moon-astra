@@ -1,0 +1,64 @@
+{
+  "model_kind": "Analytical pacing illustration; not a local-resource, technology, or construction simulation.",
+  "assumptions": {
+    "radius_km": 1737.4,
+    "initial_established_site_km2": 1,
+    "pre_day_35_growth": "Prescribed log-interpolated targets, not an economic result.",
+    "day_35_coverage_percent": 1,
+    "ideal_late_doubling_days": 1,
+    "radiator_emissivity": 0.9,
+    "radiator_sink_temperature_K": 0,
+    "radiator_environment": "Ideal unobstructed cold sink; no absorbed sunlight, ground radiation, or transport losses."
+  },
+  "moon_area_km2": 37932328.09938046,
+  "claim_levels": [
+    {
+      "level": 8,
+      "cells": 393216,
+      "mean_area_km2": 96.466898852998,
+      "corner_cell_area_km2": 35.73505166659685,
+      "central_cell_area_km2": 184.2269613594104
+    },
+    {
+      "level": 10,
+      "cells": 6291456,
+      "mean_area_km2": 6.029181178312375,
+      "corner_cell_area_km2": 2.2203748103231424,
+      "central_cell_area_km2": 11.514843922284694
+    },
+    {
+      "level": 14,
+      "cells": 1610612736,
+      "mean_area_km2": 0.023551488977782715,
+      "corner_cell_area_km2": 0.008657467995465816,
+      "central_cell_area_km2": 0.04498002998560622
+    }
+  ],
+  "radiator_examples": [
+    {
+      "temperature_K": 300,
+      "W_per_m2": 413.3702951451,
+      "km2_per_GW_rejected": 2.4191385103009955
+    },
+    {
+      "temperature_K": 350,
+      "W_per_m2": 765.8195051260687,
+      "km2_per_GW_rejected": 1.3057907160974969
+    },
+    {
+      "temperature_K": 400,
+      "W_per_m2": 1306.4542661376,
+      "km2_per_GW_rejected": 0.7654305442749243
+    }
+  ],
+  "ideal_final_phase_days": 6.643856189774724,
+  "ideal_completion_day": 41.64385618977472,
+  "day_42_coverage_percent": {
+    "1.0": 100.0,
+    "0.9": 78.79324245407463,
+    "0.75": 38.05462768008707
+  },
+  "day_42_after_one_day_complete_interruption_percent": 64,
+  "texture_equatorial_km_per_pixel_4096": 2.665138220872513,
+  "dem_equatorial_km_per_sample_5760": 1.8952094015093426
+}

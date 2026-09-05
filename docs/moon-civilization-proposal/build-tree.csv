@@ -1,0 +1,46 @@
+id,family,first_technology,construction_inputs,function
+B00,Seed lander,T00,Starting scenario kit,"Initial power, tooling, controllers, emergency reserve"
+B01,Survey rover,T01,"Structure, optics, control components",Site observations and route surveys
+B02,Claim beacon,T00,"Structure, controller, delivered starter supply",Established local permission boundary
+B03,Regolith collector,T03,"Structure, tools, controller",Local raw feedstock
+B04,Compact processor,T03,"Structure, ceramic liner, control components",Basic material baskets
+B05,Stockpile and depot,T06,"Structure, handling equipment",Located inventory and shipping reservations
+B06,Solar array,T02,"Imported or locally made solar modules, structure",Daylight generation
+B07,Battery or storage module,T08,"Storage components, structure, power controller",Time-shifted usable energy
+B08,Cable and switchgear,T02,"Conductors, insulation, controls",Local power network
+B09,Builder rover,T00,"Structure, tools, controller",Delivery and construction work
+B10,Parts workshop,T04,"Structure, fixtures, controls","Frames, tooling, repair parts"
+B11,Glass and ceramics kiln,T05,"Structure, insulation, heater components",Ceramics and optical feedstock
+B12,Maintenance bay,T07,"Structure, tools, spares","Repairs, inspection, salvage"
+B13,Local control cabinet,T10,"Controllers, structure, basic heat rejection",Diagnostics and supported settlement policies
+B14,Telemetry mast,T11,"Structure, communications components",Local sensing and communication
+B15,Controller fabrication cell,T12,"Precision starter tools, materials, process supplies",Local control components
+B16,Precision machine shop,T13,"Fixtures, drives, metrology components",Interchangeable and advanced parts
+B17,Separation and electrolysis plant,T14,"Furnace materials, electrodes, process supplies",Specialized materials and coproducts
+B18,Volatile recovery station,T15,"Excavation tools, thermal system, storage",Surveyed volatile products
+B19,Freight terminal and rail,T16,"Structure, conductors, transport equipment",Regional material movement
+B20,Radiator field,T17,"Thermal materials, piping, pumps as needed",Heat rejection capacity
+B21,Compute shelter,T18,"Compute modules, power, cooling, shielding",Allocatable in-world compute service
+B22,Experiment and test bay,T19,"Instruments, fixtures, sacrificial materials",Calibration and physical design tests
+B23,Design foundry,T20,"Compute service, precision tooling, test capacity",Candidate and certified machine packages
+B24,Optical relay,T22,"Precision optics, mounts, controls",Long-distance data links
+B25,Regional substation,T23,"Conductors, conversion equipment, switchgear",Connected regional power
+B26,Solar manufacturing line,T24,"Purified materials, fixtures, deposition tools",Locally manufactured generation modules
+B27,Purification works,T25,"Processing hardware, metrology, recovered reagents",High-purity feedstock
+B28,Advanced fabrication campus,T26,"Precision tools, clean processes, qualified feedstock",Advanced compute and sensor modules
+B29,Thermal exchange campus,T27,"Heat transport equipment, radiator capacity",Shared heat service for dense facilities
+B30,Cooperative engineering hub,T29,"Communications, instruments, compute",Interoperability and public design validation
+B31,Research federation campus,T30,Connected compute and experiment facilities,Coordinated multi-site research
+B32,Modular industrial foundry,T31,Certified processing and assembly modules,Repeatable production packages
+B33,Bootstrap-kit assembly line,T32,Complete audited parts and consumables list,Daughter-factory kits
+B34,Long-range dispatch terminal,T33,"Power infrastructure, launch/receive equipment",Authorized distant deployment
+B35,Construction swarm depot,T34,"Builder fleet, spares, local supply",Coordinated district construction
+B36,Optional fission station,T35,"Reactor package, fuel, shielding, thermal system",Continuous accountable generation
+B37,Computronium district,T36,"Compute, power, cooling, control, repair, links",Useful computational service across a developed district
+B38,Self-deploying district package,T37,Full reproduction kit and delivery capacity,A commissioned daughter industrial district
+B39,Planetary coordination exchange,T38,"Regional links, distributed compute, resilient controls",Coordination of large deployment programs
+B40,Distributed repair depot,T40,"Spares, builders, diagnostics, transport",Recovery service and network resilience
+B41,Integration and verification station,T41,Connected test and measurement systems,Verified final campaign service
+B42,Optional orbital platform,T42,"Launched structural, control, and utility modules",Orbital relays or industrial functions
+B43,Optional power receiver field,T43,"Receiver modules, grid connection, thermal equipment",Delivered orbital energy
+B44,Optional subsurface campus,T44,"Excavation, stabilization, shielding, utilities",Underground industry or compute

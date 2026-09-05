@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "desktop": {
+    "missingAnchors": [],
+    "duplicateIds": [],
+    "images": [
+      {
+        "alt": "The existing Moon prototype viewed from orbit",
+        "loaded": true
+      },
+      {
+        "alt": "The progression backbone, with parallel physical and intelligence systems",
+        "loaded": true
+      },
+      {
+        "alt": "Illustrative campaign growth and the sensitivity of the final week to infrastructure",
+        "loaded": true
+      },
+      {
+        "alt": "A common simulation behind the human client, AI adapters, and laboratory",
+        "loaded": true
+      }
+    ],
+    "sections": 23,
+    "bodyOverflow": false
+  },
+  "mobile": {
+    "width": 390,
+    "documentWidth": 390,
+    "scrollY": 0
+  },
+  "errors": [],
+  "unexpectedNetworkRequests": [],
+  "pdf": "report.pdf"
+}
