@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "origin": "http://127.0.0.1:4175",
+  "scope": "Read-only Codex identity viewing the existing settlement; no joins, commands, resets or access changes.",
+  "allSixModelsLoaded": true,
+  "detailedMachines": 21,
+  "drawCalls": 278,
+  "triangles": 192440,
+  "players": 3,
+  "mutations": [],
+  "errors": []
+}
