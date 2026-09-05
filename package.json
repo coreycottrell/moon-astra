@@ -12,7 +12,9 @@
     "build": "vite build",
     "preview": "node server/world-server.mjs --production",
     "test": "node --test tests/*.test.js",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "build:aiciv": "node scripts/build-aiciv.mjs",
+    "test:aiciv": "node scripts/aiciv-smoke.mjs"
   },
   "dependencies": {
     "three": "0.185.1"

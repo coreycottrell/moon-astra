@@ -43,3 +43,6 @@ test('a competing world process cannot overwrite committed state',async()=>{
     a.advance(1);assert.throws(()=>b.advance(1),/Another server changed/);assert.equal(a.state.tick,1);assert.equal(b.state.tick,0);
   }finally{if(a)await a.close();if(b)await b.close();rmSync(dir,{recursive:true,force:true});}
 });
+test('proxy public origin configuration rejects malformed or path-bearing origins',()=>{
+  for(const publicOrigin of ['https://ai-civ.com/moon-astra','ftp://ai-civ.com','https://user:secret@ai-civ.com','https://ai-civ.com?x=1'])assert.throws(()=>createWorldServer({database:':memory:',terrain:()=>0,tickMs:0,publicOrigin}),/MOON_PUBLIC_ORIGIN/);
+});

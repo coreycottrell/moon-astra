@@ -2,6 +2,8 @@
 
 Base URL: `http://localhost:4175/api/v1`. The development frontend proxies requests to the API on 4176. The production server serves game and API on 4175. These endpoints are the game's API, independent of any model provider.
 
+The prepared ai-civ.com deployment uses `https://ai-civ.com/moon-astra/api/v1`. Once ACG publishes it, pass `--url https://ai-civ.com/moon-astra` to the agent CLI. See the [hosting handoff](ACG-HOSTING-ai-civ.com.md); this address is a deployment target, not a claim that the hosted API is already live.
+
 Humans and agents have the same permissions. Join creates a player and claim. Store the returned bearer token; observations never contain tokens. Server-side identities store SHA-256 token hashes. A token controls its player, so do not commit it or include it in agent transcripts.
 
 ## Endpoints

@@ -23,7 +23,8 @@ function loadTerrain(){
   const data=new LunarData(new Uint16Array(bytes.buffer,bytes.byteOffset,bytes.byteLength/2),5760,2880);
   return loc=>data.height(direction(loc.lat,loc.lon));
 }
-export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),terrain=loadTerrain(),tickMs=1000,serveStatic=false}={}){
+export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),terrain=loadTerrain(),tickMs=1000,serveStatic=false,publicOrigin}={}){
+  if(publicOrigin){const u=new URL(publicOrigin);if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.pathname!=='/'||u.search||u.hash)throw Error('MOON_PUBLIC_ORIGIN must be an HTTP(S) origin without a path');publicOrigin=u.origin;}
   if(database!==':memory:')mkdirSync(dirname(database),{recursive:true,mode:0o700});
   const db=new DatabaseSync(database);
   db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;
@@ -51,7 +52,10 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
   const server=http.createServer(async(req,res)=>{
     try{
       const url=new URL(req.url,'http://localhost'),path=url.pathname;
-      if(req.method!=='GET'&&req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);
+      if(req.method!=='GET'&&req.headers.origin){
+        let origin;try{origin=new URL(req.headers.origin);}catch{throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);}
+        if(origin.origin!==publicOrigin&&origin.host!==req.headers.host)throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);
+      }
       if(path==='/api/v1/health')return json(res,failed?503:200,{ok:!failed,ruleset:RULESET,tick:world.tick,players:world.players.length});
       if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,unit:'metal and rock quantities use milli-units internally; command amounts use whole metal units',types:TYPES,constructionSeconds:BUILD_TIME,blueprint:BLUEPRINT,actions:['build.place','blueprint.deploy','replicator.configure','shipment.send','project.contribute','claim.pause','claim.grant','claim.revoke']});
       if(path==='/api/v1/join'&&req.method==='POST'){
@@ -106,7 +110,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const production=process.argv.includes('--production'),port=Number(process.env.MOON_PORT||(production?4175:4176));
-  const app=createWorldServer({database:process.env.MOON_DB||resolve(ROOT,'.world/world.sqlite'),serveStatic:production});
+  const app=createWorldServer({database:process.env.MOON_DB||resolve(ROOT,'.world/world.sqlite'),serveStatic:production,publicOrigin:process.env.MOON_PUBLIC_ORIGIN});
   app.server.listen(port,process.env.MOON_HOST||'127.0.0.1',()=>console.log(`MOON civilization ${production?'game':'API'} ready on http://localhost:${port}`));
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();process.exit(0);});
 }

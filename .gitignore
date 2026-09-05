@@ -6,3 +6,4 @@ playwright-report/
 artifacts/*.log
 .world/
 .agent-access/
+dist-aiciv/

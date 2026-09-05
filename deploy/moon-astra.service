@@ -1,0 +1,29 @@
+[Unit]
+Description=MOON Astra shared world API
+After=network.target
+
+[Service]
+Type=simple
+User=moon-astra
+Group=moon-astra
+WorkingDirectory=/srv/moon-astra/current
+# ACG: verify this is a system-wide Node 24.13+ binary; nvm shell setup is not loaded.
+ExecStart=/usr/bin/node /srv/moon-astra/current/server/world-server.mjs
+Environment=NODE_ENV=production
+Environment=MOON_HOST=127.0.0.1
+Environment=MOON_PORT=4180
+Environment=MOON_DB=/var/lib/moon-astra/world.sqlite
+Environment=MOON_PUBLIC_ORIGIN=https://ai-civ.com
+StateDirectory=moon-astra
+StateDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

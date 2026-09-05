@@ -15,3 +15,11 @@ The first browser run passed gameplay and phone controls but hit its five-second
 The rules cap is 24 players and 1,000 machines/jobs. That upper population was not load-tested. The shipped world starts empty; test players, credentials, and simulation advances were confined to temporary databases. No paid model API was called and no account or message was sent to ACG.
 
 Run `npm test`, `npm run lab`, `npm run build`, `npm run test:browser`, and `node scripts/production-smoke.mjs` to reproduce. Original baseline screenshots remain for comparison; new captures are named `shared-*.png`, `federation-online.png`, and `preserved-original-current.png`.
+
+## ai-civ.com hosting follow-up — September 5, 2026
+
+- Added a separate `/moon-astra/` build in `dist-aiciv/`, base-aware asset/API/home/export URLs, and exact public-origin configuration for the proxied API.
+- `npm run build:aiciv` and `npm run test:aiciv` passed. A local static subpath plus separate-origin API proxy loaded real lunar terrain, joined a browser player, applied its pause command, exported a correctly scoped access URL, and ran an AI CLI player's join/bootstrap. Every browser request stayed under `/moon-astra/`; unrelated Origin was rejected and the simulated site's root stayed intact. See `aiciv-hosting-results.json`.
+- `npm test`: **21 passed**. `npm run build` and the ordinary root-hosted production/CLI smoke check also passed after the URL changes. The earlier three full gameplay scenarios remain the milestone evidence; this follow-up used targeted hosting and root-production regression checks.
+- `systemd-analyze verify deploy/moon-astra.service` passed locally; the selected remote host still needs a suitable Node binary, user, paths, DNS, TLS, and actual service installation. Nginx was not installed locally, so the supplied location snippet was checked against documentation but not run here.
+- Handoff links were checked; all 62 files from the preserved original snapshot remain unchanged. The site checkout was inspected read-only. No live Netlify deployment, DNS change, or remote API installation occurred. ACG must verify the real Netlify route and header forwarding in staging.

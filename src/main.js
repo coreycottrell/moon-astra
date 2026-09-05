@@ -10,6 +10,7 @@ import {TYPES} from './simulation.js';
 import {connectWorld,FACTORY} from './network.js';
 import {cellBoundary} from './claims.js';
 import {BLUEPRINT,UNIT,PROJECT_COST,PLANNER_WORK} from './shared-world.js';
+import {appPath,BASE_URL} from './urls.js';
 
 const $=id=>document.getElementById(id);
 const format=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
@@ -81,7 +82,7 @@ function renderColony(force=false){
     <section class="colony-box colony-wide"><h3>Work in motion</h3><p>${localJobs.length?localJobs.map(j=>`${escapeHTML(TYPES[j.type].name)} · ${j.remaining}s${c.paused?' (paused)':''}`).join(' / '):'No local construction queued.'}</p>${w.shipments.map(s=>`<p class="construction-job">${s.metal/UNIT} metal → ${s.project?'federation':escapeHTML(w.claims.find(x=>x.id===s.to).name)} · ${Math.max(0,s.arrivesAt-w.tick)}s to arrival</p>`).join('')}<div id="colony-events">${w.events.slice(-8).reverse().map(e=>`<div>T+${e.tick} · ${escapeHTML(e.message)}</div>`).join('')}</div></section>`;
   $('district-view').onclick=()=>{$('colony-dialog').close();setLocation(c.home,c.name,'district');};
   $('deploy-factory').onclick=()=>{$('colony-dialog').close();selectBuild('factory');};
-  $('access-export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({game:location.origin,player:sim.actor.name,token:sim.token},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='moon-private-player-access.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('colony-notice').textContent='Access exported. Whoever has this token can play as you.';};
+  $('access-export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({game:new URL(BASE_URL,location.origin).href,player:sim.actor.name,token:sim.token},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='moon-private-player-access.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('colony-notice').textContent='Access exported. Whoever has this token can play as you.';};
   $('contribute').onclick=()=>colonyCommand({action:'project.contribute',claimId:c.id,amount:Math.min(20,available)});
   document.querySelectorAll('[data-replicator]').forEach(el=>el.onchange=()=>colonyCommand({action:'replicator.configure',claimId:c.id,machineId:Number(el.dataset.replicator),mode:el.value}));
   document.querySelectorAll('[data-visit]').forEach(el=>el.onclick=()=>{const p=w.players.find(p=>p.id===el.dataset.visit);$('colony-dialog').close();setLocation(p.home,p.name+' · settlement');});
@@ -261,7 +262,7 @@ async function init(){
     const sun=new THREE.DirectionalLight(0xfffaf3,4.2);sun.position.set(-1800,1600,1100);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-180,right:180,top:180,bottom:-180,near:1,far:6000});sun.shadow.normalBias=.08;sun.shadow.bias=-.00008;scene.add(sun,sun.target);
     const starPositions=[];for(let i=0;i<1800;i++){const y=1-2*(i+.5)/1800,a=i*2.39996,r=Math.sqrt(1-y*y);starPositions.push(Math.cos(a)*r*45_000_000,y*45_000_000,Math.sin(a)*r*45_000_000);}
     const starsGeo=new THREE.BufferGeometry();starsGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));scene.add(new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xb8c6d1,size:1.05,sizeAttenuation:false,transparent:true,opacity:.45,depthWrite:false})));
-    [data,texture]=await Promise.all([LunarData.load(s=>$('loading-detail').textContent=s),new THREE.TextureLoader().loadAsync('/data/moon-color.webp')]);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+    [data,texture]=await Promise.all([LunarData.load(s=>$('loading-detail').textContent=s),new THREE.TextureLoader().loadAsync(appPath('data/moon-color.webp'))]);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
     ghostRing=new THREE.Mesh(new THREE.RingGeometry(6.6,6.72,64),new THREE.MeshBasicMaterial({color:0xf2bd80,side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false}));ghostRing.rotation.x=-Math.PI/2;ghostRing.visible=false;scene.add(ghostRing);
     sim.onBuild=m=>{addMachine(m);rebuildMarkers();};sim.message=message=>{toast(message);beep(760);};
     let claimCount=0;sim.onSnapshot=()=>{if(!frame)return;rebuildJobs();if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};

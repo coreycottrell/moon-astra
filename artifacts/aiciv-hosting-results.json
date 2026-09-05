@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "scope": "Local subpath and reverse-proxy simulation; live Netlify routing still needs ACG staging verification.",
+  "mount": "/moon-astra/",
+  "allBrowserRequestsStayedUnderMount": true,
+  "terrainAndWebGL": true,
+  "browserJoinAndCommandThroughProxy": true,
+  "agentJoinAndBootstrapThroughProxy": true,
+  "exportIncludesMount": true,
+  "foreignOriginRejected": true,
+  "existingRootUnaffected": true,
+  "errors": []
+}

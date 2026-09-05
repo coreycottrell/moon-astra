@@ -1,0 +1,9 @@
+# Merge these into the site's EXISTING _redirects, before broader matches.
+# Replace this hostname with the provisioned HTTPS API origin. Do not deploy the
+# placeholder hostname until its DNS, certificate, API, and health check work.
+/moon-astra/api/*  https://moon-astra-api.ai-civ.com/api/:splat  200!
+
+# Serve the directory entry with or without a slash; no redirect loop.
+/moon-astra  /moon-astra/index.html  200
+
+# Do not add a /* or /moon-astra/* SPA fallback. Missing assets should be 404s.

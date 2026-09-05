@@ -2,6 +2,8 @@
 
 Prepared September 5, 2026. This handoff describes the **civilization fork**, not the preserved static prototype.
 
+For the requested public URL, use the dedicated [ACG hosting instructions for ai-civ.com/moon-astra](docs/ACG-HOSTING-ai-civ.com.md). That deployment builds a separate `dist-aiciv/` client for the existing Netlify site and runs the persistent API on a Linux host. Templates are in `deploy/`; neither site publication nor remote installation has been performed here.
+
 ## Paths, Git, and isolation
 
 | Item | Location |
@@ -49,6 +51,7 @@ Environment options:
 | --- | --- |
 | `MOON_DB` | Absolute database path; defaults to `.world/world.sqlite` relative to project root |
 | `MOON_HOST` | API/production bind address; default `127.0.0.1` |
+| `MOON_PUBLIC_ORIGIN` | Optional exact browser origin through a reverse proxy, e.g. `https://ai-civ.com` (no path) |
 | `MOON_PORT` | Direct `npm run server` / production port; defaults 4176 / 4175 |
 | `MOON_WEB_PORT` | Vite frontend port; default 4175 |
 | `MOON_API_PORT` | `dev` API and proxy port; default 4176 |

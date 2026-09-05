@@ -1,4 +1,5 @@
 // All terrain, machines, and navigation use one Moon-centered coordinate system.
+import {appPath} from './urls.js';
 export const RADIUS = 1_737_400;
 export const SURFACE_AREA_KM2 = 4 * Math.PI * RADIUS ** 2 / 1e6;
 export const DEG = Math.PI / 180;
@@ -97,7 +98,7 @@ export class LunarData {
   point(d,detail=true) { const r=RADIUS+this.height(d,detail); return d.map(v=>v*r); }
   static async load(progress=()=>{}) {
     progress('Reading the lunar elevation map');
-    const [meta,response] = await Promise.all([fetch('/data/sources.json').then(r=>{if(!r.ok)throw Error('Lunar source metadata is missing');return r.json();}),fetch('/data/moon-height.u16.gz')]);
+    const [meta,response] = await Promise.all([fetch(appPath('data/sources.json')).then(r=>{if(!r.ok)throw Error('Lunar source metadata is missing');return r.json();}),fetch(appPath('data/moon-height.u16.gz'))]);
     if(!response.ok) throw Error('Lunar elevation map could not be loaded');
     // Some static servers attach Content-Encoding: gzip to .gz files. Browsers
     // then decode them automatically. Inspect the payload rather than decode twice.

@@ -9,6 +9,8 @@
 
 **Git branch:** `development/shared-world`. **Starting checkpoint:** tag `prototype-baseline`, commit `4469345`. The original project, its browser saves, and its server are separate. This fork does not import or overwrite the original save.
 
+**ACG hosting handoff:** [Deploy at ai-civ.com/moon-astra](docs/ACG-HOSTING-ai-civ.com.md). Includes the existing site's Netlify/Git workflow, a separate persistent API service, scoped routing templates, staging checks, and rollback. `npm run build:aiciv` creates the client in `dist-aiciv/`; `npm run test:aiciv` verifies subpath and proxy behavior locally. Publication is still for ACG to perform.
+
 ## Play the fork
 
 Requires Node **24.13 or newer in the 24.x series** (built-in SQLite), npm, and a WebGL browser.
