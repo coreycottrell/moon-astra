@@ -9,5 +9,7 @@
   "exportIncludesMount": true,
   "foreignOriginRejected": true,
   "existingRootUnaffected": true,
+  "galleryAndSixAnimatedModels": true,
+  "galleryMakesNoAPIRequests": true,
   "errors": []
 }

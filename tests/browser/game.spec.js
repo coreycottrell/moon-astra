@@ -3,7 +3,7 @@ import {randomUUID} from 'node:crypto';
 async function openGame(page,name){
   const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto('/');await page.locator('#callsign').fill(name);await page.locator('#join-submit').click();
-  await page.waitForFunction(()=>window.__moon,null,{timeout:60000});await expect(page.locator('#loading')).toBeHidden();return errors;
+  await page.waitForFunction(()=>window.__moon,null,{timeout:60000});await expect(page.locator('#loading')).toBeHidden();expect(await page.evaluate(()=>window.__moon.stats.machineAssets.length)).toBe(6);return errors;
 }
 async function build(page,name,east,north){
   await page.getByRole('button',{name:`Build ${name}`,exact:true}).click();
@@ -14,6 +14,8 @@ async function build(page,name,east,north){
   await page.keyboard.press('Escape');
 }
 test('browser construction, research, a partner delivery, factory programs, and saved identity',async({page,request})=>{
+  // Real research/freight clocks plus software-rendered models need room on CI.
+  test.setTimeout(360000);
   const errors=await openGame(page,'Surface builder');
   await page.getByRole('button',{name:'Pause settlement',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.__moon.state.claims[0].paused)).toBe(true);

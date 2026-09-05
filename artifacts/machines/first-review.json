@@ -1,0 +1,53 @@
+{
+  "info": [
+    {
+      "type": "seed",
+      "lineup": false,
+      "state": "working",
+      "drawCalls": 47,
+      "triangles": 33850,
+      "geometries": 25
+    },
+    {
+      "type": "solar",
+      "lineup": false,
+      "state": "working",
+      "drawCalls": 29,
+      "triangles": 29034,
+      "geometries": 38
+    },
+    {
+      "type": "miner",
+      "lineup": false,
+      "state": "working",
+      "drawCalls": 29,
+      "triangles": 54482,
+      "geometries": 51
+    },
+    {
+      "type": "refinery",
+      "lineup": false,
+      "state": "working",
+      "drawCalls": 29,
+      "triangles": 27010,
+      "geometries": 64
+    },
+    {
+      "type": "replicator",
+      "lineup": false,
+      "state": "working",
+      "drawCalls": 41,
+      "triangles": 26186,
+      "geometries": 83
+    },
+    {
+      "type": "compute",
+      "lineup": false,
+      "state": "working",
+      "drawCalls": 29,
+      "triangles": 31858,
+      "geometries": 96
+    }
+  ],
+  "errors": []
+}

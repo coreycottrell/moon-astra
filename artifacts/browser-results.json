@@ -2,11 +2,11 @@
   "config": {
     "argv": [
       "/home/corey/.nvm/versions/node/v24.13.1/bin/node",
-      "/home/corey/projects/moon-civilization/node_modules/.bin/playwright",
+      "/home/corey/projects/moon-machine-art/node_modules/.bin/playwright",
       "test"
     ],
-    "configFile": "/home/corey/projects/moon-civilization/playwright.config.js",
-    "rootDir": "/home/corey/projects/moon-civilization/tests/browser",
+    "configFile": "/home/corey/projects/moon-machine-art/playwright.config.js",
+    "rootDir": "/home/corey/projects/moon-machine-art/tests/browser",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -22,7 +22,7 @@
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "/home/corey/projects/moon-civilization/test-results",
+        "outputDir": "/home/corey/projects/moon-machine-art/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -30,7 +30,7 @@
         },
         "id": "",
         "name": "",
-        "testDir": "/home/corey/projects/moon-civilization/tests/browser",
+        "testDir": "/home/corey/projects/moon-machine-art/tests/browser",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -81,7 +81,7 @@
           "tags": [],
           "tests": [
             {
-              "timeout": 240000,
+              "timeout": 360000,
               "annotations": [],
               "expectedStatus": "passed",
               "projectId": "",
@@ -91,12 +91,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 217464,
+                  "duration": 253595,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T15:58:57.244Z",
+                  "startTime": "2026-09-05T18:26:03.807Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -125,12 +125,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 21478,
+                  "duration": 30052,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T16:02:35.038Z",
+                  "startTime": "2026-09-05T18:30:17.573Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -140,7 +140,7 @@
           ],
           "id": "8739d194ba1dcb8a2e3d-797c8b4e828694731ede",
           "file": "game.spec.js",
-          "line": 71,
+          "line": 73,
           "column": 1
         },
         {
@@ -159,12 +159,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5587,
+                  "duration": 9041,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T16:02:56.546Z",
+                  "startTime": "2026-09-05T18:30:47.651Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -174,7 +174,49 @@
           ],
           "id": "8739d194ba1dcb8a2e3d-eccdd4fa3c9e5b19c5e3",
           "file": "game.spec.js",
-          "line": 85,
+          "line": 87,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "machines.spec.js",
+      "file": "machines.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "all Blender machines render, animate, pause and survive repeated gallery switching",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 51896,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-05T18:30:56.725Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "758b413bd87eed00e5f9-7aa61cc780b885ff05cd",
+          "file": "machines.spec.js",
+          "line": 2,
           "column": 1
         }
       ]
@@ -182,9 +224,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-05T15:58:56.475Z",
-    "duration": 245847.032,
-    "expected": 3,
+    "startTime": "2026-09-05T18:26:02.487Z",
+    "duration": 346530.618,
+    "expected": 4,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

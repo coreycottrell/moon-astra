@@ -1,4 +1,5 @@
 node_modules/
+node_modules
 dist/
 test-results/
 playwright-report/
@@ -7,3 +8,5 @@ artifacts/*.log
 .world/
 .agent-access/
 dist-aiciv/
+art/blender/*.blend[0-9]
+artifacts/machines/*.log

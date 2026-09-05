@@ -52,5 +52,17 @@ try{
   for(const p of ['data/sources.json','data/moon-height.u16.gz','data/moon-color.webp','data/moon-map.webp','api/v1/join','api/v1/commands'])assert.ok(paths.includes(prefix+p),`Missing prefixed request: ${p}`);
   assert.deepEqual(errors,[]);assert.equal(await page.evaluate(()=>typeof window.__moon),'undefined');
   mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/aiciv-subpath.png'});
-  const report={status:'PASS',scope:'Local subpath and reverse-proxy simulation; live Netlify routing still needs ACG staging verification.',mount:prefix,allBrowserRequestsStayedUnderMount:true,terrainAndWebGL:true,browserJoinAndCommandThroughProxy:true,agentJoinAndBootstrapThroughProxy:true,exportIncludesMount:true,foreignOriginRejected:true,existingRootUnaffected:true,errors};writeFileSync('artifacts/aiciv-hosting-results.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+  // The new second entry point must load every model under the deployed base,
+  // and opening a studio preview must never create or command a game account.
+  const gallery=await browser.newPage(),galleryPaths=[],models=[];
+  gallery.on('pageerror',e=>errors.push(e.message));gallery.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  gallery.on('request',r=>{const u=new URL(r.url());if(u.origin===origin)galleryPaths.push(u.pathname);});
+  gallery.on('response',r=>{if(r.url().endsWith('.glb'))models.push({url:r.url(),status:r.status()});});
+  await gallery.goto(game+'machines.html');await gallery.waitForFunction(()=>document.getElementById('status').textContent==='LIVE MECHANICAL PREVIEW',null,{timeout:60000});
+  assert.equal(await gallery.locator('.model-tab').count(),6);assert.equal(await gallery.locator('#play-link').getAttribute('href'),prefix);
+  await gallery.locator('[data-type="replicator"]').click();await gallery.locator('#operation').selectOption('waiting');
+  assert.equal(await gallery.locator('#status').textContent(),'SUPERVISION NEEDED / MOTION HELD');
+  assert.equal(models.length,6);assert.ok(models.every(m=>m.status===200&&m.url.startsWith(game+'models/industrial-01/')));
+  assert.ok(galleryPaths.every(p=>p.startsWith(prefix)&&!p.includes('/api/')));assert.equal(await gallery.evaluate(()=>typeof window.__machineGallery),'undefined');assert.deepEqual(errors,[]);
+  const report={status:'PASS',scope:'Local subpath and reverse-proxy simulation; live Netlify routing still needs ACG staging verification.',mount:prefix,allBrowserRequestsStayedUnderMount:true,terrainAndWebGL:true,browserJoinAndCommandThroughProxy:true,agentJoinAndBootstrapThroughProxy:true,exportIncludesMount:true,foreignOriginRejected:true,existingRootUnaffected:true,galleryAndSixAnimatedModels:true,galleryMakesNoAPIRequests:true,errors};writeFileSync('artifacts/aiciv-hosting-results.json',JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
 }finally{if(browser)await browser.close();front.closeAllConnections();await new Promise(r=>front.close(r));if(app)await app.close();rmSync(temp,{recursive:true,force:true});}

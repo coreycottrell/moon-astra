@@ -13,6 +13,8 @@
 
 **Shared working notepad:** [Corey / Codex / ACG](SHARED-NOTEPAD.md). Read and update this file for the current task queue, deployment status, verified checkpoints and handoff notes. Its canonical shared location is `/home/corey/projects/moon-civilization/SHARED-NOTEPAD.md` on the tower.
 
+**Blender machinery:** [Explore the animated equipment gallery](http://localhost:4175/machines.html). All six machine types have detailed models, operating animations and lightweight distant representations. The in-game field guide and machine inspector also link to the gallery. [Editable Blender source, rebuilding and deployment notes](art/README.md).
+
 ## Play the fork
 
 Requires Node **24.13 or newer in the 24.x series** (built-in SQLite), npm, and a WebGL browser.

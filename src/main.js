@@ -3,6 +3,7 @@ import './ui.css';
 import './colony.css';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {LunarData,RADIUS,direction,coordinates,frameAt,normalize,distanceOnMoon,offsetPosition} from './geography.js';
 import {MoonTerrain} from './terrain.js';
 import {createMachine,positionMachine,animateMachine,createRocks,disposeMachine} from './machines.js';
@@ -13,6 +14,7 @@ import {BLUEPRINT,UNIT,PROJECT_COST,PLANNER_WORK,industryFor} from './shared-wor
 import {MIND,PRODUCTION} from './industry.js';
 import {appPath,BASE_URL} from './urls.js';
 import {factoryLayouts,nextObjective} from './guidance.js';
+import {loadMachineAssets,loadedMachineTypes} from './machine-assets.js';
 
 const $=id=>document.getElementById(id);
 const format=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
@@ -36,7 +38,7 @@ $('destinations').innerHTML=sites.map((s,i)=>`<button class="destination" data-s
 
 let sim,renderer,scene,camera,controls,data,terrain,frame,texture,rocks,ghost,ghostRing,markers;
 let mode='surface',selected=null,rotation=0,hover=null,inspected=null,tween=null,sound=false,audioContext,focusedLayout=null;
-let lastSave=0,lastUI=0,lastLod=0,now=0;
+let lastSave=0,lastUI=0,lastLod=0,now=0,lastFrame=0;
 let modelMap=new Map(),pointerDown=null,toastTimeout,claimLines,jobMarkers,placing=false;
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const screenVector=new THREE.Vector3();
@@ -46,7 +48,7 @@ function save(){if(!sim)return;sim.saveView();$('save-status').textContent=sim.c
 function localAt(loc){return new THREE.Vector3(...frame.toLocal(data.point(direction(loc.lat,loc.lon))));}
 function clearLayoutFocus(){focusedLayout=null;$('layout-labels').replaceChildren();}
 function focusLayout(id){
-  const layout=factoryLayouts(sim.state,sim.activeClaim.id).find(l=>l.id===id);if(!layout)return;
+  const layout=factoryLayouts(sim.state,sim.activeClaim.id).find(l=>l.id===id);if(!layout)return;$('inspect-model').href=appPath('machines.html?all=1');
   $('colony-dialog').close();setLocation(layout.center,`Production layout ${id}`);focusedLayout=layout;
   $('layout-labels').innerHTML=layout.parts.map(p=>`<div class="layout-label" data-layout-part="${p.id}">${escapeHTML(TYPES[p.type].name)}</div>`).join('');
   $('inspect').hidden=false;$('inspect-type').textContent=`PRODUCTION LAYOUT ${id}`;$('inspect-title').textContent='Three machines. One layout.';$('inspect-body').textContent='This is your balanced factory: solar power, a harvester, and a refinery. Add a replicator separately to automate construction.';
@@ -182,7 +184,7 @@ function updateGhost(){
   const definition=selected==='factory'?FACTORY:TYPES[selected];
   $('placement-text').textContent=reason||`Click to place ${definition.name.toLowerCase()} · ${definition.cost} metal`;
 }
-function inspectMachine(m){clearLayoutFocus();inspected=m;$('inspect').hidden=false;$('inspect-type').textContent=`GENERATION ${String(m.generation).padStart(2,'0')} · MACHINE ${String(m.id).padStart(3,'0')}`;$('inspect-title').textContent=TYPES[m.type].name;$('inspect-body').textContent=TYPES[m.type].description;}
+function inspectMachine(m){$('inspect-model').href=appPath(`machines.html?model=${m.type}`);clearLayoutFocus();inspected=m;$('inspect').hidden=false;$('inspect-type').textContent=`GENERATION ${String(m.generation).padStart(2,'0')} · MACHINE ${String(m.id).padStart(3,'0')}`;$('inspect-title').textContent=TYPES[m.type].name;$('inspect-body').textContent=TYPES[m.type].description;}
 function bind(){
   document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>selectBuild(b.dataset.build));
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setMode(b.dataset.view));
@@ -262,15 +264,22 @@ function updateUI(){
   }else $('marker-label').hidden=true;
 }
 function animate(time){
+  const delta=lastFrame?Math.min((time-lastFrame)/1000,.1):0;lastFrame=time;
   now=time;
   // Economic time belongs to the server, including when this browser is closed.
+  // Keep menus responsive even on software WebGL. Snapshots continue updating
+  // their contents while the obscured 3D scene holds its last rendered frame.
+  if($('colony-dialog').open||$('atlas-dialog').open||$('help-dialog').open){
+    if(time-lastUI>180){updateUI();lastUI=time;}
+    return;
+  }
   if(tween){const t=Math.min(1,(time-tween.start)/1100),e=t*t*(3-2*t);camera.position.lerpVectors(tween.fromPosition,tween.toPosition,e);controls.target.lerpVectors(tween.fromTarget,tween.toTarget,e);if(t===1)tween=null;}
   controls.update();
   // Keep a surface camera above the actual measured terrain, including steep crater walls.
   if(mode==='surface'&&!tween){const w=frame.toWorld(camera.position.toArray()),d=normalize(w),floor=RADIUS+data.height(d)+4;if(Math.hypot(...w)<floor)camera.position.fromArray(frame.toLocal(d.map(v=>v*floor)));}
   if(time-lastLod>200){terrain.update(camera);lastLod=time;}
   terrain.process(8);
-  for(const g of modelMap.values()){const m=g.userData.machine,i=claimIndustry(m.claimId),c=sim.state.claims.find(c=>c.id===m.claimId),active=!c.paused&&(!MIND.costs[m.type]||i.states[m.id]==='active');if(active)animateMachine(g,sim.world.elapsed,i.powerFactor*((m.type==='miner'||m.type==='refinery')?0.1:1));}
+  for(const g of modelMap.values()){const m=g.userData.machine,i=claimIndustry(m.claimId),c=sim.state.claims.find(c=>c.id===m.claimId),active=sim.connected&&!c.paused&&(!MIND.costs[m.type]||i.states[m.id]==='active');animateMachine(g,delta,{power:i.powerFactor,active,camera,progress:m.type==='replicator'?m.progress:undefined});}
   if(time-lastUI>180){updateUI();lastUI=time;}
   if(time-lastSave>4000){save();lastSave=time;}
   renderer.render(scene,camera);
@@ -280,13 +289,16 @@ async function init(){
     sim=await connectWorld();
     renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;$('scene').appendChild(renderer.domElement);
     scene=new THREE.Scene();scene.background=new THREE.Color(0x06090d);
+    const room=new RoomEnvironment(),pmrem=new THREE.PMREMGenerator(renderer);
+    scene.environment=pmrem.fromScene(room,.04).texture;scene.environmentIntensity=.45;room.dispose();pmrem.dispose();
     camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.3,80_000_000);
     controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.screenSpacePanning=false;controls.zoomSpeed=1.3;controls.rotateSpeed=.55;
     scene.add(new THREE.AmbientLight(0xc8d6e0,.65));
     const sun=new THREE.DirectionalLight(0xfffaf3,4.2);sun.position.set(-1800,1600,1100);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-180,right:180,top:180,bottom:-180,near:1,far:6000});sun.shadow.normalBias=.08;sun.shadow.bias=-.00008;scene.add(sun,sun.target);
     const starPositions=[];for(let i=0;i<1800;i++){const y=1-2*(i+.5)/1800,a=i*2.39996,r=Math.sqrt(1-y*y);starPositions.push(Math.cos(a)*r*45_000_000,y*45_000_000,Math.sin(a)*r*45_000_000);}
     const starsGeo=new THREE.BufferGeometry();starsGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));scene.add(new THREE.Points(starsGeo,new THREE.PointsMaterial({color:0xb8c6d1,size:1.05,sizeAttenuation:false,transparent:true,opacity:.45,depthWrite:false})));
-    [data,texture]=await Promise.all([LunarData.load(s=>$('loading-detail').textContent=s),new THREE.TextureLoader().loadAsync(appPath('data/moon-color.webp'))]);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+    const loaded=await Promise.all([LunarData.load(s=>$('loading-detail').textContent=s),new THREE.TextureLoader().loadAsync(appPath('data/moon-color.webp')),loadMachineAssets((n,total)=>$('loading-detail').textContent=`Preparing lunar machinery · ${n} / ${total}`)]);
+    [data,texture]=loaded;if(loaded[2].failed.length)toast('Some detailed models were unavailable. Using lightweight machinery.');texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
     ghostRing=new THREE.Mesh(new THREE.RingGeometry(6.6,6.72,64),new THREE.MeshBasicMaterial({color:0xf2bd80,side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false}));ghostRing.rotation.x=-Math.PI/2;ghostRing.visible=false;scene.add(ghostRing);
     sim.onBuild=m=>{addMachine(m);rebuildMarkers();};sim.message=message=>{toast(message);beep(760);};
     let claimCount=0,lastSnapshotTick=sim.state.tick;sim.onSnapshot=()=>{if(!frame)return;
@@ -298,7 +310,7 @@ async function init(){
     while(terrain.pending.length){terrain.process(12);await new Promise(resolve=>setTimeout(resolve,0));}
     updateUI();renderer.setAnimationLoop(animate);$('loading').classList.add('fade');setTimeout(()=>$('loading').hidden=true,750);
     // Read-only diagnostics for verification, never a second path for game mutations.
-    if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
+    if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power,machineAssets:loadedMachineTypes(),detailedMachines:[...modelMap.values()].filter(g=>g.userData.asset).length};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
   }catch(error){console.error(error);$('loading-detail').textContent=`Could not open this expedition: ${error.message}`;$('retry').hidden=false;$('retry').onclick=()=>location.reload();}
 }
 init();

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {direction,coordinates,noise} from './geography.js';
+import {instantiateMachine,isSharedGeometry,isSharedMaterial} from './machine-assets.js';
 const mat=(color,metalness=.4,roughness=.6)=>new THREE.MeshStandardMaterial({color,metalness,roughness});
 const white=mat(0xe5e1d7),dark=mat(0x252a30,.65),orange=mat(0xe3813d,.4),gold=mat(0x9b793b,.8),blue=mat(0x14364b,.75,.3),black=mat(0x101519),glass=new THREE.MeshStandardMaterial({color:0x85e4dc,emissive:0x46a99e,emissiveIntensity:.6,metalness:.4,roughness:.2});
 const unitBox=new THREE.BoxGeometry(1,1,1);
@@ -9,6 +10,14 @@ function cylinder(g,x,y,z,r1,r2,h,m=white,segments=12){const o=new THREE.Mesh(ne
 function beam(g,a,b,r=.12,m=dark){const aa=new THREE.Vector3(...a),bb=new THREE.Vector3(...b),o=cylinder(g,0,0,0,r,r,aa.distanceTo(bb),m,6);o.position.copy(aa).add(bb).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),bb.sub(aa).normalize());return o;}
 function solarPanel(g,x,z,scale=1){const pivot=new THREE.Group();pivot.position.set(x,1.9,z);pivot.rotation.z=-.22;g.add(pivot);box(pivot,0,0,0,4*scale,.15,5*scale,dark);for(let i=0;i<4;i++)for(let j=0;j<5;j++)box(pivot,(i-1.5)*.95*scale,.09,(j-2)*.95*scale,.89*scale,.05,.89*scale,blue);beam(g,[x,.2,z],[x,2,z]);return pivot;}
 export function createMachine(type) {
+  const asset=instantiateMachine(type);
+  if(!asset)return createFallbackMachine(type);
+  const g=new THREE.Group(),lod=new THREE.LOD();
+  lod.addLevel(asset.root,0);lod.addLevel(createFallbackMachine(type),260);
+  g.add(lod);g.userData.asset=asset;g.userData.lod=lod;g.userData.machineType=type;
+  return g;
+}
+function createFallbackMachine(type) {
   const g=new THREE.Group();g.userData.spinners=[];
   const size=type==='replicator'?8:type==='seed'?7:5;
   box(g,0,.05,0,size,.24,size,dark);
@@ -61,7 +70,10 @@ export function createMachine(type) {
 }
 export function disposeMachine(g,ownMaterials=false){
   const geometries=new Set(),materials=new Set();
-  g.traverse(o=>{if(o.isMesh){if(o.geometry!==unitBox)geometries.add(o.geometry);if(ownMaterials)materials.add(o.material);}});
+  g.traverse(o=>{
+    if(o.userData.asset){const a=o.userData.asset;a.mixer.stopAllAction();a.mixer.uncacheRoot(a.root);a.lights.forEach(m=>materials.add(m));}
+    if(o.isMesh){if(o.geometry!==unitBox&&!isSharedGeometry(o.geometry))geometries.add(o.geometry);if(ownMaterials)for(const m of Array.isArray(o.material)?o.material:[o.material])if(!isSharedMaterial(m))materials.add(m);}
+  });
   geometries.forEach(geo=>geo.dispose());materials.forEach(m=>m.dispose());g.removeFromParent();
 }
 export function positionMachine(object,m,data,frame) {
@@ -70,9 +82,24 @@ export function positionMachine(object,m,data,frame) {
   object.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(...frame.vectorToLocal(d)));
   object.rotateY(m.rotation);object.userData.machine=m;
 }
-export function animateMachine(g,t,power=1) {
-  for(const o of g.userData.spinners||[])o.rotation.y=t*power*.8;
-  if(g.userData.arm){g.userData.arm.position.x=Math.sin(t*power*.8)*2;g.userData.arm.position.z=Math.cos(t*power*.55)*1.8;}
+export function animateMachine(g,delta,{power=1,active=true,camera,progress}={}) {
+  const asset=g.userData.asset;
+  if(asset){
+    if(camera)g.userData.lod.update(camera);
+    const isNear=g.userData.lod.getCurrentLevel()===0;
+    const rate=active?Math.max(0,power):0;
+    asset.elapsed+=Math.min(Math.max(delta,0),.1)*rate;
+    if(isNear){asset.mixer.setTime(asset.elapsed);
+      if(asset.work&&progress!==undefined){asset.work.scale.y=Math.max(.08,Math.min(1,progress/24));asset.work.visible=progress>0;}
+    }
+    const glow=active?Math.max(.1,power):.035;
+    if(asset.glow!==glow){for(const m of asset.lights)m.emissiveIntensity=m.userData.ratedEmission*glow;asset.glow=glow;}
+    return;
+  }
+  if(!active)return;
+  const t=g.userData.animationTime=(g.userData.animationTime||0)+Math.min(delta,.1)*power;
+  for(const o of g.userData.spinners||[])o.rotation.y=t*.8;
+  if(g.userData.arm){g.userData.arm.position.x=Math.sin(t*.8)*2;g.userData.arm.position.z=Math.cos(t*.55)*1.8;}
   if(g.userData.ring)g.userData.ring.position.y=3.2+Math.sin(t*1.5)*.3;
   if(g.userData.work)g.userData.work.scale.y=.4+(g.userData.machine?.progress||0)/24;
 }
