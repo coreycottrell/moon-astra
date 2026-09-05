@@ -1,0 +1,1 @@
+Historical expectations from the Neighbors and browser-only prototypes, retained for reference. They are not part of the Foundry test suite; matching source is available in the parent commit 48c5ac5. Current tests are tests/foundry*.test.js and tests/browser/foundry.spec.js.

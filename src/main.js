@@ -1,6 +1,10 @@
 import './style.css';
 import './ui.css';
 import './colony.css';
+import './foundry/style.css';
+import {FoundryScene} from './foundry/scene.js';
+import {renderFoundryPanel} from './foundry/panel.js';
+import {ROBOTS,DESIGNS} from './foundry/catalog.js';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
@@ -37,6 +41,7 @@ $('waveform').innerHTML=Array.from({length:48},()=>'<i></i>').join('');
 $('destinations').innerHTML=sites.map((s,i)=>`<button class="destination" data-site="${i}"><strong>${s.name} ↗</strong><small>${coordText(s)}</small></button>`).join('');
 
 let sim,renderer,scene,camera,controls,data,terrain,frame,texture,rocks,ghost,ghostRing,markers;
+let foundryScene,inspectedRobotId=null,selectedProfile='balanced';
 let mode='surface',selected=null,rotation=0,hover=null,inspected=null,tween=null,sound=false,audioContext,focusedLayout=null;
 let lastSave=0,lastUI=0,lastLod=0,now=0,lastFrame=0;
 let modelMap=new Map(),pointerDown=null,toastTimeout,claimLines,jobMarkers,placing=false;
@@ -83,31 +88,15 @@ async function colonyCommand(command){
   finally{colonyBusy=false;renderColony(true);}
 }
 function renderColony(force=false){
-  if(!force&&(colonyBusy||document.activeElement?.matches('#colony-content select')))return;
-  const w=sim.state,c=sim.activeClaim,own=c.ownerId===sim.actor.id,unlocked=c.unlocks.includes('factory-plans'),canBuild=own||c.builders.includes(sim.actor.id);
-  const reserved=w.shipments.filter(s=>s.project&&s.ownerId===sim.actor.id).reduce((n,s)=>n+s.metal,0),contribution=w.project.contributions[sim.actor.id]||0,available=Math.max(0,(PROJECT_COST/2-contribution-reserved)/UNIT);
-  const localJobs=w.jobs.filter(j=>j.claimId===c.id),replicas=w.machines.filter(m=>m.claimId===c.id&&m.type==='replicator'),layouts=factoryLayouts(w,c.id);
-  const industry=claimIndustry(c.id);
-  $('colony-title').textContent=c.name;
-  $('colony-content').innerHTML=`
-    <section class="colony-box"><h3>Your place in the Moon</h3><p>${escapeHTML(c.id)} · ${c.areaKm2.toFixed(2)} km²</p><p>${escapeHTML(c.profile)}</p><p>${format.format(c.deposit/UNIT)} rock remains · ${c.yieldPerSecond/UNIT*60} rock/min per supervised harvester at full power</p><p>${resourceFormat.format(c.metal/UNIT)} metal · ${resourceFormat.format(c.rock/UNIT)} stored rock</p><p id="production-rates">Current output: ${resourceFormat.format(industry.harvestPerSecond/UNIT*60)} rock/min · ${resourceFormat.format(industry.refinePerSecond/UNIT*60)} metal/min</p><p>${own?'You own this settlement.':canBuild?'You have construction access here.':'Visit, learn, and ask the owner for construction access.'}</p><button id="district-view">View district ↗</button><button id="access-export">Export my access token ↓</button></section>
-    <section class="colony-box" id="mind-capacity"><h3>Mind capacity · ${industry.used} / ${industry.capacity} in use</h3><p>${industry.nodes} mind nodes · ${industry.requiredNodes} needed for the current workload</p><p>Each node supplies 4 capacity. Harvester: 1 · Refinery: 2 · Replicator: 4. Harvesters, then refineries, then replicators receive supervision; oldest first.</p><p>${industry.blockedIds.length?`${industry.blockedIds.length} machine(s) waiting for mind capacity. Build another node or switch a replicator Off.`:'All requested work has supervision.'} Power shortages slow supervised work and research together.</p>${w.machines.filter(m=>m.claimId===c.id&&MIND.costs[m.type]).map(m=>`<p>${escapeHTML(TYPES[m.type].name)} ${m.id} · ${machineStatus(m)}</p>`).join('')}<button id="add-mind" ${canBuild?'':'disabled'}>Place mind node · 35 metal</button></section>
-    <section class="colony-box"><h3>01 · Intelligence changes the plan</h3><p>${unlocked?'Factory plans are online. One instruction can now place a working production layout.':'Powered mind nodes research factory layouts and programmable replication.'}</p><progress value="${Math.min(c.thought,PLANNER_WORK)}" max="${PLANNER_WORK}"></progress><p>${Math.floor(c.thought/UNIT)} / ${PLANNER_WORK/UNIT} research work</p><button id="deploy-factory" class="factory-button" ${!unlocked||!canBuild?'disabled':''}>Place factory layout · 3 machines · 52 metal</button><p>Builds a solar array, harvester, and refinery. The three machines appear separately after 5–8 seconds. A replicator is a separate machine.</p></section>
-    <section class="colony-box colony-wide"><h3>Production layouts · ${layouts.length}</h3>${layouts.map(l=>`<div class="neighbor"><strong>Balanced factory layout ${l.id} · ${l.completed} / 3 machines complete</strong><small>Solar array + harvester + refinery</small><button data-show-layout="${l.id}">Show on terrain ↗</button></div>`).join('')||'<p>Your factory layouts will appear here, with a button to find their three machines on the terrain.</p>'}</section>
-    <section class="colony-box"><h3>02 · The first federation</h3><p>${w.project.complete?'Recursive factory designs are shared. Replicators can build replicators that inherit their program.':'Deliver a shared 120 metal. Each player can supply at most 60, so this capability needs a partner.'}</p><progress value="${Math.min(w.project.delivered,PROJECT_COST)}" max="${PROJECT_COST}"></progress><p>${w.project.delivered/UNIT} / 120 delivered · your share ${contribution/UNIT} delivered + ${reserved/UNIT} in transit</p><button id="contribute" ${!own||available<1||w.project.complete?'disabled':''}>Ship ${Math.min(20,available)} metal to federation</button><p>Freight travels at an abstract 50 m/s. Metal changes hands only on arrival.</p></section>
-    <section class="colony-box"><h3>03 · Tell a factory what to make</h3>${replicas.length?replicas.map(m=>`<div class="neighbor"><strong>Replicator ${m.id} · generation ${m.generation}</strong><small>${Math.floor(m.progress/UNIT)} / 24 powered seconds · ${m.mode==='off'?'awaiting a program':escapeHTML(TYPES[m.mode].name)}</small><select aria-label="Program replicator ${m.id}" data-replicator="${m.id}" ${!own||!unlocked?'disabled':''}>${['off',...buildOrder].map(type=>`<option value="${type}" ${m.mode===type?'selected':''} ${type==='replicator'&&!w.project.complete?'disabled':''}>${type==='off'?'Off':escapeHTML(TYPES[type].name)}</option>`).join('')}</select></div>`).join(''):'<p>Build a replicator on the surface, then give it a program after factory research.</p>'}<p>Replicators pay full machine costs and wait for power, metal, and free ground. Pause your settlement to stop its construction and production.</p></section>
-    <section class="colony-box colony-wide"><h3>Neighbors · ${w.players.length} / 24 settlements</h3>${w.players.filter(p=>p.id!==sim.actor.id).map(p=>{const other=w.claims.find(x=>x.id===p.homeClaimId);return `<div class="neighbor"><strong>${escapeHTML(p.name)}</strong><small>${escapeHTML(other.profile)} · ${(distanceOnMoon(c.home,p.home)/1000).toFixed(1)} km away · ${Math.floor(other.metal/UNIT)} metal</small><button data-visit="${p.id}">Visit ↗</button><button data-send="${other.id}" ${!own||other.id===c.id?'disabled':''}>Send 20 metal</button><button data-grant="${p.id}" ${!own?'disabled':''}>${c.builders.includes(p.id)?'Revoke':'Grant'} construction access</button></div>`;}).join('')||'<p>Your first neighbor could be a friend or an AI client. They join the same game address and use the same construction rules.</p>'}<p class="source-note">Granting access lets that player build using this settlement’s metal. Ownership, shipments, and factory programs remain yours.</p></section>
-    <section class="colony-box colony-wide"><h3>Work in motion</h3><p>${localJobs.length?localJobs.map(j=>`${escapeHTML(TYPES[j.type].name)} · ${j.remaining}s${c.paused?' (paused)':''}`).join(' / '):'No local construction queued.'}</p>${w.shipments.map(s=>`<p class="construction-job">${s.metal/UNIT} metal → ${s.project?'federation':escapeHTML(w.claims.find(x=>x.id===s.to).name)} · ${Math.max(0,s.arrivesAt-w.tick)}s to arrival</p>`).join('')}<div id="colony-events">${w.events.slice(-8).reverse().map(e=>`<div>T+${e.tick} · ${escapeHTML(e.message)}</div>`).join('')}</div></section>`;
-  $('district-view').onclick=()=>{$('colony-dialog').close();setLocation(c.home,c.name,'district');};
-  $('add-mind').onclick=()=>{$('colony-dialog').close();selectBuild('compute');};
-  $('deploy-factory').onclick=()=>{$('colony-dialog').close();selectBuild('factory');};
-  document.querySelectorAll('[data-show-layout]').forEach(b=>b.onclick=()=>focusLayout(Number(b.dataset.showLayout)));
-  $('access-export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({game:new URL(BASE_URL,location.origin).href,player:sim.actor.name,token:sim.token},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='moon-private-player-access.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('colony-notice').textContent='Access exported. Whoever has this token can play as you.';};
-  $('contribute').onclick=()=>colonyCommand({action:'project.contribute',claimId:c.id,amount:Math.min(20,available)});
-  document.querySelectorAll('[data-replicator]').forEach(el=>el.onchange=()=>colonyCommand({action:'replicator.configure',claimId:c.id,machineId:Number(el.dataset.replicator),mode:el.value}));
-  document.querySelectorAll('[data-visit]').forEach(el=>el.onclick=()=>{const p=w.players.find(p=>p.id===el.dataset.visit);$('colony-dialog').close();setLocation(p.home,p.name+' · settlement');});
-  document.querySelectorAll('[data-send]').forEach(el=>el.onclick=()=>colonyCommand({action:'shipment.send',claimId:c.id,toClaimId:el.dataset.send,amount:20}));
-  document.querySelectorAll('[data-grant]').forEach(el=>el.onclick=()=>colonyCommand({action:c.builders.includes(el.dataset.grant)?'claim.revoke':'claim.grant',claimId:c.id,playerId:el.dataset.grant}));
+  if(!force&&(colonyBusy||document.activeElement?.matches('#colony-content input,#colony-content select,#colony-content textarea')))return;
+  renderFoundryPanel($('colony-content'),{sim,command:colonyCommand,selectBuild,visit:setLocation,focus:focusFoundry,refresh:()=>renderColony(true),notice:s=>$('colony-notice').textContent=s,utilities:toggleUtilities});
+}
+function toggleUtilities(){foundryScene.showUtilities=!foundryScene.showUtilities;$('utilities-toggle').setAttribute('aria-pressed',String(foundryScene.showUtilities));foundryScene.sync(sim.state,data,frame,sim.world.view);toast(foundryScene.showUtilities?'Power and data routes visible. Buried corridors appear through the surface.':'Utility overlay hidden.');}
+function inspectRobot(r){inspected=null;inspectedRobotId=r.id;$('inspect').hidden=false;$('inspect-type').textContent=`ROBOT CREW / ${r.id}`;$('inspect-title').textContent=r.name;$('inspect-body').textContent=ROBOTS[r.role].description;$('inspect-model').href=appPath('machines.html?model='+ROBOTS[r.role].asset);}
+function focusFoundry(target,isRobot=false){
+  $('colony-dialog').close();setLocation(target,isRobot?target.name:target.type?TYPES[target.type].name:target.name);
+  camera.position.set(...(isRobot?[7,5,10]:[28,22,34]));controls.target.set(0,isRobot?.5:1,0);controls.minDistance=isRobot?2:8;controls.update();
+  if(isRobot)inspectRobot(target);else if(target.type&&sim.world.machines.some(m=>m.id===target.id))inspectMachine(target);
 }
 function nearbyMachine(m){return distanceOnMoon(m,sim.world.view)<4000;}
 function addMachine(m){
@@ -122,7 +111,7 @@ function rebuildMarkers(){
   markers=new THREE.Points(geo,new THREE.PointsMaterial({color:0xffc185,size:6,sizeAttenuation:false,depthTest:true}));markers.visible=mode!=='surface';scene.add(markers);
 }
 function setLocation(loc,name,requestedMode='surface'){
-  cancelBuild();clearLayoutFocus();inspected=null;$('inspect').hidden=true;
+  cancelBuild();clearLayoutFocus();inspected=null;inspectedRobotId=null;$('inspect').hidden=true;foundryScene?.reset();
   sim.world.view={lat:loc.lat,lon:loc.lon};
   sim.setView(loc);
   frame=frameAt(loc.lat,loc.lon,data.height(direction(loc.lat,loc.lon)));
@@ -130,7 +119,7 @@ function setLocation(loc,name,requestedMode='surface'){
   terrain.setBorders($('borders').getAttribute('aria-pressed')==='true');
   removeModels();sim.world.machines.forEach(addMachine);
   if(rocks){rocks.geometry.dispose();rocks.material.dispose();rocks.removeFromParent();}rocks=createRocks(data,frame);scene.add(rocks);
-  setMode(requestedMode,false);rebuildMarkers();rebuildClaims();rebuildJobs();
+  setMode(requestedMode,false);rebuildMarkers();rebuildClaims();rebuildJobs();foundryScene?.sync(sim.state,data,frame,sim.world.view);
   $('place-kicker').textContent=(name||locationName(loc)).toUpperCase();$('coordinates').textContent=coordText(loc);
   const x=(loc.lon+180)/360*100,y=(90-loc.lat)/180*100;
   for(const id of ['map-cross','atlas-cross']){$(id).style.left=x+'%';$(id).style.top=y+'%';}
@@ -152,7 +141,7 @@ function setMode(next,animate=true){
   if(animate)tween={start:performance.now(),fromPosition:camera.position.clone(),toPosition:position,fromTarget:controls.target.clone(),toTarget:target};
   else{tween=null;camera.position.copy(position);controls.target.copy(target);controls.update();}
   if(rocks)rocks.visible=mode==='surface';if(markers)markers.visible=mode!=='surface';
-  $('construction-hint').textContent=mode==='surface'?'Choose a machine. Give it a place.':'Click the Moon to descend and build.';
+  $('construction-hint').textContent=mode==='surface'?'Choose a site. Your crew will build it.':'Click the Moon to descend and build.';
   $('construction').classList.toggle('distant',mode!=='surface');
   if(terrain)terrain.update(camera,true);
 }
@@ -164,10 +153,10 @@ function pick(event){
   return {loc,point:exact,tile:hit.object.userData.tile};
 }
 function cancelBuild(){selected=null;hover=null;if(ghost){disposeMachine(ghost,true);ghost=null;}if(ghostRing)ghostRing.visible=false;$('placement-hint').hidden=true;$('cancel-build').hidden=true;renderer?.domElement.classList.remove('placing');document.querySelectorAll('[data-build]').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false');});}
-function selectBuild(type){
+function selectBuild(type,profile='balanced'){
   if(mode!=='surface')setMode('surface');
   if(selected===type){cancelBuild();return;}
-  cancelBuild();selected=type;rotation=0;
+  cancelBuild();selected=type;selectedProfile=profile;rotation=0;
   if(type==='factory'){ghost=new THREE.Group();for(const p of BLUEPRINT){const g=createMachine(p.type);g.position.set(p.east,0,-p.north);ghost.add(g);}}
   else ghost=createMachine(type);
   ghost.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.35;o.material.depthWrite=false;o.castShadow=false;}});ghost.visible=false;scene.add(ghost);
@@ -178,7 +167,7 @@ function selectBuild(type){
 }
 function updateGhost(){
   if(!selected||!hover)return;
-  const reason=sim.canBuild(selected,hover.loc);
+  const reason=sim.canBuild(selected,hover.loc,selectedProfile);
   positionMachine(ghost,{...hover.loc,rotation},data,frame);ghost.visible=true;
   ghostRing.position.copy(hover.point);ghostRing.position.y+=.35;ghostRing.visible=true;ghostRing.material.color.set(reason?0xef806a:0xefbd86);
   const definition=selected==='factory'?FACTORY:TYPES[selected];
@@ -224,10 +213,10 @@ function bind(){
     if(e.button!==0||!pointerDown)return;const movement=Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y);pointerDown=null;if(movement>6)return;
     const hit=pick(e);if(!hit)return;
     if(mode!=='surface'){setLocation(hit.loc);toast('Surface reached. Begin building here.');return;}
-    if(selected){if(placing)return;placing=true;const type=selected;try{const result=await sim.build(type,hit.loc,{rotation});if(result.ok){beep(640);toast(type==='factory'?'Layout supplied: solar, harvester, and refinery. Find them in Settlement → Production layouts.':`${TYPES[type].name} supplied. Construction is underway.`);save();if(selected&&hover)updateGhost();rebuildJobs();}else{toast(result.reason);beep(140);}}finally{placing=false;}return;}
-    raycaster.setFromCamera(pointer,camera);const machineHit=raycaster.intersectObjects([...modelMap.values()],true)[0];
-    if(machineHit){let o=machineHit.object;while(o&&!o.userData.machine)o=o.parent;if(o?.userData.machine)inspectMachine(o.userData.machine);}
-    else{$('inspect').hidden=true;inspected=null;clearLayoutFocus();}
+    if(selected){if(placing)return;placing=true;const type=selected;try{const result=await sim.build(type,hit.loc,{rotation,profile:selectedProfile});if(result.ok){beep(640);toast(type==='factory'?'Three construction sites reserved. Your crew will deliver and assemble each machine.':`${TYPES[type].name} reserved. Watch the crew deliver its supplies.`);save();if(selected&&hover)updateGhost();rebuildJobs();}else{toast(result.reason);beep(140);}}finally{placing=false;}return;}
+    raycaster.setFromCamera(pointer,camera);const machineHit=raycaster.intersectObjects([...modelMap.values(),...foundryScene.robots.values()],true)[0];
+    if(machineHit){let o=machineHit.object;while(o&&!o.userData.machine)o=o.parent;if(o?.userData.robot)inspectRobot(o.userData.robot);else if(o?.userData.machine){inspectedRobotId=null;inspectMachine(o.userData.machine);}}
+    else{$('inspect').hidden=true;inspected=null;inspectedRobotId=null;clearLayoutFocus();}
   });
   window.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});window.addEventListener('pagehide',save);
@@ -247,8 +236,12 @@ function updateUI(){
   $('mind-message').textContent=unlocked?'I can turn a working idea into a whole factory.':!minds?'A silent world. For now.':`${Math.floor(w.thought)} / 120 research. New capabilities are taking shape.`;
   if(industry.blockedIds.length){$('mind-state').textContent='CAPACITY NEEDED';$('mind-message').textContent=`${industry.blockedIds.length} machines need supervision. Add a mind node to bring them online.`;}
   [...$('waveform').children].forEach((bar,i)=>bar.style.height=(minds?3+Math.abs(Math.sin(i*.5+now*.001)*Math.cos(i*.19-now*.0007))*24:2)+'px');
-  for(const b of document.querySelectorAll('[data-build]')){b.classList.toggle('unaffordable',w.metal<TYPES[b.dataset.build].cost);b.querySelector('.cost').style.color=w.metal<TYPES[b.dataset.build].cost?'#aa8373':'';}
-  if(inspected){const definition=TYPES[inspected.type],cost=MIND.costs[inspected.type];$('inspect-progress').textContent=cost?`${machineStatus(inspected)} · ${cost} mind capacity · ${inspected.type==='replicator'?`${inspected.mode} · ${Math.floor(inspected.progress/24*100)}% · configure in Settlement`:inspected.type==='miner'?`${sim.state.claims.find(c=>c.id===inspected.claimId).yieldPerSecond/UNIT*60} rock/min rated`:`${PRODUCTION.refinery/UNIT*60} metal/min rated`}`:`${definition.power>0?'+':''}${definition.power} MW · ${inspected.type==='compute'?'4 mind capacity':'local claim grid'}`;}
+  for(const b of document.querySelectorAll('[data-build]')){const type=b.dataset.build,kits=sim.activeClaim.kits[type]||0,unaffordable=!kits&&(w.metal<TYPES[type].cost||sim.activeClaim.parts<TYPES[type].parts*UNIT);b.classList.toggle('unaffordable',unaffordable);b.querySelector('.cost').textContent=kits?`${kits} KIT${kits>1?'S':''}`:`◇ ${TYPES[type].cost} + ${TYPES[type].parts} parts`;}
+  const crew=sim.state.robots.filter(r=>r.claimId===sim.activeClaim.id),busy=crew.filter(r=>!['idle','paused'].includes(r.status)).length;
+  $('crew-hud-text').textContent=`${busy} / ${crew.length} crew working · ${industry.used} / ${industry.capacity} mind slots`;
+  $('crew-hud-text').classList.toggle('warning',industry.blockedIds.length>0||p.factor<1);
+  if(inspected){const current=sim.state.machines.find(m=>m.id===inspected.id)||inspected;const contents=Object.entries(current.inventory||{}).filter(([,n])=>n>0).map(([k,n])=>`${resourceFormat.format(n/UNIT)} ${k}`).join(' · ');$('inspect-progress').textContent=`${machineStatus(current)} · ${Math.round(current.condition/100)}% condition · ${current.design||'balanced'} design${contents?' · '+contents:''}`;}
+  if(inspectedRobotId){const r=sim.state.robots.find(r=>r.id===inspectedRobotId);if(r)$('inspect-progress').textContent=`${r.status.replaceAll('-',' ')} · ${Math.round(r.condition/100)}% condition · ${Math.round(r.distanceTravelled)} m traveled${r.cargo.length?' · carrying '+r.cargo.map(c=>`${c.amount/UNIT} ${c.item}`).join(', '):''}`;}
   if(focusedLayout){
     const parts=[...sim.state.machines,...sim.state.jobs],complete=new Set(sim.state.machines.map(m=>m.id));
     $('inspect-progress').textContent=`${focusedLayout.parts.filter(p=>complete.has(p.id)).length} / 3 machines complete · grouped production`;
@@ -279,7 +272,8 @@ function animate(time){
   if(mode==='surface'&&!tween){const w=frame.toWorld(camera.position.toArray()),d=normalize(w),floor=RADIUS+data.height(d)+4;if(Math.hypot(...w)<floor)camera.position.fromArray(frame.toLocal(d.map(v=>v*floor)));}
   if(time-lastLod>200){terrain.update(camera);lastLod=time;}
   terrain.process(8);
-  for(const g of modelMap.values()){const m=g.userData.machine,i=claimIndustry(m.claimId),c=sim.state.claims.find(c=>c.id===m.claimId),active=sim.connected&&!c.paused&&(!MIND.costs[m.type]||i.states[m.id]==='active');animateMachine(g,delta,{power:i.powerFactor,active,camera,progress:m.type==='replicator'?m.progress:undefined});}
+  for(const g of modelMap.values()){const m=g.userData.machine,i=claimIndustry(m.claimId),c=sim.state.claims.find(c=>c.id===m.claimId),active=sim.connected&&!c.paused&&i.states[m.id]==='active';animateMachine(g,delta,{power:i.powerFactor,active,camera,progress:m.type==='replicator'&&m.fabrication?m.fabrication.progress/(m.fabrication.seconds*UNIT)*24:undefined});}
+  foundryScene?.animate(delta,camera,sim.connected);
   if(time-lastUI>180){updateUI();lastUI=time;}
   if(time-lastSave>4000){save();lastSave=time;}
   renderer.render(scene,camera);
@@ -287,8 +281,8 @@ function animate(time){
 async function init(){
   try{
     sim=await connectWorld();
-    renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;$('scene').appendChild(renderer.domElement);
-    scene=new THREE.Scene();scene.background=new THREE.Color(0x06090d);
+    renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;$('scene').appendChild(renderer.domElement);
+    scene=new THREE.Scene();foundryScene=new FoundryScene(scene);scene.background=new THREE.Color(0x06090d);
     const room=new RoomEnvironment(),pmrem=new THREE.PMREMGenerator(renderer);
     scene.environment=pmrem.fromScene(room,.04).texture;scene.environmentIntensity=.45;room.dispose();pmrem.dispose();
     camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.3,80_000_000);
@@ -304,13 +298,13 @@ async function init(){
     let claimCount=0,lastSnapshotTick=sim.state.tick;sim.onSnapshot=()=>{if(!frame)return;
       // A requested campaign reset also removes the old world's rendered machines.
       if(sim.state.tick<lastSnapshotTick)setLocation(sim.world.view,locationName(sim.world.view),mode);
-      lastSnapshotTick=sim.state.tick;rebuildJobs();if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};
-    setLocation(sim.world.view,locationName(sim.world.view));resize();bind();
+      lastSnapshotTick=sim.state.tick;rebuildJobs();foundryScene.sync(sim.state,data,frame,sim.world.view);if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};
+    setLocation(sim.world.view,locationName(sim.world.view));resize();bind();$('utilities-toggle').onclick=toggleUtilities;$('crew-hud').onclick=()=>{$('colony-dialog').showModal();renderColony(true);};
     $('loading-detail').textContent='Stitching the first regions';
     while(terrain.pending.length){terrain.process(12);await new Promise(resolve=>setTimeout(resolve,0));}
     updateUI();renderer.setAnimationLoop(animate);$('loading').classList.add('fade');setTimeout(()=>$('loading').hidden=true,750);
     // Read-only diagnostics for verification, never a second path for game mutations.
-    if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power,machineAssets:loadedMachineTypes(),detailedMachines:[...modelMap.values()].filter(g=>g.userData.asset).length};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
+    if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power,machineAssets:loadedMachineTypes(),robots:foundryScene.robots.size,constructionSites:foundryScene.sites.size,detailedMachines:[...modelMap.values()].filter(g=>g.userData.asset).length};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
   }catch(error){console.error(error);$('loading-detail').textContent=`Could not open this expedition: ${error.message}`;$('retry').hidden=false;$('retry').onclick=()=>location.reload();}
 }
 init();

@@ -19,22 +19,13 @@ export function factoryLayouts(w,claimId){
 }
 export function nextObjective(w,c){
   const machines=w.machines.filter(m=>m.claimId===c.id),jobs=w.jobs.filter(j=>j.claimId===c.id);
-  if(c.paused)return {title:'Resume your settlement',body:'Use the pause button to resume production and finish construction. Your neighbors continue while you are paused.'};
-  const basics=[['compute','Bring your first mind online','Place a mind node · 35 metal. Its 4 capacity supervises harvesters (1 each), refineries (2), and replicators (4). It also researches new plans.'],['miner','Harvest your claim','Place a harvester to collect rock from your local deposit.'],['refinery','Give rock a purpose','Place a refinery to turn local rock into construction metal.'],['solar','Catch the sunlight','Place a solar array to power this settlement.']];
-  for(const [type,title,body] of basics)if(!machines.some(m=>m.type===type)){
-    const job=jobs.find(j=>j.type===type);return job?{title:'Construction is underway',body:`Your ${type==='compute'?'mind node':type==='miner'?'harvester':type} will finish in ${job.remaining} seconds. Its materials are already supplied.`}:{title,body};
-  }
-  const minds=mindFor(w,c.id);
-  if(minds.blockedIds.length){const pending=jobs.filter(j=>j.type==='compute');return {title:pending.length?'Mind capacity is being built':'Add mind capacity',body:`${minds.blockedIds.length} machine${minds.blockedIds.length===1?' is':'s are'} waiting for supervision. ${minds.nodes} / ${minds.requiredNodes} mind nodes needed for the current workload. ${pending.length?`${pending.length} node(s) under construction.`:'Build a mind node · 35 metal, or switch a replicator Off.'} Harvesting and refining get priority.`};}
-  if(!c.unlocks.includes('factory-plans'))return {title:'Teach your factories',body:`${Math.floor(c.thought/UNIT)} / ${PLANNER_WORK/UNIT} research work. Keep the mind nodes powered to unlock layouts and replication programs.`};
-  const replicas=machines.filter(m=>m.type==='replicator');
-  if(!replicas.length){const job=jobs.find(j=>j.type==='replicator');return job?{title:'Your replicator is being built',body:`${job.remaining} seconds remain. Then open Settlement and choose what it should manufacture.`}:{title:'Build your first replicator',body:'Choose Replicator below · 65 metal. A balanced factory is three production machines; a replicator adds automated construction.'};}
-  if(replicas.every(m=>m.mode==='off'))return {title:'Give your replicator a program',body:'Open Settlement → Tell a factory what to make. Choose an output such as Solar array; Off means it will wait.'};
-  if(!w.project.complete){
-    const delivered=w.project.contributions[c.ownerId]||0,reserved=w.shipments.filter(s=>s.project&&s.ownerId===c.ownerId).reduce((n,s)=>n+s.metal,0),remaining=Math.max(0,(PROJECT_COST/2-delivered-reserved)/UNIT);
-    if(remaining)return {title:'Complete your federation share',body:`Ship ${remaining} more metal from Settlement. Each player supplies at most 60; the federation needs 120 delivered to unlock replicators that copy themselves.`};
-    return {title:'Bring the federation online',body:`${w.project.delivered/UNIT} / 120 metal delivered. Your share is supplied; wait for shipments and your partners’ contributions.`};
-  }
-  if(!replicas.some(m=>m.mode==='replicator'))return {title:'Let a factory build factories',body:'The federation is online. Open Settlement and set a replicator’s output to Replicator. Its daughters inherit that program.'};
-  return {title:'Feed the growing factory network',body:'Daughter replicators need mind capacity, metal, power, and space. Add mind nodes, production layouts, and solar as the network grows.'};
+  if(c.paused)return {title:'Resume your settlement',body:'Your crew, production and research are paused. Your neighbors continue.'};
+  const basics=[['compute','Bring the first mind online','Place a prefabricated mind node. Watch a robot collect the kit and assemble it.'],['miner','Harvest your claim','Place the harvester kit. Rock collects in its own hopper until a robot carries it onward.'],['refinery','Make the first local metal','Place the refinery kit within a short haul of the harvester. Crew deliver its rock.'],['solar','Support the growing load','Place a solar kit to give the machines more power.'],['workshop','Keep the colony repairable','Open Settlement → Build and place the workshop kit. Manufacture parts, then service spares.']];
+  for(const [type,title,body] of basics)if(!machines.some(m=>m.type===type)){const j=jobs.find(j=>j.type===type);return j?{title:'A crew is building your '+(type==='compute'?'mind node':type),body:`Stage: ${j.phase}. ${j.crew.length} crew at the site. Open Settlement to inspect supplies, progress and routes.`}:{title,body};}
+  const minds=mindFor(w,c.id);if(minds.blockedIds.length)return {title:'Give industry more attention',body:`${minds.blockedIds.length} machines need supervision. Add a powered mind node or reduce the active crew budget.`};
+  if(!c.unlocks.includes('crew-production'))return {title:'Build the replacement loop',body:'Open Research. Factory planning → A repairable colony → Builders that build builders unlocks the robot foundry.'};
+  if(!machines.some(m=>m.type==='robotfactory'))return {title:'Make your first new robot',body:'Build a robot foundry. In Industry, order a Mason or Atlas; crew deliver its metal, parts and service spare.'};
+  if(!w.projects[0].complete)return {title:'Build something together',body:'Invite a neighbor. Deliver metal and parts to the first federation, then send crew to assemble it. Each settlement can supply at most 60%.'};
+  if(!c.unlocks.includes('reproduction'))return {title:'Make intelligence change the design',body:'Research connected districts, modular designs and heat management. Certify better machines, then research supported reproduction.'};
+  return {title:'A network that can reproduce',body:'Program a replicator to make replicators. Every daughter still needs a kit delivery, a construction crew, power, attention and maintenance.'};
 }

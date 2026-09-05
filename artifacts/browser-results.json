@@ -2,11 +2,11 @@
   "config": {
     "argv": [
       "/home/corey/.nvm/versions/node/v24.13.1/bin/node",
-      "/home/corey/projects/moon-machine-art/node_modules/.bin/playwright",
+      "/home/corey/projects/moon-foundry/node_modules/.bin/playwright",
       "test"
     ],
-    "configFile": "/home/corey/projects/moon-machine-art/playwright.config.js",
-    "rootDir": "/home/corey/projects/moon-machine-art/tests/browser",
+    "configFile": "/home/corey/projects/moon-foundry/playwright.config.js",
+    "rootDir": "/home/corey/projects/moon-foundry/tests/browser",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -22,7 +22,7 @@
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "/home/corey/projects/moon-machine-art/test-results",
+        "outputDir": "/home/corey/projects/moon-foundry/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -30,8 +30,10 @@
         },
         "id": "",
         "name": "",
-        "testDir": "/home/corey/projects/moon-machine-art/tests/browser",
-        "testIgnore": [],
+        "testDir": "/home/corey/projects/moon-foundry/tests/browser",
+        "testIgnore": [
+          "**/legacy/**"
+        ],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
@@ -63,25 +65,25 @@
     "workers": 1,
     "webServer": {
       "command": "node scripts/test-server.mjs",
-      "url": "http://127.0.0.1:4185/api/v1/health",
+      "url": "http://127.0.0.1:4215/api/v1/health",
       "reuseExistingServer": false,
       "timeout": 30000
     }
   },
   "suites": [
     {
-      "title": "game.spec.js",
-      "file": "game.spec.js",
+      "title": "foundry.spec.js",
+      "file": "foundry.spec.js",
       "column": 0,
       "line": 0,
       "specs": [
         {
-          "title": "browser construction, research, a partner delivery, factory programs, and saved identity",
+          "title": "a real terrain colony has animated crew, staged construction and usable management panels",
           "ok": true,
           "tags": [],
           "tests": [
             {
-              "timeout": 360000,
+              "timeout": 240000,
               "annotations": [],
               "expectedStatus": "passed",
               "projectId": "",
@@ -91,12 +93,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 253595,
+                  "duration": 45509,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T18:26:03.807Z",
+                  "startTime": "2026-09-05T22:31:44.807Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -104,13 +106,13 @@
               "status": "expected"
             }
           ],
-          "id": "8739d194ba1dcb8a2e3d-03d0916a2fd7bd5a7ab4",
-          "file": "game.spec.js",
-          "line": 16,
+          "id": "625210ce57cafbc2d2c8-fb8bdd827a0abd5ae302",
+          "file": "foundry.spec.js",
+          "line": 4,
           "column": 1
         },
         {
-          "title": "four zoom scales, orbit landing, atlas, and poles stay connected",
+          "title": "foundry gallery shows the four crew and new physical industry without errors",
           "ok": true,
           "tags": [],
           "tests": [
@@ -125,12 +127,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 30052,
+                  "duration": 13204,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T18:30:17.573Z",
+                  "startTime": "2026-09-05T22:32:30.472Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -138,13 +140,13 @@
               "status": "expected"
             }
           ],
-          "id": "8739d194ba1dcb8a2e3d-797c8b4e828694731ede",
-          "file": "game.spec.js",
-          "line": 73,
+          "id": "625210ce57cafbc2d2c8-416b652a834176eb100a",
+          "file": "foundry.spec.js",
+          "line": 41,
           "column": 1
         },
         {
-          "title": "phone layout supports joining, settlement controls, building, and atlas travel",
+          "title": "mobile management is readable without horizontal overflow",
           "ok": true,
           "tags": [],
           "tests": [
@@ -159,12 +161,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 9041,
+                  "duration": 5970,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T18:30:47.651Z",
+                  "startTime": "2026-09-05T22:32:43.693Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -172,21 +174,13 @@
               "status": "expected"
             }
           ],
-          "id": "8739d194ba1dcb8a2e3d-eccdd4fa3c9e5b19c5e3",
-          "file": "game.spec.js",
-          "line": 87,
+          "id": "625210ce57cafbc2d2c8-d03844915f208044d7d9",
+          "file": "foundry.spec.js",
+          "line": 47,
           "column": 1
-        }
-      ]
-    },
-    {
-      "title": "machines.spec.js",
-      "file": "machines.spec.js",
-      "column": 0,
-      "line": 0,
-      "specs": [
+        },
         {
-          "title": "all Blender machines render, animate, pause and survive repeated gallery switching",
+          "title": "a foreign backend is rejected before opening an account or sending saved credentials",
           "ok": true,
           "tags": [],
           "tests": [
@@ -201,12 +195,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 51896,
+                  "duration": 879,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T18:30:56.725Z",
+                  "startTime": "2026-09-05T22:32:49.675Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -214,9 +208,9 @@
               "status": "expected"
             }
           ],
-          "id": "758b413bd87eed00e5f9-7aa61cc780b885ff05cd",
-          "file": "machines.spec.js",
-          "line": 2,
+          "id": "625210ce57cafbc2d2c8-11b3754a8c6b5eac6f89",
+          "file": "foundry.spec.js",
+          "line": 53,
           "column": 1
         }
       ]
@@ -224,8 +218,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-05T18:26:02.487Z",
-    "duration": 346530.618,
+    "startTime": "2026-09-05T22:31:43.563Z",
+    "duration": 67183.147,
     "expected": 4,
     "skipped": 0,
     "unexpected": 0,

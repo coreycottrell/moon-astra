@@ -1,0 +1,16 @@
+{
+  "scope": "Synthetic flat-terrain load, directly seeded equipment and buffers; not a gameplay progression or production capacity guarantee.",
+  "settlements": 4,
+  "machines": 192,
+  "robots": 32,
+  "freight": 898,
+  "ticks": 120,
+  "tickMs": {
+    "p50": 3.2337800000000243,
+    "p95": 10.334955999999977,
+    "max": 37.411584000000005
+  },
+  "rssMB": 93.734375,
+  "worldBytes": 342367,
+  "runtime": "v24.13.1"
+}

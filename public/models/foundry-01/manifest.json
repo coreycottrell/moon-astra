@@ -1,0 +1,204 @@
+{
+  "version": "foundry-01",
+  "source": "art/blender/build_foundry_assets.py",
+  "units": "meters",
+  "fps": 24,
+  "models": {
+    "mason": {
+      "name": "MASON / Generalist builder",
+      "file": "mason.glb",
+      "triangles": 13532,
+      "rigs": [
+        "Suspended_chassis",
+        "Drive_wheel",
+        "Drive_wheel.001",
+        "Drive_wheel.002",
+        "Drive_wheel.003",
+        "Drive_wheel.004",
+        "Drive_wheel.005",
+        "Work_shoulder",
+        "Work_upper_arm",
+        "Work_forearm",
+        "Idle_sensor"
+      ],
+      "clips": [
+        "Idle",
+        "Travel",
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 857652,
+      "sha256": "fc9d18d19b3f14b699c5dfb208e3853ac7f470916bb98e20f183e2a618a47eb7"
+    },
+    "atlas": {
+      "name": "ATLAS / Cargo rover",
+      "file": "atlas.glb",
+      "triangles": 13120,
+      "rigs": [
+        "Suspended_chassis.001",
+        "Drive_wheel.006",
+        "Drive_wheel.007",
+        "Drive_wheel.008",
+        "Drive_wheel.009",
+        "Drive_wheel.010",
+        "Drive_wheel.011",
+        "Payload_crate",
+        "Idle_sensor.001"
+      ],
+      "clips": [
+        "Idle",
+        "Travel"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 846932,
+      "sha256": "972ad957f904952c91ddb22f4777b3d5d0a0fbdcddc82a86340928e90401cf6e"
+    },
+    "suture": {
+      "name": "SUTURE / Service crew",
+      "file": "suture.glb",
+      "triangles": 14100,
+      "rigs": [
+        "Suspended_chassis.002",
+        "Drive_wheel.012",
+        "Drive_wheel.013",
+        "Drive_wheel.014",
+        "Drive_wheel.015",
+        "Drive_wheel.016",
+        "Drive_wheel.017",
+        "Work_shoulder.001",
+        "Work_upper_arm.001",
+        "Work_forearm.001",
+        "Idle_sensor.002"
+      ],
+      "clips": [
+        "Idle",
+        "Travel",
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 913456,
+      "sha256": "76c3d6e077c65fc7505f9bb3c7ab986fd2100f03335436e5e313482ee2aea2c7"
+    },
+    "titan": {
+      "name": "TITAN / Heavy constructor",
+      "file": "titan.glb",
+      "triangles": 13444,
+      "rigs": [
+        "Suspended_chassis.003",
+        "Drive_wheel.018",
+        "Drive_wheel.019",
+        "Drive_wheel.020",
+        "Drive_wheel.021",
+        "Drive_wheel.022",
+        "Drive_wheel.023",
+        "Work_shoulder.002",
+        "Work_upper_arm.002",
+        "Work_forearm.002",
+        "Idle_sensor.003"
+      ],
+      "clips": [
+        "Idle",
+        "Travel",
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 871044,
+      "sha256": "489cd18c68431f15d350fc23591ccb7900a30210e3aa9ef4627baeeb5fee0c8e"
+    },
+    "depot": {
+      "name": "PORT / Freight depot",
+      "file": "depot.glb",
+      "triangles": 6360,
+      "rigs": [
+        "Work_stock_lift"
+      ],
+      "clips": [
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 426724,
+      "sha256": "4fb65cd03fc5909bb3584cf1d483fbe9656c460d58a8d7b7ce3e7cd186d3a07a"
+    },
+    "workshop": {
+      "name": "SUTURE / Service workshop",
+      "file": "workshop.glb",
+      "triangles": 6820,
+      "rigs": [
+        "Work_service_head"
+      ],
+      "clips": [
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 454968,
+      "sha256": "39a7411317a336eefe072968f6c13a4b9e8eddf4fe3b1f5275316d078f959ce0"
+    },
+    "robotfactory": {
+      "name": "GENESIS / Robot foundry",
+      "file": "robotfactory.glb",
+      "triangles": 11048,
+      "rigs": [
+        "Work_shoulder.003",
+        "Work_upper_arm.003",
+        "Work_forearm.003",
+        "Work_shoulder.004",
+        "Work_upper_arm.004",
+        "Work_forearm.004",
+        "Manufactured_part"
+      ],
+      "clips": [
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 688784,
+      "sha256": "ba0e73e974009a34d172db5b1779f41f929ed6df13fed4513fa83e93d7c74b6d"
+    },
+    "relay": {
+      "name": "NEXUS / Utility relay",
+      "file": "relay.glb",
+      "triangles": 7740,
+      "rigs": [
+        "Idle_dish"
+      ],
+      "clips": [
+        "Idle"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 276008,
+      "sha256": "3cd458b8f5fa8d390378f1bb1c2408b7f0a8690f42100b46a953200ec276f8ea"
+    },
+    "tunnel": {
+      "name": "MOLE / Utility bore",
+      "file": "tunnel.glb",
+      "triangles": 11848,
+      "rigs": [
+        "Work_cutterhead",
+        "Idle_sensor.004"
+      ],
+      "clips": [
+        "Idle",
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 680232,
+      "sha256": "07176062d01d4d951b1ee03350a8e76df12a647193e4e087b179857b2146d473"
+    },
+    "radiator": {
+      "name": "UMBRA / Radiator field",
+      "file": "radiator.glb",
+      "triangles": 8168,
+      "rigs": [
+        "Idle_thermal_wing",
+        "Idle_thermal_wing.001",
+        "Work_pump"
+      ],
+      "clips": [
+        "Idle",
+        "Work"
+      ],
+      "cycleSeconds": 12.0,
+      "bytes": 476068,
+      "sha256": "8f65c81db933ba87fdca7bb6fe494abfec136dd4a1a80aa7fec88c862d0aa765"
+    }
+  }
+}

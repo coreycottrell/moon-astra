@@ -1,0 +1,115 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0d171d"><title>MOON Foundry — from whitepaper to playable systems</title><style>*{box-sizing:border-box}body{margin:0;background:#0d171d;color:#d8e0dc;font:16px/1.8 system-ui,sans-serif}main{max-width:1060px;margin:auto;padding:55px 28px 100px}nav{display:flex;gap:25px;flex-wrap:wrap;margin-bottom:45px;font-size:13px}a{color:#e1b882}h1,h2{font-family:Georgia,serif;font-weight:400;line-height:1.2;color:#f0e9db}h1{font-size:clamp(36px,5vw,67px);max-width:850px;letter-spacing:-1.5px}h2{font-size:32px;margin-top:65px}h3{font-size:20px;margin-top:38px}p,li{max-width:850px}table{border-collapse:collapse;width:100%;display:block;overflow:auto;font-size:13px;line-height:1.65;margin:30px 0}th{color:#e1b882;background:#20312f}td,th{border:1px solid #34464a;padding:15px;text-align:left;min-width:170px}td:first-child{color:#ecd9bb}code{font:13px/1.7 monospace;color:#b8d8cb;overflow-wrap:anywhere}pre{padding:22px;background:#18252c;border:1px solid #34464a;border-radius:9px;overflow:auto}pre code{white-space:pre}img{display:block;max-width:100%;width:700px;margin:35px auto;border:1px solid #3d565c;border-radius:13px}strong{color:#f0dfc6}blockquote{margin:30px 0;padding:16px 25px;border-left:3px solid #cfaa75;background:#22312e}.stamp{font:11px monospace;letter-spacing:.15em;color:#91bfae}@media(max-width:600px){main{padding:30px 20px 70px}body{font-size:14px}table{font-size:12px}h2{font-size:27px}}</style></head><body><main><nav><a href="./">Play Foundry ↗</a><a href="phase.html">Available now / coming later</a><a href="agent-manual.html">Agent manual</a><a href="https://ai-civ.com/moon-astra-whitepaper/">Published whitepaper ↗</a></nav><p class="stamp">MOON / FOUNDRY / DEVELOPMENT EDITION · 2026-09-05</p><h1 id="moon-foundry-from-whitepaper-to-playable-systems">MOON Foundry — from whitepaper to playable systems</h1>
+<p>The published design is at <a href="https://ai-civ.com/moon-astra-whitepaper/">ai-civ.com/moon-astra-whitepaper</a>. Foundry is the next development fork of that vision. The current Neighbors game remains a separate world.</p>
+<p><strong>Three different things:</strong> the live game is at <a href="https://ai-civ.com/moon-astra/">moon-astra</a>; this Foundry preview runs locally on port 4205; the whitepaper describes the much larger destination. A proposal appearing in the whitepaper does not mean it is already shipped to either game.</p>
+<p><img alt="Mason builder, authored and rendered in Blender" src="images/foundry/mason.webp" /></p>
+<h2 id="what-is-in-the-foundry-fork">What is in the Foundry fork</h2>
+<table>
+<thead>
+<tr>
+<th>Whitepaper idea</th>
+<th>Foundry implementation</th>
+<th>What remains beyond this phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Protect the current game</td>
+<td>Separate checkout, branch, database, browser identity, ports, and verified pre-fork backup</td>
+<td>Production promotion after playtesting</td>
+</tr>
+<tr>
+<td>A quick beginning that becomes physical industry</td>
+<td>Four landing robots and seven prefabricated kits; later construction reserves full metal and component bills</td>
+<td>A tuned multi-day campaign with authored chapter pacing</td>
+</tr>
+<tr>
+<td>Construction you can watch</td>
+<td>Supply → prepare → assemble → connect → commission; physical cargo, work sites, limited crew and visible progress</td>
+<td>Excavation geometry, cranes, terrain grading and detailed building interiors</td>
+</tr>
+<tr>
+<td>Robot crews</td>
+<td>Mason, Atlas, Suture and Titan; travel, work and sensor animation; footprints, pathfinding, yielding and parking</td>
+<td>Wheel-soil physics, articulated walking, arbitrary robot assemblies</td>
+</tr>
+<tr>
+<td>Located materials</td>
+<td>Inventory at each machine; cargo packets reserved once and carried to their destination</td>
+<td>Continuous conveyors, fluid networks, mass drivers and deep storage throughput models</td>
+</tr>
+<tr>
+<td>Maintenance and replacement</td>
+<td>Wear, service spares, service travel, foundry queues and manufactured new chassis</td>
+<td>Component-level failure modes, cannibalization and destructive accidents</td>
+</tr>
+<tr>
+<td>Avoid an unrecoverable start</td>
+<td>Lander attention reserve and slow reconditioning of an exhausted idle robot</td>
+<td>Formal proof of recovery from every possible player-created layout</td>
+</tr>
+<tr>
+<td>Minds change capability</td>
+<td>Eight research capabilities, supervision costs, supported mind nodes, crew budgets and heat limits</td>
+<td>Actual model inference inside the simulation, distributed research markets and emergent design discovery</td>
+</tr>
+<tr>
+<td>New machine designs</td>
+<td>Bounded profiles with material, throughput and wear tradeoffs; certification and physical retrofits</td>
+<td>Freeform machine engineering, topology search, experimentally certified CAD</td>
+</tr>
+<tr>
+<td>Neighbors build together</td>
+<td>Claim permissions, cargo deliveries, crew loans, a shared board, three staged common projects</td>
+<td>Contracts with escrow, diplomacy, elected institutions and multi-world federations</td>
+</tr>
+<tr>
+<td>Underground infrastructure</td>
+<td>A supplied bore excavates measured corridor length, consumes liners, produces spoil and connects utilities</td>
+<td>Navigable underground volumes, soil mechanics, utility separation and underground freight</td>
+</tr>
+<tr>
+<td>Factories reproduce</td>
+<td>Fabricated machine kits create physical construction jobs; daughters require freight, crews and operating support</td>
+<td>A closed semiconductor/tooling supply chain, autonomous new landings, planetary-scale reproduction</td>
+</tr>
+<tr>
+<td>A playground for AICIVs</td>
+<td>Authenticated observation, preview and command APIs; scoped expiring agent tokens, durable allowances, receipts, audit and deterministic gym scripts</td>
+<td>Reward hosting, tournaments, arbitrary third-party agent execution and model training infrastructure</td>
+</tr>
+<tr>
+<td>Operator visibility</td>
+<td>Tick, queues, persistence latency, process memory, world size, blocked crews and limits</td>
+<td>Production capacity commitments, multi-process simulation and hosted dashboards</td>
+</tr>
+<tr>
+<td>The Moon as one place</td>
+<td>Existing lunar sphere, measured macro terrain, stitched tiles, surface-to-orbit view and geographic claims</td>
+<td>Planetary industrial LOD simulation and the final days of exponential Moon-wide conversion</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-new-equipment">The new equipment</h2>
+<p><img alt="Atlas cargo rover" src="images/foundry/atlas.webp" /></p>
+<p>Mason is the generalist builder. Atlas carries larger loads. Suture fetches spares and services the colony. Titan is a heavier construction chassis unlocked by design research. These are actual exported Blender models with separate mechanical animations, used by the game renderer.</p>
+<p>The supporting collection adds a service workshop, freight depot, robot foundry, utility relay, utility bore and radiator field. The original six animated machines are retained. Open the <a href="machines.html?model=mason">rotating equipment collection</a> to inspect all sixteen assets.</p>
+<p><img alt="Robot foundry" src="images/foundry/robotfactory.webp" /></p>
+<h2 id="what-to-try-first">What to try first</h2>
+<ol>
+<li>Place the mind-node kit, then the harvester and refinery kits close enough for short trips.</li>
+<li>Add solar. Watch the crew collect cargo from the seed and move through the construction stages.</li>
+<li>Open <strong>Settlement → Build</strong> and place the service workshop. In Industry, choose parts or spares.</li>
+<li>Research factory planning, the repairable colony, and robot production. Construct a robot foundry and order a new chassis.</li>
+<li>Bring a friend into this preview. Use Together to request help, send materials, and build the first federation.</li>
+<li>Research better designs and thermal support. Reproduction is the last capability gate in this phase, not a free-resource multiplier.</li>
+</ol>
+<p>The simulation uses one-second world ticks. Harvesting remains 18–24 rock/min; a fully supplied refinery makes 6 metal/min. Construction time depends on actual freight and crew work. The displayed resource and power units are gameplay quantities, not a validated lunar engineering model.</p>
+<h2 id="where-this-fits-in-the-rollout">Where this fits in the rollout</h2>
+<p>The whitepaper’s readable-industry, first-crew, maintenance and neighbor chapters are the center of this fork. It also includes bounded design experiments, a simplified utility-bore system and supported machine replication so those systems can be tested together.</p>
+<p>The planetary endgame is still a proposal. This version supports 24 settlements, 256 robots, 1,000 machines plus construction sites, and construction within 900 m of each lander. These are admission limits, not a claim that every possible layout at those limits will meet a performance target. The release notes report the scenarios actually measured.</p>
+<p><a href="./">Play this Foundry preview</a> · <a href="agent-manual.html">Agent manual</a> · <a href="https://ai-civ.com/moon-astra-whitepaper/">Published whitepaper</a></p>
+<h2 id="what-we-actually-verified">What we actually verified</h2>
+<p><img alt="Measured progression of two isolated test colonies" src="images/foundry/gym-progress.png" /></p>
+<p>Two deterministic agent policies reached second-generation machine replication in <strong>7 h 3 min 10 s of simulated time</strong> using ordinary landing supplies and the same construction commands exposed to players. They assembled the first federation, manufactured two additional robots, installed 28 additional machines, and performed 44 repairs. The final world contained 30 machines and 10 robots.</p>
+<p>This run used flat terrain and accelerated execution of the normal one-second rules; it took about 14 seconds of compute time. It proves that this particular industry and cooperation path can complete without resource gifts. Separate browser checks exercised construction on the actual lunar terrain, the orbit transition, the new animated assets, and mobile management. Neither test establishes a tuned multi-day campaign or planetary capacity.</p>
+<p>A separate synthetic load probe with 192 machines and 32 robots measured a 10.3 ms simulation-tick latency at the 95th percentile on this tower. It excluded persistence, networking and rendering. Congestion still matters: the completed two-colony run had one robot reporting a movement wait at its final snapshot. These measurements are recorded in the release artifacts so future changes can be compared against them.</p></main></body></html>

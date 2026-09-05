@@ -3,18 +3,20 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {appPath} from './urls.js';
 
 export const MACHINE_TYPES=['seed','solar','miner','refinery','replicator','compute'];
+export const FOUNDRY_TYPES=['mason','atlas','suture','titan','depot','workshop','robotfactory','relay','tunnel','radiator'];
+const ALL_TYPES=[...MACHINE_TYPES,...FOUNDRY_TYPES];
 const templates=new Map(),sharedGeometry=new WeakSet(),sharedMaterials=new WeakSet();
 let loading;
 export function loadMachineAssets(onProgress=()=>{}){
   if(loading)return loading;
   let done=0;const loader=new GLTFLoader();
-  loading=Promise.allSettled(MACHINE_TYPES.map(async type=>{
+  loading=Promise.allSettled(ALL_TYPES.map(async type=>{
     // Versioned folder makes the art release safe for cached and older open tabs.
-    const gltf=await loader.loadAsync(appPath(`models/industrial-01/${type}.glb`));
+    const gltf=await loader.loadAsync(appPath(`models/${FOUNDRY_TYPES.includes(type)?'foundry-01':'industrial-01'}/${type}.glb`));
     if(!gltf.scene||!gltf.animations.length)throw Error(`${type}: missing model or animation`);
     gltf.scene.traverse(o=>{if(o.isMesh){sharedGeometry.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])sharedMaterials.add(m);o.castShadow=true;o.receiveShadow=true;}});
-    templates.set(type,gltf);onProgress(++done,MACHINE_TYPES.length);
-  })).then(results=>({loaded:[...templates.keys()],failed:results.flatMap((r,i)=>r.status==='rejected'?[MACHINE_TYPES[i]]:[])}));
+    templates.set(type,gltf);onProgress(++done,ALL_TYPES.length);
+  })).then(results=>({loaded:[...templates.keys()],failed:results.flatMap((r,i)=>r.status==='rejected'?[ALL_TYPES[i]]:[])}));
   return loading;
 }
 export function instantiateMachine(type){
@@ -27,8 +29,8 @@ export function instantiateMachine(type){
     });o.material=Array.isArray(o.material)?materials:materials[0];
   }});
   const mixer=new THREE.AnimationMixer(root);
-  for(const clip of template.animations)mixer.clipAction(clip).play();
-  return {root,mixer,lights:[...lights.values()],work:root.getObjectByName('Manufactured_part'),elapsed:0};
+  const actions={};for(const clip of template.animations){const action=mixer.clipAction(clip);actions[clip.name]=action;action.play();}
+  return {root,mixer,actions,lights:[...lights.values()],work:root.getObjectByName('Manufactured_part'),elapsed:0};
 }
 export function isSharedGeometry(g){return sharedGeometry.has(g);}
 export function isSharedMaterial(m){return sharedMaterials.has(m);}

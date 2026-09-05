@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "mount": "/moon-foundry/",
+  "checks": [
+    "compiled game and proxied identity",
+    "16-model gallery and Titan",
+    "whitepaper cross-reference page",
+    "agent manual",
+    "extensionless document paths"
+  ],
+  "errors": [],
+  "badResponses": []
+}

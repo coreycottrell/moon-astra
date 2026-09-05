@@ -10,6 +10,7 @@ artifacts/*.log
 dist-aiciv/
 art/blender/*.blend[0-9]
 artifacts/machines/*.log
+artifacts/foundry/gym-checkpoint.json
 
 # Rollback capture of a previous FRONTEND deploy (2026-09-05, web-frontend-lead).
 # The .tar.gz is ~32 MB and is 94% the terrain file, which is already tracked in

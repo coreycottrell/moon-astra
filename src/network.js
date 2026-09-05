@@ -1,15 +1,18 @@
 import {TYPES} from './simulation.js';
 import {cellAt,validLocation} from './claims.js';
 import {distanceOnMoon,offsetPosition} from './geography.js';
-import {UNIT,BLUEPRINT} from './shared-world.js';
+import {UNIT,BLUEPRINT,preview} from './shared-world.js';
+import {DESIGNS} from './foundry/catalog.js';
 import {appPath} from './urls.js';
-const ACCESS='moon-civilization-access-v1',VIEW='moon-civilization-view-v1';
+const ACCESS='moon-foundry-access-v1',VIEW='moon-foundry-view-v1';
 export const FACTORY={name:'Factory layout (3 machines)',cost:52,description:'Builds a solar array, harvester, and refinery together. Add a replicator separately for automated construction.'};
 export async function request(path,{token,body,key}={}){
   const response=await fetch(appPath('api/v1/'+path),{method:body===undefined?'GET':'POST',headers:{...(token?{Authorization:`Bearer ${token}`}:{ }),...(body!==undefined?{'Content-Type':'application/json'}:{}),...(key?{'Idempotency-Key':key}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const value=await response.json();if(!response.ok){const e=new Error(value.message||value.error||'World service unavailable');e.status=response.status;e.code=value.error;throw e;}return value;
 }
 export async function connectWorld(){
+  const catalog=await request('catalog');
+  if(catalog.ruleset!=='moon-foundry-1')throw Error('This address is connected to a different Moon world. Foundry needs its own backend; no account was opened.');
   let access;try{access=JSON.parse(localStorage.getItem(ACCESS));}catch{}
   if(access?.token){try{return new NetworkSimulation(access.token,await request('observe',{token:access.token}));}catch(e){if(e.status!==401)throw e;}}
   const dialog=document.getElementById('join-dialog');dialog.showModal();dialog.addEventListener('cancel',e=>e.preventDefault());
@@ -40,7 +43,7 @@ export class NetworkSimulation{
   get power(){return this.state.powers[this.activeClaim.id];}
   get paused(){return this.activeClaim.paused;}
   setView(view){this.world.view=view;this.sync();}
-  sync(){const c=this.activeClaim;Object.assign(this.world,{version:2,metal:c.metal/UNIT,rock:c.rock/UNIT,thought:c.thought/UNIT,elapsed:this.state.tick,replications:c.replications,paused:c.paused,claimId:c.id,actorId:this.actor.id});}
+  sync(){const c=this.activeClaim;Object.assign(this.world,{version:3,metal:c.metal/UNIT,rock:c.rock/UNIT,thought:c.thought/UNIT,elapsed:this.state.tick,replications:c.replications,paused:c.paused,claimId:c.id,actorId:this.actor.id});}
   apply(state,notify=true){
     const oldIds=new Set(this.world.machines.map(m=>m.id)),oldMap=new Map(this.world.machines.map(m=>[m.id,m]));
     const previous=this.state?.sequence||0;this.state=state;
@@ -59,20 +62,13 @@ export class NetworkSimulation{
     }
     await this.refresh();return result;
   }
-  canBuild(type,loc){
-    const c=this.activeClaim,definition=type==='factory'?FACTORY:TYPES[type];
+  canBuild(type,loc,profile='balanced'){
     if(!this.connected)return 'Reconnect to the world before building';
-    if(!definition)return 'Choose a machine';
-    if(c.ownerId!==this.actor.id&&!c.builders.includes(this.actor.id))return 'Ask this settlement for construction access';
-    if(type==='factory'&&!c.unlocks.includes('factory-plans'))return 'Mind nodes unlock factory plans at 120 research work';
-    if(c.metal<definition.cost*UNIT)return `The local depot needs ${Math.ceil(definition.cost-c.metal/UNIT)} more metal`;
-    const locations=type==='factory'?BLUEPRINT.map(p=>offsetPosition(loc.lat,loc.lon,p.east,p.north)):[loc];
-    for(const p of locations){if(cellAt(p)!==c.id)return 'Build inside this settlement boundary';if([...this.world.machines,...this.state.jobs].some(m=>distanceOnMoon(p,m)<12))return 'Leave 12 m around machines and construction sites';}
-    return null;
+    try{preview(this.state,this.actor.id,{action:type==='factory'?'blueprint.deploy':'build.place',claimId:this.activeClaim.id,...(type==='factory'?{}:{type,profile}),...loc});return null;}catch(e){return e.message;}
   }
-  async build(type,loc,{rotation=0}={}){
-    const reason=this.canBuild(type,loc);if(reason)return {ok:false,reason};
-    try{const result=await this.command({action:type==='factory'?'blueprint.deploy':'build.place',claimId:this.activeClaim.id,...(type==='factory'?{}:{type,rotation}),...loc,maxMetal:(type==='factory'?FACTORY:TYPES[type]).cost});return {ok:true,...result};}catch(e){return {ok:false,reason:e.message};}
+  async build(type,loc,{rotation=0,profile='balanced'}={}){
+    const reason=this.canBuild(type,loc,profile);if(reason)return {ok:false,reason};
+    try{const result=await this.command({action:type==='factory'?'blueprint.deploy':'build.place',claimId:this.activeClaim.id,...(type==='factory'?{}:{type,rotation,profile}),...loc,maxMetal:(type==='factory'?FACTORY:TYPES[type]).cost*DESIGNS[profile].cost});return {ok:true,...result};}catch(e){return {ok:false,reason:e.message};}
   }
   async setPaused(paused){await this.command({action:'claim.pause',claimId:this.activeClaim.id,paused});}
   saveView(){try{localStorage.setItem(VIEW,JSON.stringify(this.world.view));}catch{}}
