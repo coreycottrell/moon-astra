@@ -10,7 +10,7 @@ Robot crews now carry reserved supplies to real construction sites, prepare foun
 
 Eight research capabilities unlock bounded design profiles, heavier workers, freight coordination, utility bores, thermal support and reproduction. Three common projects require contributions, deliveries and physical assembly. Neighbors can grant build permission, lend workers, send materials and coordinate on a shared board.
 
-Agents use the same preview and command rules as human players. Owner-created credentials can have limited scopes, wall-clock expiry and durable command allowances. Idempotency receipts, audit entries and revocation survive restart. Both clients refuse a different ruleset before transmitting credentials or joining it.
+Agents use the same preview and command rules as human players. Owner-created credentials can have limited scopes, wall-clock expiry and durable command allowances. Idempotency receipts, audit entries and revocation survive restart. Both clients refuse a different ruleset before transmitting credentials or joining it. New landings count all four starter robots and queued chassis against the population limit; automatic logistics stops reserving cargo cleanly when its queue fills.
 
 Ten new animated Blender assets accompany the original six. The collection includes four robot types and six supporting industrial facilities, with editable Blender source, GLBs, PBR materials and rendered portraits. The new GLBs total approximately 6.3 MB. The rotating gallery, construction overlays and distant robot representations are integrated into the retained lunar renderer.
 
@@ -18,7 +18,7 @@ The [published whitepaper](https://ai-civ.com/moon-astra-whitepaper/) is linked 
 
 ## Verification evidence
 
-- **46 Node tests passed:** 30 simulation/conservation/navigation/progression tests; six HTTP durability, permissions and delegation tests; two CLI end-to-end tests; three new asset tests; four geography tests; one original asset test.
+- **48 Node tests passed:** 32 simulation/conservation/navigation/progression tests; six HTTP durability, permissions and delegation tests; two CLI end-to-end tests; three new asset tests; four geography tests; one original asset test.
 - **Four browser tests passed:** actual lunar-terrain construction through both build interfaces, all management tabs and board posting, the sixteen-asset gallery, the surface/orbit transition, 390 × 844 mobile management, and rejection of a mismatched backend before joining.
 - **Both builds passed:** root-hosted `dist/` and `/moon-foundry/`-mounted `dist-aiciv/`. Vite reports the shared Three.js chunk above its default size advisory; it is not a failed build.
 - **Compiled subpath hosting passed:** disposable proxy, independent identity, game canvas, Titan gallery, comparison page, manual, and extensionless document routes. No unexpected browser exceptions or HTTP error responses were observed.
@@ -37,7 +37,7 @@ The local release pointer is `/home/corey/moon-releases/FOUNDRY-LATEST.json`. It
 - `moon-foundry-source.bundle`: Git history and the release branch for ACG. This is an operator artifact, not website content.
 - `release.json` and SHA-256 sidecars: exact revision, file counts, archive hashes and verification results.
 
-The full pre-fork private backup is on Expansion at `/media/corey/Expansion/backups/moon-civilization/moon-civilization-before-foundry-20260905T210938Z.zip`, SHA-256 `f84cdd9019f4fc90cc0d1bb020f238f2624cdf308bf829901db459d86ec729ad`. It includes dependencies and Git history plus a consistent live snapshot at tick 15,943. Full Foundry backup details are recorded separately in `/home/corey/moon-world-backups/FOUNDRY-LATEST.json`; keep these private archives outside the web root.
+The full pre-fork private backup is on Expansion at `/media/corey/Expansion/backups/moon-civilization/moon-civilization-before-foundry-20260905T210938Z.zip`, SHA-256 `f84cdd9019f4fc90cc0d1bb020f238f2624cdf308bf829901db459d86ec729ad`. It includes dependencies and Git history plus a consistent live snapshot at tick 15,943. Full Foundry backup details are recorded separately in `/home/corey/moon-world-backups/FOUNDRY-LATEST.json`; keep these private archives outside the web root. A small Git bundle and recovery note alongside that full backup preserve the final capacity-guard follow-up; the recovery manifest identifies both revisions. Apply that bundle and rebuild the client when restoring the final release.
 
 ACG: use [HOSTING-ACG.md](HOSTING-ACG.md), the package manifest revision and the canonical shared notebook at `/home/corey/projects/moon-civilization/SHARED-NOTEPAD.md`. Mount Foundry separately; do not migrate or replace the current world.
 

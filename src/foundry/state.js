@@ -22,6 +22,9 @@ export function addPlayer(w,id,name){
   if(typeof name!=='string'||!/^[\p{L}\p{N} _.-]{2,32}$/u.test(name.trim()))fail('INVALID_NAME','Use 2–32 letters, numbers, spaces, dots, or dashes',400);
   name=name.trim();if(w.players.some(p=>p.id===id||p.name.toLowerCase()===name.toLowerCase()))fail('NAME_TAKEN','That callsign already has a settlement. Resume with its access token or choose another.');
   if(w.players.length>=LIMITS.players)fail('WORLD_FULL','This preview supports 24 settlements');
+  if(w.machines.length+w.jobs.length>=LIMITS.machines)fail('WORLD_CAPACITY','There is no capacity for another lander');
+  const reservedRobots=w.machines.reduce((n,m)=>n+(m.queue?.length||0)+(m.fabrication?.role?1:0),0);
+  if(w.robots.length+reservedRobots+4>LIMITS.robots)fail('ROBOT_CAPACITY','A new landing needs capacity for all four starter robots');
   const cid=startingCell(w.players.length),home=cellCenter(cid),p={id,name,homeClaimId:cid,home,joinedAt:w.tick};
   const c={id:cid,ownerId:id,name:`${name}'s settlement`,home,areaKm2:cellArea(cid),builders:[],metal:0,rock:0,parts:0,spares:0,thought:0,deposit:250000*UNIT,yieldPerSecond:w.players.length%2?PRODUCTION.bulkHarvester:PRODUCTION.standardHarvester,profile:w.players.length%2?'Loose regolith · bulk yield':'Dense regolith · standard yield',revision:1,paused:false,unlocks:[],replications:0,research:'factory-plans',researchProgress:0,crewLimit:2,maxActive:4,autoLogistics:true};
   w.players.push(p);w.claims.push(c);

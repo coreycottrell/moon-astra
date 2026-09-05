@@ -64,6 +64,7 @@ function requestInputs(w,m,wanted){
 }
 export function autoLogistics(w){
   if(w.freight.length>LIMITS.freight-100)return;
+  try{
   for(const c of w.claims){if(c.paused||!c.autoLogistics)continue;
     const machines=w.machines.filter(m=>m.claimId===c.id),depot=machines.find(m=>m.type==='seed');
     for(const m of machines){
@@ -77,6 +78,7 @@ export function autoLogistics(w){
       for(const item of outputs)if(stock(m.inventory,item)>=6000&&!m.fabrication?.cost?.[item])makeFreight(w,m,'machine',depot.id,item,stock(m.inventory,item)-2000,{purpose:'warehouse'});
     }
   }
+  }catch(error){if(error.code!=='FREIGHT_CAPACITY')throw error;}
 }
 
 function assignHaul(w,r){

@@ -50,3 +50,19 @@ test('a small crew budget rotates fairly instead of permanently starving high ID
 test('maintenance cannot chain-freeze a robot that is already servicing another',()=>{const {w}=setup();for(const r of w.robots)r.condition=2000;for(let t=0;t<1200;t++){tick(w,1);for(const r of w.robots)if(r.task?.kind==='service')assert.ok(!r.serviceBy||r.serviceBy===r.id,'active service crew must not be immobilized by another service assignment');}assert.ok(w.robots.every(r=>r.condition>5000));});
 
 test('cancelled assembled prefab salvages materials instead of producing unusable fractional kits',()=>{const {w,c}=setup();const {jobId}=build(w,c,'solar',35,0);for(let t=0;t<400&&w.jobs[0]?.stage<2;t++)tick(w,1);const j=w.jobs.find(j=>j.id===jobId);assert.ok(j&&j.stage>=2);cmd(w,c,'build.cancel',{jobId});assert.ok(w.freight.every(f=>!f.item.startsWith('kit.')||f.amount%1000===0));assert.ok(w.freight.some(f=>f.item==='metal'));tick(w,500);assert.equal(w.freight.length,0);});
+
+test('landings count queued chassis and landers against the shared admission limits',()=>{
+  const {w,c}=setup();for(let i=0;i<248;i++)createRobot(w,c,'builder');
+  const foundry=createMachine(w,c,'robotfactory',loc(c,45,45),{queue:[{role:'builder'}]});const before=structuredClone(w);
+  assert.throws(()=>addPlayer(w,'p2','Babbage'),e=>e.code==='ROBOT_CAPACITY');assert.deepEqual(w,before);
+  foundry.queue=[];addPlayer(w,'p2','Babbage');assert.equal(w.robots.length,256);
+  const full=setup();for(let i=0;i<999;i++)createMachine(full.w,full.c,'solar',loc(full.c,30+i,30));const nextId=full.w.nextId;
+  assert.throws(()=>addPlayer(full.w,'p2','Babbage'),e=>e.code==='WORLD_CAPACITY');assert.equal(full.w.players.length,1);assert.equal(full.w.nextId,nextId);
+});
+test('automatic freight applies backpressure at capacity without losing stock or stopping the world',async()=>{
+  const {autoLogistics}=await import('../src/foundry/logistics.js');const {w,c}=setup();
+  for(let i=0;i<900;i++)createMachine(w,c,'refinery',loc(c,30+(i%30)*25,30+Math.floor(i/30)*25),{inventory:{metal:30000}});
+  const total=()=>w.machines.reduce((n,m)=>n+(m.inventory.metal||0),0)+w.freight.filter(f=>f.item==='metal').reduce((n,f)=>n+f.amount,0),before=total();
+  assert.doesNotThrow(()=>autoLogistics(w));assert.ok(w.freight.length>=4000&&w.freight.length<=4096);assert.equal(total(),before);
+  assert.doesNotThrow(()=>autoLogistics(w));assert.equal(total(),before);
+});
