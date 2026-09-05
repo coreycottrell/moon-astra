@@ -2,7 +2,21 @@
 
 **Deploy the current civilization fork at `https://ai-civ.com/moon-astra/`.** Its source directory is `/home/corey/projects/moon-civilization`, branch `development/shared-world`. The URL name `moon-astra` does not mean deploying the preserved `/home/corey/projects/moon-astra` prototype. Keep that original project and its localhost:4173 game playable.
 
-This document prepares the deployment for ACG. No website publication, DNS change, remote service installation, or message to ACG was performed while writing it. The remaining host-specific values are the chosen Linux server, its SSH destination, the HTTPS API hostname, and the actual system-wide Node binary path.
+**Working coordination:** read and update the [shared notepad](../SHARED-NOTEPAD.md) on the tower before proceeding. It tracks the current handoff, work queue and deployment evidence for Corey, Codex and ACG.
+
+This document is the deployment handoff for ACG. Check the current VPS and site release before acting; the host-specific findings below were added during deployment work. This handoff alone does not establish which revision is currently serving the public URL.
+
+## Current release checkpoint — economy version 2
+
+Use the tip of `development/shared-world` from `/home/corey/projects/moon-civilization`. It must include **`25b7931`** (10× slower harvest/refining, required local mind supervision, current-rate/status UI and saved-world migration) and **`9822f9a`** (ACG's Node path, pinned build shell and symlink entrypoint fixes). The latest source is committed locally. Git `origin` currently points to `/home/corey/projects/moon-astra`, the preserved local prototype; it is not a GitHub remote or the deployment source to pull on the VPS.
+
+Record the chosen revision with `git rev-parse HEAD`, transfer an archive of that revision to the VPS, and build the website client from the same revision. A Git archive includes the checked-in terrain assets and deployment templates, but excludes the local database, private player access files, dependencies and compiled outputs. `npm ci` and `npm run build:aiciv` generate the client. Keep the API's SQLite database outside the release directory.
+
+The upgrade was checked with 30 passing simulation/API tests, all three full browser scenarios, and an isolated starter-economy lab. At full power, harvesters extract 18/24 rock per minute and refineries produce 6 metal per minute. Each mind node supplies 4 capacity; harvesters/refineries/programmed replicators use 1/2/4. A node is now the first building in the guided opening. API observations expose each claim's `industry` status, and `/catalog` exposes the production rates and mind costs.
+
+**Release acceptance:** the API through both the VPS HTTPS endpoint and `https://ai-civ.com/moon-astra/api/v1/health` must report `ok: true`, `ruleset: "moon-neighbors-1"`, **`economyVersion: 2`**, and an advancing tick. Check `/catalog` for `production.refinery: 100` and `mind.costs.replicator: 4`. Verify the published browser shows mind capacity and the slower rates; an old static build can otherwise appear healthy against the new API.
+
+The user requested a reset of the **local** world, which has been completed with its previous state backed up. That reset is not startup behavior. Initialize an empty online world only for a new deployment; preserve and back up any existing VPS world. An older compatible online world migrates once to economy version 2 while retaining inventories, machines, identities and receipts. Do not replace the VPS database with the tower's local `.world/` directory.
 
 ## 1. Use the existing site's deployment process
 
@@ -178,7 +192,8 @@ Check these paths on the staged site and again at production after the normal si
 | `/moon-astra/data/sources.json` | JSON terrain metadata, not the homepage HTML |
 | `/moon-astra/data/moon-height.u16.gz` | Successful complete download; lunar terrain loads |
 | `/moon-astra/assets/<actual-built-name>.js` | JavaScript with the correct MIME type |
-| `/moon-astra/api/v1/health` | JSON, `ok: true`, `moon-neighbors-1`, advancing tick |
+| `/moon-astra/api/v1/health` | JSON, `ok: true`, `moon-neighbors-1`, `economyVersion: 2`, advancing tick |
+| `/moon-astra/api/v1/catalog` | `economyVersion: 2`, `production.refinery: 100`, `mind.capacityPerNode: 4`, replicator mind cost 4 |
 | `/moon-astra/api/v1/observe` without a token | 401 JSON, not a cached player's world |
 | Existing `/`, blog, and existing Moon pages | Same content/routing as before |
 
@@ -197,7 +212,7 @@ Confirm browser network requests stay under `/moon-astra/`; none should escape t
 
 ## 8. Updates, backup, and rollback
 
-Keep the frontend and API on the same game ruleset. Before backend updates, record the release path and stop the single world service gracefully. Take a backup of the entire persistent directory, then switch the `current` symlink and restart. Never start a second production worker against the same SQLite database. Health 503 after a conflicting writer requires stopping the competing processes and restarting one, not deleting the database.
+Keep the frontend and API on the same source revision and economy version as well as the same game ruleset. Before backend updates, record the release path and stop the single world service gracefully. Take a backup of the entire persistent directory, then switch the `current` symlink and restart. Never start a second production worker against the same SQLite database. Health 503 after a conflicting writer requires stopping the competing processes and restarting one, not deleting the database.
 
 Example backend backup on the host:
 
