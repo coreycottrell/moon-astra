@@ -1,103 +1,114 @@
-# MOON — The first machine
+# MOON — The first federation
 
-A fresh, playable 3D prototype: turn lunar rock into machines that build more machines, and grow a lunar mind. Built independently from the two-sentence concept, with new code and procedural machine models.
+**Make intelligence change what players can do, then let factories reproduce those capabilities across the Moon.** This is the playable civilization fork: neighboring settlements, local industry, shared research, and the same game commands for humans and AI clients.
 
-**Project directory:** `/home/corey/projects/moon-astra`  
-**ACG handoff:** [`dev-ops.md`](dev-ops.md) covers Git setup, dependencies, running, verification, hosting, and backup restoration. Full backup ZIPs are stored under `/media/corey/Expansion/backups/moon-astra/`.
+| Version | Project directory | Play |
+| --- | --- | --- |
+| Preserved original | `/home/corey/projects/moon-astra` | http://localhost:4173 |
+| Civilization development | `/home/corey/projects/moon-civilization` | http://localhost:4175 |
 
-## Resume this Codex session
+**Git branch:** `development/shared-world`. **Starting checkpoint:** tag `prototype-baseline`, commit `4469345`. The original project, its browser saves, and its server are separate. This fork does not import or overwrite the original save.
 
-[Open this Moon session in Codex](codex://threads/01a06dd9-5847-7c73-b3a3-4ec974195750)
+## Play the fork
 
-**Session ID:** `01a06dd9-5847-7c73-b3a3-4ec974195750`
-
-If your Markdown viewer does not open Codex links, run this on the original machine:
-
-```bash
-codex resume 01a06dd9-5847-7c73-b3a3-4ec974195750 --cd /home/corey/projects/moon-astra
-```
-
-Resuming requires the existing Codex session history; the project ZIP does not include that history. See the [Codex resume reference](https://learn.chatgpt.com/docs/developer-commands?surface=cli#codex-resume).
-
-## Civilization design proposal
-
-Read the [illustrated proposal](docs/moon-civilization-proposal/report.html), download the [49-page PDF](docs/moon-civilization-proposal/report.pdf), or edit the [Markdown source](docs/moon-civilization-proposal/report.md).
-
-The proposal covers shared land claims, local resources, human and AICIV players, a game API and AI gym, 46 technologies, 45 buildable families, mind-driven invention, an exponential campaign finale, clearer zoom/detail levels, aesthetics, and a staged development roadmap. These are proposed extensions to the playable prototype. The folder also includes CSV catalogs, diagrams, and reproducible pacing calculations.
-
-## Full backup on the expansion drive
-
-**Latest backup ZIP:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.zip`  
-**SHA-256 checksum:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.zip.sha256`  
-**File manifest:** `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.manifest.json`
-
-This full snapshot includes the entire project folder, including this README, `dev-ops.md`, source, dependencies, prepared and original assets, compiled build, and verification artifacts. Restore instructions and ACG's Git setup steps are in [`dev-ops.md`](dev-ops.md).
-
-## Play locally
+Requires Node **24.13 or newer in the 24.x series** (built-in SQLite), npm, and a WebGL browser.
 
 ```bash
-cd /home/corey/projects/moon-astra
+cd /home/corey/projects/moon-civilization
 npm ci
 npm run dev
 ```
 
-Open **http://localhost:4173**. The development server also accepts connections from your local network. `npm run build` creates a self-contained static site in `dist/`; `npm run preview` serves that build.
+Open **http://localhost:4175**, choose a callsign, and establish your settlement. Friends on the same trusted network can use `http://YOUR-MACHINE-IP:4175`. Each player receives a neighboring claim, a seed lander, and 240 metal. To resume elsewhere, use **Settlement → Export my access token** and enter that token in the join screen.
 
-Choose a machine along the bottom, then click the terrain to place it. Start with a **Harvester**, **Refinery**, and **Solar array**, then add a **Replicator** and **Mind node**. A replicator spends 30 metal per construction cycle and makes solar arrays, harvesters, refineries, mind nodes, and additional replicators. New machines have persistent geographic locations and generation numbers.
+1. Build a **Harvester**, **Solar array**, and **Refinery**. Each machine occupies real terrain, costs local metal, and takes 5–12 simulation seconds to construct. Deposits are finite; power belongs to that settlement.
+2. Add a **Mind node**. At 120 research work, it unlocks a complete **balanced factory layout** and **programmable replicators**. A powered node produces one work per second. The first layouts are authored game designs, not live model-generated CAD.
+3. Open **Settlement** to visit neighbors, send material shipments, or grant construction access. A builder you authorize spends your settlement's metal; they do not gain control of shipments or factory programs.
+4. Deliver **120 metal** to **the first federation**. Each player can supply at most 60. Materials travel and only count after arrival. Two accounts can complete this first cooperation exercise; distinct humans are not enforced.
+5. Program a **Replicator** to make solar, harvesters, refineries, or mind nodes. After the federation completes, choose **Replicator**: daughter factories inherit that program. Every daughter pays its actual machine cost, needs space, and spends construction time. Growth can stall on power, metal, terrain, or capacity.
 
-Drag to orbit the camera, right-drag to pan, and scroll to zoom. The **Surface / Region / Orbit** buttons change scale. Click the Moon from Region or Orbit to land. The atlas also lets you visit any longitude and latitude, including the poles and far side. **Seed base** returns to your first lander.
+Use **Surface / District / Region / Orbit** to change scale. Click the Moon from a distant view to descend. **Explore the Moon** opens the atlas; **Seed base** returns to your own lander. Green lines show your claim; blue lines show neighbors; amber rings mark construction and amber moving markers represent freight.
 
-Keys: **1–5** select a machine; **R** rotates it; **Esc** cancels placement; **Space** pauses; **H** returns home; **O** switches to/from orbit; **G** shows region edges. Touch supports placement, one-finger orbit, and two-finger pan/zoom.
+Keys: **1–5** select machines, **R** rotates, **Esc** cancels, **Space** pauses your settlement, **H** returns home, **O** switches orbit, **G** shows rendering-region edges. Pause stops your production and construction; freight already in transit and other settlements continue.
 
-## One connected Moon
+## Let an AI play
 
-- The reference sphere has a radius of **1,737,400 meters**, covering approximately **37.93 million km²**.
-- Six cube-sphere faces form a complete global partition. A quadtree subdivides visible regions as the camera approaches, currently reaching level 18. Every tile samples the same global terrain function; local regions are parts of the same planetary surface.
-- Shared edge vertices agree; skirts cover joins between differing levels of detail. Region edges can be shown in the game.
-- Official **NASA LRO / LOLA LDEM_16 V3.1** measurements displace the sphere. The grid is 5,760 × 2,880 samples, approximately **1.9 km per pixel at the equator**. Heights retain their half-meter numeric encoding; that does not mean half-meter spatial accuracy.
-- The raw archive grid is shifted from 0–360° east to −180–180°. Its signed half-meter heights become unsigned values with a documented 10 km offset. Compression is lossless.
-- A 4K equirectangular lunar texture supplies recognizable maria and craters. Floating local coordinate frames preserve close-up precision. Machines keep lunar latitude/longitude when you travel or reload.
-- Small impact craters, regolith grain, rocks, machine models, and lighting are artistic. This is an approximate geographic Moon with procedural close-up detail, not a surveyed reconstruction at machine scale.
-
-## Prototype boundaries
-
-The industry simulation, power sharing, resource units, and lunar-mind progression are deliberately simple. The mind is a local game simulation, not an external language-model service. Power is pooled globally. This version supports 500 machines; it does not store billions of prebuilt terrain tiles or implement multiplayer.
-
-The game saves to browser local storage under `moon-astra-world-v1` and provides **Export expedition save** in the field guide. It preserves an unreadable prior save rather than overwriting it. Production pauses while the tab is hidden or a dialog is open; closing the game produces no offline progress. Browser saves belong to their origin: use the same hostname and port when returning.
-
-No server account, API key, asset service, or network API is needed during play. The initial local payload includes approximately 30 MB of compressed elevations and 2.6 MB of surface imagery.
-
-## Assets and verification
-
-Data attribution, exact source URLs, transformations, and SHA-256 hashes are in [`public/data/sources.json`](public/data/sources.json). See [`NOTICE.md`](NOTICE.md) for credits. Original downloads are cached in `.asset-cache/`; only browser-ready assets are required to play.
-
-To reproduce the data conversion with Python, Pillow, and NumPy installed:
+The browser and agent client use the same authenticated HTTP commands. No external AI service or paid API key is required. An AICIV can read observations, preview a plan, and submit bounded commands through the API; its reasoning runs outside this game.
 
 ```bash
-python3 scripts/prepare_assets.py
+npm run agent -- join ACG
+npm run agent -- --access .agent-access/acg.json observe
+npm run agent -- --access .agent-access/acg.json bootstrap
+npm run agent -- --access .agent-access/acg.json cooperate
 ```
 
-To verify:
+`bootstrap` queues one of each starter machine, searching for suitable terrain through the preview endpoint. Repeating it skips types already built or queued. `cooperate` supplies the player's remaining federation contribution. These are finite scripted helpers, not autonomous model agents. They run only when you invoke them. Access files are private, Git-ignored, and created with mode `0600`.
+
+Use `--url http://HOST:4175` for another machine. See the [API contract and command examples](docs/api.md) for observations, permissions, previews, idempotent commands, and event streams.
+
+## What is playable now
+
+- One persistent server world; separate claims, inventories, power, production, pause controls, and access permissions.
+- Deterministic integer resource accounting, timed construction, finite deposits, and real metal shipments.
+- Research that unlocks new commands, a cooperative project, and paid recursive machine construction.
+- Durable player identities and command receipts in SQLite; authenticated HTTP API, polling observations, event cursors, and optional SSE snapshots.
+- A deterministic [collaboration lab](artifacts/collaboration-lab.json). Run `npm run lab` to simulate two scripted players in an isolated world: research, a federation, factory layouts, and generation-two replication. It never changes the live server.
+- The original full-radius, NASA-elevation Moon renderer, with a District view and procedural shading across intermediate scales. These additions improve visual continuity; they do not increase the source survey's resolution.
+
+This is the first shared-world milestone. It has a **24-settlement / 1,000-machine-and-job cap**, automatically assigned neighboring cells, generated resource profiles, settlement-wide microgrids, straight-line abstract freight, and full shared observations. Open registration is intended for a trusted friends-and-agents preview. There is no public hosting hardening, invitation system, identity recovery service, parcel expansion, detailed transport network, electricity cables, competitive secrecy, alliance governance, thermodynamics, multi-day campaign ending, or full RL/Gymnasium adapter yet.
+
+The game server runs while browsers are closed. Stopping the server stops world time; restart resumes from the last committed tick without inventing offline production. Use **one world process per database**. The backend detects conflicting writers and pauses rather than overwriting their state.
+
+## Civilization design proposal
+
+Read the [illustrated report](docs/moon-civilization-proposal/report.html), the [49-page PDF](docs/moon-civilization-proposal/report.pdf), or the [Markdown source](docs/moon-civilization-proposal/report.md). The complete proposal includes 46 technologies, 45 building families, AICIV collaboration, mind-driven invention, an exponential finale, and the longer roadmap. Most of that scope remains proposed. Its references to the original prototype describe the pre-fork baseline.
+
+The next useful milestone is **physical networks**: power cables, explicit depots and transport routes, and blueprints that include their connections. That makes logistics a spatial design problem before expanding the technology tree.
+
+## Verify and operate
 
 ```bash
 npm test
+npm run lab
 npm run build
-# With the development server running:
 npm run test:browser
 ```
 
-The browser configuration uses the Chromium already installed in this workspace. Set `MOON_CHROMIUM_PATH` to another Chromium executable when moving to a different environment. Screenshots and browser results are written to `artifacts/`.
+Browser tests start their own disposable world on ports **4185/4186**, use Chromium, and leave both playable worlds untouched. Set `MOON_CHROMIUM_PATH` when Chromium lives elsewhere. The full browser flow waits for real research and daughter-machine construction, so allow several minutes. Results and screenshots are in `artifacts/`.
 
-Core checks cover the complete spherical area, cross-face joins, the longitude seam, pole/floating-origin round trips, real elevation data, production and replication, power shortages, placement rejection, and save restoration. Browser tests exercise the actual construction controls, manufacturing, persistence, global travel, and phone layout.
+For the compiled game, stop the fork's development server, then run `npm run build && npm start`. This serves the built game and API together on port 4175. `dist/` alone cannot run this multiplayer version. See [dev-ops.md](dev-ops.md) for persistence, recovery, LAN hosting, verification, and backup instructions.
 
-## Source layout
+## Geography and credits
+
+The reference sphere has a **1,737,400 m radius**. Six cube-sphere faces partition the whole Moon; adaptive rendering reaches level 18. Ownership uses independent, stable **level-10 cells**, whose spherical areas vary by latitude on each face. Rendering detail does not change ownership.
+
+NASA **LRO / LOLA LDEM_16 V3.1** provides a 5,760 × 2,880 height grid, approximately 1.9 km sample spacing at the equator. A 4K lunar map supplies the large-scale appearance. Small craters, dust, grain, rocks, machine models, resource yields, and lighting are artistic. Details are globally addressed and share the same coordinate system across views.
+
+Sources, exact transformations, and asset hashes: [public/data/sources.json](public/data/sources.json). Credits: [NOTICE.md](NOTICE.md). Prepared assets are included; the original download cache remains in the preserved prototype and its backup. Re-download with `python3 scripts/prepare_assets.py` only if regeneration is needed (NumPy and Pillow required).
+
+## Project map
 
 | File | Responsibility |
 | --- | --- |
-| `src/geography.js` | Lunar coordinates, measured height sampling, globally addressed fine terrain |
-| `src/terrain.js` | Cube-sphere quadtree, tile meshes, level-of-detail joins |
-| `src/machines.js` | New procedural machine models, animation, rocks |
-| `src/simulation.js` | Resources, power, replication, save validation |
-| `src/main.js` | Rendering, navigation, placement, browser persistence |
-| `src/style.css`, `src/ui.css`, `index.html` | Interface and responsive layouts |
-| `dev-ops.md` | ACG repository and operations handoff |
+| `src/main.js`, `src/network.js` | 3D interface and authenticated world client |
+| `src/shared-world.js` | Authoritative deterministic game rules |
+| `src/claims.js` | Stable ownership cells and spherical areas |
+| `server/world-server.mjs` | HTTP API, simulation clock, SQLite transactions |
+| `src/terrain.js`, `src/geography.js` | Measured lunar terrain and progressive rendering |
+| `src/machines.js` | Procedural machine models |
+| `scripts/agent.mjs`, `scripts/lab.mjs` | Agent CLI and isolated collaboration exercise |
+| `src/simulation.js` | Machine catalog and retained baseline simulator for regression tests |
+
+## Backup and return to this session
+
+**Civilization fork backup:** `/media/corey/Expansion/backups/moon-civilization/moon-civilization-full-20260905T122723Z.zip`, with adjacent `.sha256` and `.manifest.json`. This checkpoint includes Git history, source, prepared assets, dependencies, compiled build, documentation, verification evidence, and a fresh empty world database.
+
+The preserved prototype's full backup is `/media/corey/Expansion/backups/moon-astra/moon-astra-full-20260905T015553Z.zip`, with adjacent SHA-256 and manifest files. That archive predates this fork. Back up this fork's Git history and its live `.world/` data separately, following [dev-ops.md](dev-ops.md).
+
+[Resume this Moon session in Codex](codex://threads/01a06dd9-5847-7c73-b3a3-4ec974195750)
+
+```bash
+codex resume 01a06dd9-5847-7c73-b3a3-4ec974195750 --cd /home/corey/projects/moon-civilization
+```
+
+Session ID: `01a06dd9-5847-7c73-b3a3-4ec974195750`. Resuming requires the session history on this machine; project backups do not include Codex's private session history.

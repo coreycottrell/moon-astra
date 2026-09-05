@@ -8,10 +8,21 @@ export class MoonTerrain {
     this.material=new THREE.MeshStandardMaterial({map:texture,roughness:1,metalness:0,color:0xe3e3e3,side:THREE.FrontSide});
     // Fine regolith grain is world anchored; macro albedo comes from the lunar map.
     this.material.onBeforeCompile=shader=>{
-      shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 lunarPosition;');
-      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nlunarPosition = position;');
-      shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 lunarPosition;\nfloat grain(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,45.164)))*43758.5453);}');
-      shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat viewDistance=length(vViewPosition);\nfloat closeGrain = 1.0-smoothstep(250.0,2000.0,viewDistance);\ndiffuseColor.rgb=mix(vec3(.12),diffuseColor.rgb,smoothstep(2000.0,220000.0,viewDistance));\ndiffuseColor.rgb *= 1.0 + (grain(floor(lunarPosition*7.0))-.5)*.17*closeGrain;');
+      shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute vec3 lunarWorld;\nvarying vec3 lunarPosition;');
+      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nlunarPosition = lunarWorld;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
+varying vec3 lunarPosition;
+float grain(vec3 p){p=fract(p*.1031);p+=dot(p,p.yzx+33.33);return fract((p.x+p.y)*p.z);}
+float dust(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+return mix(mix(mix(grain(i),grain(i+vec3(1,0,0)),f.x),mix(grain(i+vec3(0,1,0)),grain(i+vec3(1,1,0)),f.x),f.y),mix(mix(grain(i+vec3(0,0,1)),grain(i+vec3(1,0,1)),f.x),mix(grain(i+vec3(0,1,1)),grain(i+vec3(1,1,1)),f.x),f.y),f.z);}`);
+      shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+float viewDistance=length(vViewPosition);
+// Keep measured-image contrast through regional descent. Added detail is artistic.
+diffuseColor.rgb=mix(vec3(.12),diffuseColor.rgb,.35+.65*smoothstep(2000.0,180000.0,viewDistance));
+float regional=(dust(lunarPosition/1800.0)-.5)*.24*(1.0-smoothstep(90000.0,250000.0,viewDistance));
+float local=(dust(lunarPosition/180.0)-.5)*.20*(1.0-smoothstep(9000.0,25000.0,viewDistance));
+float fine=(grain(floor(lunarPosition*.8))-.5)*.12*(1.0-smoothstep(40.0,180.0,viewDistance));
+diffuseColor.rgb*=1.0+regional+local+fine;`);
     };
     this.borderMaterial=new THREE.LineBasicMaterial({color:0xffb66d,transparent:true,opacity:.32,depthWrite:false});
     for(let face=0;face<6;face++){const n=this.node(face,0,0,0);this.makeTile(n);this.active.push(n.key);this.cache.get(n.key).mesh.visible=true;}
@@ -105,7 +116,7 @@ export class MoonTerrain {
         border.push(...pa.map((v,k)=>v+na[k]*offset),...pb.map((v,k)=>v+nb[k]*offset));
       }
     }
-    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.setIndex(indices);geo.computeBoundingSphere();
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('lunarWorld',new THREE.Float32BufferAttribute(directions.flatMap(d=>d.map(v=>v*RADIUS)),3));geo.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.setIndex(indices);geo.computeBoundingSphere();
     const mesh=new THREE.Mesh(geo,this.material);mesh.receiveShadow=true;mesh.visible=false;mesh.userData.tile=n;
     const borderGeo=new THREE.BufferGeometry();borderGeo.setAttribute('position',new THREE.Float32BufferAttribute(border,3));
     const line=new THREE.LineSegments(borderGeo,this.borderMaterial);line.visible=false;line.frustumCulled=true;

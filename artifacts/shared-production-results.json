@@ -1,0 +1,10 @@
+{
+  "production": "PASS",
+  "humanAndCLIShareWorld": true,
+  "starterMachines": 5,
+  "bootstrapRepeatDidNotDuplicate": true,
+  "privateAccessFileMode": "0600",
+  "webglCanvas": 1,
+  "developmentDiagnosticsAbsent": true,
+  "errors": []
+}

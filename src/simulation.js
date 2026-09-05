@@ -3,11 +3,11 @@ export const SAVE_KEY='moon-astra-world-v1';
 export const MAX_MACHINES=500;
 export const TYPES={
   seed:{name:'Seed lander',cost:0,power:8,description:'Your first foothold. Supplies 8 power and construction tools.'},
-  miner:{name:'Harvester',cost:12,power:-2,description:'Collects 3 lunar rock per second.',icon:'excavate'},
-  solar:{name:'Solar array',cost:15,power:12,description:'Adds 12 power to the lunar network.',icon:'solar'},
+  miner:{name:'Harvester',cost:12,power:-2,description:'Collects local rock from a finite deposit. Yield depends on the settlement.',icon:'excavate'},
+  solar:{name:'Solar array',cost:15,power:12,description:'Adds 12 power to this settlement’s grid.',icon:'solar'},
   refinery:{name:'Refinery',cost:25,power:-3,description:'Turns 2 rock into 1 metal per second.',icon:'refine'},
-  replicator:{name:'Replicator',cost:65,power:-5,description:'Uses 30 metal to construct another machine every 24 seconds.',icon:'replicate'},
-  compute:{name:'Mind node',cost:35,power:-4,description:'Turns spare power into a growing lunar intelligence.',icon:'mind'},
+  replicator:{name:'Replicator',cost:65,power:-5,description:'After research, program an output. Every 24 powered seconds it funds construction at the machine’s full metal cost.',icon:'replicate'},
+  compute:{name:'Mind node',cost:35,power:-4,description:'Produces research work. At 120 work, unlock factory layouts and programmable replication.',icon:'mind'},
 };
 export function freshWorld() {
   return {version:1,paused:false,metal:175,rock:0,thought:0,elapsed:0,nextId:2,replications:0,machines:[{id:1,type:'seed',lat:28.5,lon:-17.5,rotation:0,progress:0,generation:0}],view:{lat:28.5,lon:-17.5}};

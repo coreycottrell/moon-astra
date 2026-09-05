@@ -1,0 +1,27 @@
+{
+  "version": "preserved-original",
+  "status": "PASS",
+  "url": "http://localhost:4173",
+  "title": "MOON — The first machine",
+  "stats": {
+    "tiles": 243,
+    "pending": 0,
+    "maxLevel": 17,
+    "cached": 249,
+    "mode": "surface",
+    "frameLocation": {
+      "lat": 28.5,
+      "lon": -17.5
+    },
+    "drawCalls": 188,
+    "triangles": 125440,
+    "geometries": 181,
+    "textures": 4,
+    "power": {
+      "supply": 8,
+      "demand": 0,
+      "factor": 1
+    }
+  },
+  "errors": []
+}

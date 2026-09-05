@@ -1,11 +1,15 @@
 import './style.css';
 import './ui.css';
+import './colony.css';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {LunarData,RADIUS,direction,coordinates,frameAt,normalize,distanceOnMoon,offsetPosition} from './geography.js';
 import {MoonTerrain} from './terrain.js';
 import {createMachine,positionMachine,animateMachine,createRocks,disposeMachine} from './machines.js';
-import {Simulation,TYPES,SAVE_KEY,validateWorld} from './simulation.js';
+import {TYPES} from './simulation.js';
+import {connectWorld,FACTORY} from './network.js';
+import {cellBoundary} from './claims.js';
+import {BLUEPRINT,UNIT,PROJECT_COST,PLANNER_WORK} from './shared-world.js';
 
 const $=id=>document.getElementById(id);
 const format=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
@@ -25,15 +29,65 @@ $('destinations').innerHTML=sites.map((s,i)=>`<button class="destination" data-s
 
 let sim,renderer,scene,camera,controls,data,terrain,frame,texture,rocks,ghost,ghostRing,markers;
 let mode='surface',selected=null,rotation=0,hover=null,inspected=null,tween=null,sound=false,audioContext;
-let saveAllowed=true,saveWarning='',savingFailed=false,lastSave=0,lastUI=0,lastLod=0,now=0,skipNextTick=true;
-let modelMap=new Map(),pointerDown=null,toastTimeout;
+let lastSave=0,lastUI=0,lastLod=0,now=0;
+let modelMap=new Map(),pointerDown=null,toastTimeout,claimLines,jobMarkers,placing=false;
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();
 const screenVector=new THREE.Vector3();
 function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').classList.remove('visible'),4200);}
 function beep(frequency=420){if(!sound)return;try{audioContext??=new AudioContext();audioContext.resume();const o=audioContext.createOscillator(),g=audioContext.createGain();o.type='sine';o.frequency.value=frequency;g.gain.setValueAtTime(.045,audioContext.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.18);o.connect(g).connect(audioContext.destination);o.start();o.stop(audioContext.currentTime+.2);}catch{sound=false;}}
-function save(){if(!sim||!saveAllowed)return;try{localStorage.setItem(SAVE_KEY,sim.serialize());$('save-status').textContent='EXPEDITION SAVED';savingFailed=false;}catch{if(!savingFailed)toast('Browser storage is unavailable. Export your expedition from the field guide.');savingFailed=true;$('save-status').textContent='SAVE UNAVAILABLE · EXPORT IN ?';}}
-function readWorld(){try{const raw=localStorage.getItem(SAVE_KEY);if(raw)return validateWorld(JSON.parse(raw));}catch{saveAllowed=false;saveWarning='The existing save could not be opened. This temporary expedition will not overwrite it; use Export to keep your new progress.';}return undefined;}
+function save(){if(!sim)return;sim.saveView();$('save-status').textContent=sim.connected?'SHARED WORLD · '+sim.actor.name.toUpperCase():'RECONNECTING · WORLD RETAINED';}
 function localAt(loc){return new THREE.Vector3(...frame.toLocal(data.point(direction(loc.lat,loc.lon))));}
+function clearOverlay(group){if(!group)return;group.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});group.removeFromParent();}
+function rebuildClaims(){
+  clearOverlay(claimLines);claimLines=new THREE.Group();scene.add(claimLines);
+  for(const c of sim.state.claims){
+    const points=cellBoundary(c.id,64).map(p=>localAt(p).add(new THREE.Vector3(...frame.vectorToLocal(direction(p.lat,p.lon))).multiplyScalar(4)));
+    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color:c.ownerId===sim.actor.id?0xa1dfba:0x8ea8c8,transparent:true,opacity:.8,depthWrite:false}));claimLines.add(line);
+  }
+}
+function rebuildJobs(){
+  clearOverlay(jobMarkers);jobMarkers=new THREE.Group();scene.add(jobMarkers);
+  for(const j of sim.state.jobs){
+    if(!nearbyMachine(j))continue;
+    const ring=new THREE.Mesh(new THREE.RingGeometry(6.5,7.1,48,1,0,Math.PI*2*(1-j.remaining/j.duration+.03)),new THREE.MeshBasicMaterial({color:0xffc58a,side:THREE.DoubleSide}));
+    const g=new THREE.Group();ring.rotation.x=-Math.PI/2;ring.position.y=.8;g.add(ring);positionMachine(g,j,data,frame);jobMarkers.add(g);
+  }
+  for(const s of sim.state.shipments){
+    const a=sim.state.claims.find(c=>c.id===s.from).home,b=s.project?sim.state.claims[0].home:sim.state.claims.find(c=>c.id===s.to).home;
+    const t=Math.max(0,Math.min(1,(sim.state.tick-s.departedAt)/(s.arrivesAt-s.departedAt))),da=direction(a.lat,a.lon),db=direction(b.lat,b.lon);
+    const loc=coordinates(da.map((v,i)=>v*(1-t)+db[i]*t));
+    const marker=new THREE.Mesh(new THREE.OctahedronGeometry(mode==='surface'?2:35),new THREE.MeshBasicMaterial({color:0xffce8e}));marker.position.copy(localAt(loc));marker.position.add(new THREE.Vector3(...frame.vectorToLocal(direction(loc.lat,loc.lon))).multiplyScalar(15));jobMarkers.add(marker);
+  }
+}
+const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let colonyBusy=false;
+async function colonyCommand(command){
+  if(colonyBusy)return;colonyBusy=true;$('colony-notice').textContent='Sending instructions…';
+  try{await sim.command(command);$('colony-notice').textContent='Instructions accepted by the world.';beep(520);}catch(e){$('colony-notice').textContent=e.message;}
+  finally{colonyBusy=false;renderColony(true);}
+}
+function renderColony(force=false){
+  if(!force&&(colonyBusy||document.activeElement?.matches('#colony-content select')))return;
+  const w=sim.state,c=sim.activeClaim,own=c.ownerId===sim.actor.id,unlocked=c.unlocks.includes('factory-plans'),canBuild=own||c.builders.includes(sim.actor.id);
+  const reserved=w.shipments.filter(s=>s.project&&s.ownerId===sim.actor.id).reduce((n,s)=>n+s.metal,0),contribution=w.project.contributions[sim.actor.id]||0,available=Math.max(0,(PROJECT_COST/2-contribution-reserved)/UNIT);
+  const localJobs=w.jobs.filter(j=>j.claimId===c.id),replicas=w.machines.filter(m=>m.claimId===c.id&&m.type==='replicator');
+  $('colony-title').textContent=c.name;
+  $('colony-content').innerHTML=`
+    <section class="colony-box"><h3>Your place in the Moon</h3><p>${escapeHTML(c.id)} · ${c.areaKm2.toFixed(2)} km²</p><p>${escapeHTML(c.profile)}</p><p>${format.format(c.deposit/UNIT)} rock remains · ${c.yieldPerSecond/UNIT} / powered harvester / s</p><p>${Math.floor(c.metal/UNIT)} metal · ${Math.floor(c.rock/UNIT)} stored rock</p><p>${own?'You own this settlement.':canBuild?'You have construction access here.':'Visit, learn, and ask the owner for construction access.'}</p><button id="district-view">View district ↗</button><button id="access-export">Export my access token ↓</button></section>
+    <section class="colony-box"><h3>01 · Intelligence changes the plan</h3><p>${unlocked?'Factory plans are online. One instruction can now place a working production layout.':'Powered mind nodes research factory layouts and programmable replication.'}</p><progress value="${Math.min(c.thought,PLANNER_WORK)}" max="${PLANNER_WORK}"></progress><p>${Math.floor(c.thought/UNIT)} / ${PLANNER_WORK/UNIT} research work</p><button id="deploy-factory" class="factory-button" ${!unlocked||!canBuild?'disabled':''}>Place balanced factory · 52 metal</button><p>Solar + harvester + refinery. Each machine still needs resources, space, and construction time.</p></section>
+    <section class="colony-box"><h3>02 · The first federation</h3><p>${w.project.complete?'Recursive factory designs are shared. Replicators can build replicators that inherit their program.':'Deliver a shared 120 metal. Each player can supply at most 60, so this capability needs a partner.'}</p><progress value="${Math.min(w.project.delivered,PROJECT_COST)}" max="${PROJECT_COST}"></progress><p>${w.project.delivered/UNIT} / 120 delivered · your share ${contribution/UNIT} delivered + ${reserved/UNIT} in transit</p><button id="contribute" ${!own||available<1||w.project.complete?'disabled':''}>Ship ${Math.min(20,available)} metal to federation</button><p>Freight travels at an abstract 50 m/s. Metal changes hands only on arrival.</p></section>
+    <section class="colony-box"><h3>03 · Tell a factory what to make</h3>${replicas.length?replicas.map(m=>`<div class="neighbor"><strong>Replicator ${m.id} · generation ${m.generation}</strong><small>${Math.floor(m.progress/UNIT)} / 24 powered seconds · ${m.mode==='off'?'awaiting a program':escapeHTML(TYPES[m.mode].name)}</small><select aria-label="Program replicator ${m.id}" data-replicator="${m.id}" ${!own||!unlocked?'disabled':''}>${['off',...buildOrder].map(type=>`<option value="${type}" ${m.mode===type?'selected':''} ${type==='replicator'&&!w.project.complete?'disabled':''}>${type==='off'?'Off':escapeHTML(TYPES[type].name)}</option>`).join('')}</select></div>`).join(''):'<p>Build a replicator on the surface, then give it a program after factory research.</p>'}<p>Replicators pay full machine costs and wait for power, metal, and free ground. Pause your settlement to stop its construction and production.</p></section>
+    <section class="colony-box colony-wide"><h3>Neighbors · ${w.players.length} / 24 settlements</h3>${w.players.filter(p=>p.id!==sim.actor.id).map(p=>{const other=w.claims.find(x=>x.id===p.homeClaimId);return `<div class="neighbor"><strong>${escapeHTML(p.name)}</strong><small>${escapeHTML(other.profile)} · ${(distanceOnMoon(c.home,p.home)/1000).toFixed(1)} km away · ${Math.floor(other.metal/UNIT)} metal</small><button data-visit="${p.id}">Visit ↗</button><button data-send="${other.id}" ${!own||other.id===c.id?'disabled':''}>Send 20 metal</button><button data-grant="${p.id}" ${!own?'disabled':''}>${c.builders.includes(p.id)?'Revoke':'Grant'} construction access</button></div>`;}).join('')||'<p>Your first neighbor could be a friend or an AI client. They join the same game address and use the same construction rules.</p>'}<p class="source-note">Granting access lets that player build using this settlement’s metal. Ownership, shipments, and factory programs remain yours.</p></section>
+    <section class="colony-box colony-wide"><h3>Work in motion</h3><p>${localJobs.length?localJobs.map(j=>`${escapeHTML(TYPES[j.type].name)} · ${j.remaining}s${c.paused?' (paused)':''}`).join(' / '):'No local construction queued.'}</p>${w.shipments.map(s=>`<p class="construction-job">${s.metal/UNIT} metal → ${s.project?'federation':escapeHTML(w.claims.find(x=>x.id===s.to).name)} · ${Math.max(0,s.arrivesAt-w.tick)}s to arrival</p>`).join('')}<div id="colony-events">${w.events.slice(-8).reverse().map(e=>`<div>T+${e.tick} · ${escapeHTML(e.message)}</div>`).join('')}</div></section>`;
+  $('district-view').onclick=()=>{$('colony-dialog').close();setLocation(c.home,c.name,'district');};
+  $('deploy-factory').onclick=()=>{$('colony-dialog').close();selectBuild('factory');};
+  $('access-export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({game:location.origin,player:sim.actor.name,token:sim.token},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='moon-private-player-access.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('colony-notice').textContent='Access exported. Whoever has this token can play as you.';};
+  $('contribute').onclick=()=>colonyCommand({action:'project.contribute',claimId:c.id,amount:Math.min(20,available)});
+  document.querySelectorAll('[data-replicator]').forEach(el=>el.onchange=()=>colonyCommand({action:'replicator.configure',claimId:c.id,machineId:Number(el.dataset.replicator),mode:el.value}));
+  document.querySelectorAll('[data-visit]').forEach(el=>el.onclick=()=>{const p=w.players.find(p=>p.id===el.dataset.visit);$('colony-dialog').close();setLocation(p.home,p.name+' · settlement');});
+  document.querySelectorAll('[data-send]').forEach(el=>el.onclick=()=>colonyCommand({action:'shipment.send',claimId:c.id,toClaimId:el.dataset.send,amount:20}));
+  document.querySelectorAll('[data-grant]').forEach(el=>el.onclick=()=>colonyCommand({action:c.builders.includes(el.dataset.grant)?'claim.revoke':'claim.grant',claimId:c.id,playerId:el.dataset.grant}));
+}
 function nearbyMachine(m){return distanceOnMoon(m,sim.world.view)<4000;}
 function addMachine(m){
   if(!nearbyMachine(m))return;
@@ -49,12 +103,13 @@ function rebuildMarkers(){
 function setLocation(loc,name,requestedMode='surface'){
   cancelBuild();inspected=null;$('inspect').hidden=true;
   sim.world.view={lat:loc.lat,lon:loc.lon};
+  sim.setView(loc);
   frame=frameAt(loc.lat,loc.lon,data.height(direction(loc.lat,loc.lon)));
   terrain?.dispose();terrain=new MoonTerrain(scene,data,frame,texture);
   terrain.setBorders($('borders').getAttribute('aria-pressed')==='true');
   removeModels();sim.world.machines.forEach(addMachine);
   if(rocks){rocks.geometry.dispose();rocks.material.dispose();rocks.removeFromParent();}rocks=createRocks(data,frame);scene.add(rocks);
-  setMode(requestedMode,false);rebuildMarkers();
+  setMode(requestedMode,false);rebuildMarkers();rebuildClaims();rebuildJobs();
   $('place-kicker').textContent=(name||locationName(loc)).toUpperCase();$('coordinates').textContent=coordText(loc);
   const x=(loc.lon+180)/360*100,y=(90-loc.lat)/180*100;
   for(const id of ['map-cross','atlas-cross']){$(id).style.left=x+'%';$(id).style.top=y+'%';}
@@ -67,6 +122,7 @@ function setMode(next,animate=true){
   let target=new THREE.Vector3(0,0,0),position;
   controls.minDistance=18;controls.maxDistance=RADIUS*8;controls.maxPolarAngle=Math.PI*.49;controls.enablePan=true;
   if(mode==='surface')position=new THREE.Vector3(85,65,100);
+  if(mode==='district')position=new THREE.Vector3(1200,1800,1400);
   if(mode==='region')position=new THREE.Vector3(60000,120000,90000);
   if(mode==='orbit'){
     target=new THREE.Vector3(...frame.toLocal([0,0,0]));position=target.clone().add(new THREE.Vector3(RADIUS*.35,RADIUS*3.5,RADIUS*.6));
@@ -91,9 +147,12 @@ function selectBuild(type){
   if(mode!=='surface')setMode('surface');
   if(selected===type){cancelBuild();return;}
   cancelBuild();selected=type;rotation=0;
-  ghost=createMachine(type);ghost.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.35;o.material.depthWrite=false;o.castShadow=false;}});ghost.visible=false;scene.add(ghost);
+  if(type==='factory'){ghost=new THREE.Group();for(const p of BLUEPRINT){const g=createMachine(p.type);g.position.set(p.east,0,-p.north);ghost.add(g);}}
+  else ghost=createMachine(type);
+  ghost.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.35;o.material.depthWrite=false;o.castShadow=false;}});ghost.visible=false;scene.add(ghost);
   document.querySelectorAll('[data-build]').forEach(b=>{b.classList.toggle('selected',b.dataset.build===type);b.setAttribute('aria-pressed',String(b.dataset.build===type));});
-  $('placement-hint').hidden=false;$('cancel-build').hidden=false;$('placement-text').textContent=`Place ${TYPES[type].name.toLowerCase()} · ${TYPES[type].cost} metal`;
+  const definition=type==='factory'?FACTORY:TYPES[type];
+  $('placement-hint').hidden=false;$('cancel-build').hidden=false;$('placement-text').textContent=`Place ${definition.name.toLowerCase()} · ${definition.cost} metal`;
   renderer.domElement.classList.add('placing');beep(300);
 }
 function updateGhost(){
@@ -101,17 +160,19 @@ function updateGhost(){
   const reason=sim.canBuild(selected,hover.loc);
   positionMachine(ghost,{...hover.loc,rotation},data,frame);ghost.visible=true;
   ghostRing.position.copy(hover.point);ghostRing.position.y+=.35;ghostRing.visible=true;ghostRing.material.color.set(reason?0xef806a:0xefbd86);
-  $('placement-text').textContent=reason||`Click to place ${TYPES[selected].name.toLowerCase()} · ${TYPES[selected].cost} metal`;
+  const definition=selected==='factory'?FACTORY:TYPES[selected];
+  $('placement-text').textContent=reason||`Click to place ${definition.name.toLowerCase()} · ${definition.cost} metal`;
 }
 function inspectMachine(m){inspected=m;$('inspect').hidden=false;$('inspect-type').textContent=`GENERATION ${String(m.generation).padStart(2,'0')} · MACHINE ${String(m.id).padStart(3,'0')}`;$('inspect-title').textContent=TYPES[m.type].name;$('inspect-body').textContent=TYPES[m.type].description;}
 function bind(){
   document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>selectBuild(b.dataset.build));
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setMode(b.dataset.view));
-  $('cancel-build').onclick=cancelBuild;$('home').onclick=()=>setLocation(sim.world.machines[0],'Seed base');
+  $('cancel-build').onclick=cancelBuild;$('home').onclick=()=>setLocation(sim.actor.home,sim.actor.name+' · home');
   $('close-inspect').onclick=()=>{inspected=null;$('inspect').hidden=true;};
   const reflectPause=()=>{document.body.classList.toggle('paused',sim.paused);$('pause').textContent=sim.paused?'▷':'Ⅱ';$('pause').setAttribute('aria-label',sim.paused?'Resume simulation':'Pause simulation');};
   reflectPause();
-  $('pause').onclick=()=>{sim.paused=!sim.paused;reflectPause();save();toast(sim.paused?'Expedition paused':'Expedition resumed');};
+  $('pause').onclick=async()=>{try{await sim.setPaused(!sim.paused);reflectPause();save();toast(sim.paused?'This settlement is paused. Neighbors continue.':'Settlement production resumed');}catch(e){toast(e.message);}};
+  $('colony').onclick=()=>{cancelBuild();renderColony();$('colony-dialog').showModal();};
   $('sound').onclick=()=>{sound=!sound;$('sound').classList.toggle('active',sound);$('sound').setAttribute('aria-label',sound?'Disable sound':'Enable sound');beep();};
   $('help').onclick=()=>{cancelBuild();$('help-dialog').showModal();};
   const openAtlas=()=>{cancelBuild();$('atlas-dialog').showModal();};
@@ -127,7 +188,7 @@ function bind(){
     if(document.querySelector('dialog[open]'))return;
     if(e.key==='Escape')cancelBuild();
     if('12345'.includes(e.key)&&e.key.length===1)selectBuild(buildOrder[Number(e.key)-1]);
-    if(e.key.toLowerCase()==='r'&&selected){rotation+=Math.PI/2;updateGhost();}
+    if(e.key.toLowerCase()==='r'&&selected&&selected!=='factory'){rotation+=Math.PI/2;updateGhost();}
     if(e.code==='Space'){e.preventDefault();$('pause').click();}
     if(e.key.toLowerCase()==='h')$('home').click();
     if(e.key.toLowerCase()==='g')$('borders').click();
@@ -138,43 +199,46 @@ function bind(){
   let lastPick=0;
   canvas.addEventListener('pointermove',e=>{if(!selected||performance.now()-lastPick<55)return;lastPick=performance.now();hover=pick(e);if(hover)updateGhost();else{ghost.visible=false;ghostRing.visible=false;}});
   canvas.addEventListener('pointerleave',()=>{if(ghost)ghost.visible=false;ghostRing.visible=false;});
-  canvas.addEventListener('pointerup',e=>{
+  canvas.addEventListener('pointerup',async e=>{
     if(e.button!==0||!pointerDown)return;const movement=Math.hypot(e.clientX-pointerDown.x,e.clientY-pointerDown.y);pointerDown=null;if(movement>6)return;
     const hit=pick(e);if(!hit)return;
     if(mode!=='surface'){setLocation(hit.loc);toast('Surface reached. Begin building here.');return;}
-    if(selected){const result=sim.build(selected,hit.loc,{rotation});if(result.ok){beep(640);toast(`${TYPES[selected].name} deployed`);save();updateGhost();}else{toast(result.reason);beep(140);}return;}
+    if(selected){if(placing)return;placing=true;const type=selected;try{const result=await sim.build(type,hit.loc,{rotation});if(result.ok){beep(640);toast(`${type==='factory'?'Balanced factory':TYPES[type].name} supplied. Construction is underway.`);save();if(selected&&hover)updateGhost();rebuildJobs();}else{toast(result.reason);beep(140);}}finally{placing=false;}return;}
     raycaster.setFromCamera(pointer,camera);const machineHit=raycaster.intersectObjects([...modelMap.values()],true)[0];
     if(machineHit){let o=machineHit.object;while(o&&!o.userData.machine)o=o.parent;if(o?.userData.machine)inspectMachine(o.userData.machine);}
     else{$('inspect').hidden=true;inspected=null;}
   });
   window.addEventListener('resize',resize);
-  document.addEventListener('visibilitychange',()=>{skipNextTick=true;if(document.hidden)save();});window.addEventListener('pagehide',save);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});window.addEventListener('pagehide',save);
 }
 function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
 function updateUI(){
-  const w=sim.world,p=sim.power,count=type=>w.machines.filter(m=>m.type===type).length;
+  const w=sim.world,p=sim.power,count=type=>w.machines.filter(m=>m.type===type&&m.claimId===sim.activeClaim.id).length;
   $('metal').textContent=format.format(Math.floor(w.metal));$('rock').textContent=format.format(Math.floor(w.rock));$('power').textContent=`${Math.max(0,p.supply-p.demand)} / ${p.supply}`;document.querySelector('.power').style.color=p.factor<1?'#f39b7f':'';
   $('power').title=`${p.demand} MW required, ${p.supply} MW available${p.factor<1?'. Production slowed; add solar arrays.':''}`;
-  $('nodes').textContent=count('compute');$('machines').textContent=w.machines.length;
-  const goals=[['miner','Harvest the surface','Place a harvester to begin collecting lunar rock.'],['refinery','Give rock a purpose','Build a refinery. Rock becomes metal; metal becomes possibility.'],['solar','Catch the sunlight','Add a solar array to power your growing industry.'],['replicator','Build the machine that builds','Place a replicator. Keep 30 metal available for its first construction.'],['compute','Let the Moon think','Build a mind node. Your industry is becoming something more.']];
+  $('nodes').textContent=count('compute');$('machines').textContent=w.machines.filter(m=>m.claimId===sim.activeClaim.id).length;
+  const goals=[['miner','Harvest your claim','Place a harvester. Local deposits supply your settlement.'],['refinery','Give rock a purpose','Build a refinery to supply your local metal depot.'],['solar','Catch the sunlight','Power is local. Add solar for this settlement.'],['compute','Let intelligence change the plan','A mind node produces the research needed for factory layouts.'],['replicator','Give the factory instructions','Program a replicator in the settlement board after research unlocks.']];
   const first=goals.findIndex(([type])=>!count(type)),complete=goals.filter(([type])=>count(type)>0).length;
-  $('objective-title').textContent=first<0?'A world building itself':goals[first][1];$('objective-body').textContent=first<0?`${w.replications} machines assembled automatically. Grow the network or explore a new horizon.`:goals[first][2];
+  const unlocked=sim.activeClaim.unlocks.includes('factory-plans');
+  $('objective-title').textContent=unlocked?'Intelligence became a capability':first<0?'Teach your first factory':goals[first][1];$('objective-body').textContent=unlocked?'Open Settlement to place a complete factory layout, program replication, and help the federation.':first<0?`${Math.floor(w.thought)} / 120 research work. Keep the mind powered.`:goals[first][2];
   $('step-number').textContent=`${String(Math.min(5,complete+1)).padStart(2,'0')} / 05`;$('objective-progress').style.width=complete/5*100+'%';
-  const minds=count('compute');$('mind-state').textContent=minds?(w.thought>200?'AWAKENING':'FIRST SIGNAL'):'DORMANT';
-  $('mind-message').textContent=!minds?'A silent world. For now.':w.thought>200?'I can see the shape of what we are becoming.':'There is something here. Keep building.';
+  const minds=count('compute');$('mind-state').textContent=unlocked?'FACTORY PLANS':minds?'LEARNING':'DORMANT';
+  $('mind-message').textContent=unlocked?'I can turn a working idea into a whole factory.':!minds?'A silent world. For now.':`${Math.floor(w.thought)} / 120 research. New capabilities are taking shape.`;
   [...$('waveform').children].forEach((bar,i)=>bar.style.height=(minds?3+Math.abs(Math.sin(i*.5+now*.001)*Math.cos(i*.19-now*.0007))*24:2)+'px');
   for(const b of document.querySelectorAll('[data-build]')){b.classList.toggle('unaffordable',w.metal<TYPES[b.dataset.build].cost);b.querySelector('.cost').style.color=w.metal<TYPES[b.dataset.build].cost?'#aa8373':'';}
-  if(inspected){const definition=TYPES[inspected.type];$('inspect-progress').textContent=inspected.type==='replicator'?`${Math.floor(inspected.progress/24*100)}% assembled · ${w.metal<30?'waiting for 30 metal':'30 metal per machine'}`:`${definition.power>0?'+':''}${definition.power} MW · ${p.factor<1&&definition.power<0?'reduced power':'connected'}`;}
+  if(inspected){const definition=TYPES[inspected.type];$('inspect-progress').textContent=inspected.type==='replicator'?`${inspected.mode==='off'?'Awaiting a program':inspected.mode+' · '+Math.floor(inspected.progress/24*100)+'%'} · configure in Settlement`:`${definition.power>0?'+':''}${definition.power} MW · local claim grid`;}
   const dist=camera.position.distanceTo(controls.target);$('scale').textContent=dist>10000?`${format.format(dist/1000)} km`:`${format.format(dist)} m`;
-  if(mode==='surface'&&modelMap.has(1)){
-    const g=modelMap.get(1);screenVector.copy(g.position).add(new THREE.Vector3(0,9,0)).project(camera);
+  $('pause').disabled=sim.activeClaim.ownerId!==sim.actor.id;document.body.classList.toggle('paused',sim.paused);$('pause').textContent=sim.paused?'▷':'Ⅱ';$('pause').setAttribute('aria-label',sim.paused?'Resume settlement':'Pause settlement');
+  const homeSeed=w.machines.find(m=>m.type==='seed'&&m.ownerId===sim.actor.id);
+  if(mode==='surface'&&homeSeed&&modelMap.has(homeSeed.id)){
+    const g=modelMap.get(homeSeed.id);screenVector.copy(g.position).add(new THREE.Vector3(0,9,0)).project(camera);
     const visible=screenVector.z>-1&&screenVector.z<1&&Math.abs(screenVector.x)<.95&&Math.abs(screenVector.y)<.95;
     $('marker-label').hidden=!visible;$('marker-label').style.left=(screenVector.x*.5+.5)*innerWidth+16+'px';$('marker-label').style.top=(-screenVector.y*.5+.5)*innerHeight-24+'px';
   }else $('marker-label').hidden=true;
 }
 function animate(time){
-  let dt=skipNextTick?0:Math.min(Math.max(0,(time-now)/1000),.5);now=time;skipNextTick=false;
-  if(!document.hidden&&!document.querySelector('dialog[open]'))while(dt>0){const step=Math.min(dt,.1);sim.tick(step);dt-=step;}
+  now=time;
+  // Economic time belongs to the server, including when this browser is closed.
   if(tween){const t=Math.min(1,(time-tween.start)/1100),e=t*t*(3-2*t);camera.position.lerpVectors(tween.fromPosition,tween.toPosition,e);controls.target.lerpVectors(tween.fromTarget,tween.toTarget,e);if(t===1)tween=null;}
   controls.update();
   // Keep a surface camera above the actual measured terrain, including steep crater walls.
@@ -188,7 +252,7 @@ function animate(time){
 }
 async function init(){
   try{
-    sim=new Simulation(readWorld());
+    sim=await connectWorld();
     renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',logarithmicDepthBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;$('scene').appendChild(renderer.domElement);
     scene=new THREE.Scene();scene.background=new THREE.Color(0x06090d);
     camera=new THREE.PerspectiveCamera(43,innerWidth/innerHeight,.3,80_000_000);
@@ -200,11 +264,11 @@ async function init(){
     [data,texture]=await Promise.all([LunarData.load(s=>$('loading-detail').textContent=s),new THREE.TextureLoader().loadAsync('/data/moon-color.webp')]);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
     ghostRing=new THREE.Mesh(new THREE.RingGeometry(6.6,6.72,64),new THREE.MeshBasicMaterial({color:0xf2bd80,side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false}));ghostRing.rotation.x=-Math.PI/2;ghostRing.visible=false;scene.add(ghostRing);
     sim.onBuild=m=>{addMachine(m);rebuildMarkers();};sim.message=message=>{toast(message);beep(760);};
+    let claimCount=0;sim.onSnapshot=()=>{if(!frame)return;rebuildJobs();if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};
     setLocation(sim.world.view,locationName(sim.world.view));resize();bind();
     $('loading-detail').textContent='Stitching the first regions';
     while(terrain.pending.length){terrain.process(12);await new Promise(resolve=>setTimeout(resolve,0));}
     updateUI();renderer.setAnimationLoop(animate);$('loading').classList.add('fade');setTimeout(()=>$('loading').hidden=true,750);
-    if(saveWarning){toast(saveWarning);$('save-status').textContent='TEMPORARY EXPEDITION · EXPORT IN ?';}
     // Read-only diagnostics for verification, never a second path for game mutations.
     if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
   }catch(error){console.error(error);$('loading-detail').textContent=`Could not open this expedition: ${error.message}`;$('retry').hidden=false;$('retry').onclick=()=>location.reload();}

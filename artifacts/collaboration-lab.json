@@ -1,0 +1,617 @@
+{
+  "ruleset": "moon-neighbors-1",
+  "scope": "Isolated deterministic rules exercise on flat placement terrain; no live players or model inference.",
+  "simulatedSeconds": 450,
+  "timeline": [
+    {
+      "tick": 0,
+      "machines": 2,
+      "construction": 10,
+      "replicators": 0,
+      "highestGeneration": 0,
+      "metal": 56,
+      "research": [
+        0,
+        0
+      ],
+      "federation": false
+    },
+    {
+      "tick": 10,
+      "machines": 10,
+      "construction": 2,
+      "replicators": 0,
+      "highestGeneration": 0,
+      "metal": 62,
+      "research": [
+        1,
+        1
+      ],
+      "federation": false
+    },
+    {
+      "tick": 20,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 82,
+      "research": [
+        11,
+        11
+      ],
+      "federation": false
+    },
+    {
+      "tick": 30,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 102,
+      "research": [
+        21,
+        21
+      ],
+      "federation": false
+    },
+    {
+      "tick": 40,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 122,
+      "research": [
+        31,
+        31
+      ],
+      "federation": false
+    },
+    {
+      "tick": 50,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 142,
+      "research": [
+        41,
+        41
+      ],
+      "federation": false
+    },
+    {
+      "tick": 60,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 162,
+      "research": [
+        51,
+        51
+      ],
+      "federation": false
+    },
+    {
+      "tick": 70,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 182,
+      "research": [
+        61,
+        61
+      ],
+      "federation": true
+    },
+    {
+      "tick": 80,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 202,
+      "research": [
+        71,
+        71
+      ],
+      "federation": true
+    },
+    {
+      "tick": 90,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 222,
+      "research": [
+        81,
+        81
+      ],
+      "federation": true
+    },
+    {
+      "tick": 100,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 242,
+      "research": [
+        91,
+        91
+      ],
+      "federation": true
+    },
+    {
+      "tick": 110,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 262,
+      "research": [
+        101,
+        101
+      ],
+      "federation": true
+    },
+    {
+      "tick": 120,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 282,
+      "research": [
+        111,
+        111
+      ],
+      "federation": true
+    },
+    {
+      "tick": 130,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 302,
+      "research": [
+        121,
+        121
+      ],
+      "federation": true
+    },
+    {
+      "tick": 140,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 322,
+      "research": [
+        131,
+        131
+      ],
+      "federation": true
+    },
+    {
+      "tick": 150,
+      "machines": 12,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 342,
+      "research": [
+        141,
+        141
+      ],
+      "federation": true
+    },
+    {
+      "tick": 160,
+      "machines": 18,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 264,
+      "research": [
+        151,
+        151
+      ],
+      "federation": true
+    },
+    {
+      "tick": 170,
+      "machines": 18,
+      "construction": 0,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 304,
+      "research": [
+        161,
+        161
+      ],
+      "federation": true
+    },
+    {
+      "tick": 180,
+      "machines": 18,
+      "construction": 2,
+      "replicators": 2,
+      "highestGeneration": 0,
+      "metal": 214,
+      "research": [
+        171,
+        171
+      ],
+      "federation": true
+    },
+    {
+      "tick": 190,
+      "machines": 20,
+      "construction": 0,
+      "replicators": 4,
+      "highestGeneration": 1,
+      "metal": 254,
+      "research": [
+        181,
+        181
+      ],
+      "federation": true
+    },
+    {
+      "tick": 200,
+      "machines": 20,
+      "construction": 2,
+      "replicators": 4,
+      "highestGeneration": 1,
+      "metal": 164,
+      "research": [
+        191,
+        191
+      ],
+      "federation": true
+    },
+    {
+      "tick": 210,
+      "machines": 22,
+      "construction": 2,
+      "replicators": 6,
+      "highestGeneration": 1,
+      "metal": 74,
+      "research": [
+        201,
+        201
+      ],
+      "federation": true
+    },
+    {
+      "tick": 220,
+      "machines": 22,
+      "construction": 2,
+      "replicators": 6,
+      "highestGeneration": 1,
+      "metal": 114,
+      "research": [
+        211,
+        211
+      ],
+      "federation": true
+    },
+    {
+      "tick": 230,
+      "machines": 24,
+      "construction": 2,
+      "replicators": 8,
+      "highestGeneration": 2,
+      "metal": 21.64,
+      "research": [
+        220.41,
+        220.41
+      ],
+      "federation": true
+    },
+    {
+      "tick": 240,
+      "machines": 26,
+      "construction": 0,
+      "replicators": 10,
+      "highestGeneration": 2,
+      "metal": 57.344,
+      "research": [
+        229.336,
+        229.336
+      ],
+      "federation": true
+    },
+    {
+      "tick": 250,
+      "machines": 26,
+      "construction": 0,
+      "replicators": 10,
+      "highestGeneration": 2,
+      "metal": 90.144,
+      "research": [
+        237.536,
+        237.536
+      ],
+      "federation": true
+    },
+    {
+      "tick": 260,
+      "machines": 26,
+      "construction": 0,
+      "replicators": 10,
+      "highestGeneration": 2,
+      "metal": 122.944,
+      "research": [
+        245.736,
+        245.736
+      ],
+      "federation": true
+    },
+    {
+      "tick": 270,
+      "machines": 26,
+      "construction": 2,
+      "replicators": 10,
+      "highestGeneration": 2,
+      "metal": 25.744,
+      "research": [
+        253.936,
+        253.936
+      ],
+      "federation": true
+    },
+    {
+      "tick": 280,
+      "machines": 28,
+      "construction": 0,
+      "replicators": 12,
+      "highestGeneration": 2,
+      "metal": 56.312,
+      "research": [
+        261.578,
+        261.578
+      ],
+      "federation": true
+    },
+    {
+      "tick": 290,
+      "machines": 28,
+      "construction": 0,
+      "replicators": 12,
+      "highestGeneration": 2,
+      "metal": 85.392,
+      "research": [
+        268.848,
+        268.848
+      ],
+      "federation": true
+    },
+    {
+      "tick": 300,
+      "machines": 28,
+      "construction": 0,
+      "replicators": 12,
+      "highestGeneration": 2,
+      "metal": 114.472,
+      "research": [
+        276.118,
+        276.118
+      ],
+      "federation": true
+    },
+    {
+      "tick": 310,
+      "machines": 28,
+      "construction": 2,
+      "replicators": 12,
+      "highestGeneration": 2,
+      "metal": 13.552,
+      "research": [
+        283.388,
+        283.388
+      ],
+      "federation": true
+    },
+    {
+      "tick": 320,
+      "machines": 30,
+      "construction": 0,
+      "replicators": 14,
+      "highestGeneration": 2,
+      "metal": 41.744,
+      "research": [
+        290.436,
+        290.436
+      ],
+      "federation": true
+    },
+    {
+      "tick": 330,
+      "machines": 30,
+      "construction": 0,
+      "replicators": 14,
+      "highestGeneration": 2,
+      "metal": 67.864,
+      "research": [
+        296.966,
+        296.966
+      ],
+      "federation": true
+    },
+    {
+      "tick": 340,
+      "machines": 30,
+      "construction": 0,
+      "replicators": 14,
+      "highestGeneration": 2,
+      "metal": 93.984,
+      "research": [
+        303.496,
+        303.496
+      ],
+      "federation": true
+    },
+    {
+      "tick": 350,
+      "machines": 30,
+      "construction": 0,
+      "replicators": 14,
+      "highestGeneration": 2,
+      "metal": 120.104,
+      "research": [
+        310.026,
+        310.026
+      ],
+      "federation": true
+    },
+    {
+      "tick": 360,
+      "machines": 30,
+      "construction": 2,
+      "replicators": 14,
+      "highestGeneration": 2,
+      "metal": 16.224,
+      "research": [
+        316.556,
+        316.556
+      ],
+      "federation": true
+    },
+    {
+      "tick": 370,
+      "machines": 32,
+      "construction": 0,
+      "replicators": 16,
+      "highestGeneration": 2,
+      "metal": 41.124,
+      "research": [
+        322.781,
+        322.781
+      ],
+      "federation": true
+    },
+    {
+      "tick": 380,
+      "machines": 32,
+      "construction": 0,
+      "replicators": 16,
+      "highestGeneration": 2,
+      "metal": 64.804,
+      "research": [
+        328.701,
+        328.701
+      ],
+      "federation": true
+    },
+    {
+      "tick": 390,
+      "machines": 32,
+      "construction": 0,
+      "replicators": 16,
+      "highestGeneration": 2,
+      "metal": 88.484,
+      "research": [
+        334.621,
+        334.621
+      ],
+      "federation": true
+    },
+    {
+      "tick": 400,
+      "machines": 32,
+      "construction": 0,
+      "replicators": 16,
+      "highestGeneration": 2,
+      "metal": 112.164,
+      "research": [
+        340.541,
+        340.541
+      ],
+      "federation": true
+    },
+    {
+      "tick": 410,
+      "machines": 32,
+      "construction": 2,
+      "replicators": 16,
+      "highestGeneration": 2,
+      "metal": 5.844,
+      "research": [
+        346.461,
+        346.461
+      ],
+      "federation": true
+    },
+    {
+      "tick": 420,
+      "machines": 34,
+      "construction": 0,
+      "replicators": 18,
+      "highestGeneration": 2,
+      "metal": 29.324,
+      "research": [
+        352.331,
+        352.331
+      ],
+      "federation": true
+    },
+    {
+      "tick": 430,
+      "machines": 34,
+      "construction": 0,
+      "replicators": 18,
+      "highestGeneration": 2,
+      "metal": 51.004,
+      "research": [
+        357.751,
+        357.751
+      ],
+      "federation": true
+    },
+    {
+      "tick": 440,
+      "machines": 34,
+      "construction": 0,
+      "replicators": 18,
+      "highestGeneration": 2,
+      "metal": 72.684,
+      "research": [
+        363.171,
+        363.171
+      ],
+      "federation": true
+    },
+    {
+      "tick": 450,
+      "machines": 34,
+      "construction": 0,
+      "replicators": 18,
+      "highestGeneration": 2,
+      "metal": 94.364,
+      "research": [
+        368.591,
+        368.591
+      ],
+      "federation": true
+    }
+  ],
+  "final": {
+    "players": 2,
+    "machines": 34,
+    "replicators": 18,
+    "highestGeneration": 2,
+    "federation": true,
+    "metal": [
+      47.182,
+      47.182
+    ]
+  },
+  "conclusion": "Research unlocked layouts; two contributors delivered a federation; paid daughter replicators inherited programs. Growth slowed when power and metal became bottlenecks."
+}

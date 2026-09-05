@@ -4,3 +4,5 @@ test-results/
 playwright-report/
 .asset-cache/
 artifacts/*.log
+.world/
+.agent-access/
