@@ -1,0 +1,290 @@
+{
+  "status": "PASS",
+  "started": "2026-09-05T20:15:57.619Z",
+  "scope": "Disposable static publication only; no game API writes",
+  "models": [
+    {
+      "id": "seed",
+      "selected": "seed",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 3,
+      "drawCalls": 47,
+      "triangles": 35832,
+      "geometries": 24,
+      "cacheEntries": 1,
+      "camera": [
+        10.000000000000004,
+        7.3000000000000025,
+        12.000000000000004
+      ]
+    },
+    {
+      "id": "solar",
+      "selected": "solar",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 4,
+      "drawCalls": 29,
+      "triangles": 31016,
+      "geometries": 37,
+      "cacheEntries": 2,
+      "camera": [
+        10.000000000000004,
+        7.3000000000000025,
+        12.000000000000004
+      ]
+    },
+    {
+      "id": "miner",
+      "selected": "miner",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 5,
+      "drawCalls": 29,
+      "triangles": 56464,
+      "geometries": 50,
+      "cacheEntries": 3,
+      "camera": [
+        10.000000000000004,
+        7.3000000000000025,
+        12.000000000000004
+      ]
+    },
+    {
+      "id": "refinery",
+      "selected": "refinery",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 6,
+      "drawCalls": 29,
+      "triangles": 28992,
+      "geometries": 63,
+      "cacheEntries": 4,
+      "camera": [
+        10.000000000000004,
+        7.3000000000000025,
+        12.000000000000004
+      ]
+    },
+    {
+      "id": "replicator",
+      "selected": "replicator",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 7,
+      "drawCalls": 41,
+      "triangles": 28168,
+      "geometries": 82,
+      "cacheEntries": 5,
+      "camera": [
+        10.000000000000004,
+        7.3000000000000025,
+        12.000000000000004
+      ]
+    },
+    {
+      "id": "compute",
+      "selected": "compute",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 8,
+      "drawCalls": 29,
+      "triangles": 33840,
+      "geometries": 95,
+      "cacheEntries": 6,
+      "camera": [
+        10.000000000000004,
+        7.3000000000000025,
+        12.000000000000004
+      ]
+    },
+    {
+      "id": "builder",
+      "selected": "builder",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 9,
+      "drawCalls": 301,
+      "triangles": 83388,
+      "geometries": 244,
+      "cacheEntries": 7,
+      "camera": [
+        9.999999999999996,
+        7.300000000000001,
+        -12.000000000000002
+      ]
+    },
+    {
+      "id": "tunneler",
+      "selected": "tunneler",
+      "motion": false,
+      "visible": true,
+      "elapsed": 0,
+      "frameCount": 10,
+      "drawCalls": 187,
+      "triangles": 54852,
+      "geometries": 336,
+      "cacheEntries": 8,
+      "camera": [
+        9.999999999999996,
+        7.300000000000001,
+        -12.000000000000002
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "Eight models load, render, animate and pause",
+      "animatedElapsed": 0.19329999999999928
+    },
+    {
+      "name": "Desktop structure, all pictures, anchors and layout",
+      "chapters": 24,
+      "missingAnchors": [],
+      "duplicateIds": [],
+      "overflow": false,
+      "images": [
+        {
+          "src": "./images/hero.png",
+          "alt": "The existing Genesis replicator presented as the beginning of a future industrial civilization",
+          "width": 1400
+        },
+        {
+          "src": "./images/settlement.png",
+          "alt": "The existing developed lunar settlement with familiar machines, long shadows, and the sparse MOON interface",
+          "width": 2560
+        },
+        {
+          "src": "./figures/construction.svg",
+          "alt": "A proposed construction job progresses through reserve, supply, prepare, assemble, connect, commission and operate",
+          "width": 1240
+        },
+        {
+          "src": "./images/builder.png",
+          "alt": "Proposed Mason six-wheel construction rover with articulated tool arm and cargo platform",
+          "width": 1400
+        },
+        {
+          "src": "./images/seed.png",
+          "alt": "Pioneer seed lander studio view",
+          "width": 1400
+        },
+        {
+          "src": "./images/seed.png",
+          "alt": "Selected machine, static print view",
+          "width": 1400
+        },
+        {
+          "src": "./images/collection.png",
+          "alt": "Existing six-machine industrial art collection on individual studio platforms",
+          "width": 1800
+        },
+        {
+          "src": "./figures/corridor.svg",
+          "alt": "Conceptual cutaway of two settlements connected by a supported tunnel with separate freight, power and communications services",
+          "width": 1240
+        },
+        {
+          "src": "./figures/architecture.svg",
+          "alt": "Human, AI and observer clients connect through versioned commands to one authoritative simulation, with durable world state and isolated laboratory runs",
+          "width": 1240
+        }
+      ]
+    },
+    {
+      "name": "Construction explorer respects work positions, fabrication and distance",
+      "c4": {
+        "crew": 4,
+        "distance": 100,
+        "fabrication": 60,
+        "haul": 19.333333333333336,
+        "assembly": 15,
+        "test": 8,
+        "total": 102.33333333333334
+      },
+      "c16": {
+        "crew": 16,
+        "distance": 100,
+        "fabrication": 60,
+        "haul": 19.333333333333336,
+        "assembly": 15,
+        "test": 8,
+        "total": 102.33333333333334
+      },
+      "kit": {
+        "crew": 16,
+        "distance": 100,
+        "fabrication": 0,
+        "haul": 19.333333333333336,
+        "assembly": 15,
+        "test": 8,
+        "total": 42.333333333333336
+      },
+      "distant": {
+        "crew": 16,
+        "distance": 1000,
+        "fabrication": 0,
+        "haul": 139.33333333333334,
+        "assembly": 15,
+        "test": 8,
+        "total": 162.33333333333334
+      }
+    },
+    {
+      "name": "Growth explorer applies the printed analytical formula",
+      "g100": {
+        "hours": 24,
+        "factor": 1,
+        "daysTo90": 6.491853096329675,
+        "day14": 100
+      },
+      "g50": {
+        "hours": 24,
+        "factor": 0.5,
+        "daysTo90": 12.98370619265935,
+        "day14": 100
+      }
+    },
+    {
+      "name": "Capability ancestry and explanations"
+    },
+    {
+      "name": "Reduced-motion gallery, ownership trim and keyboard orbit"
+    },
+    {
+      "name": "Review notes persist locally and export as Markdown and JSON"
+    },
+    {
+      "name": "Print edition exported"
+    },
+    {
+      "name": "Mobile cover, navigation and interactive layout"
+    },
+    {
+      "name": "Full manuscript is readable without JavaScript"
+    },
+    {
+      "name": "Missing model returns a static poster and explicit retry"
+    },
+    {
+      "name": "Root and subpath publication, all file bytes and GLB magic",
+      "files": 33
+    },
+    {
+      "name": "No browser exceptions, missing requests or external runtime requests"
+    }
+  ],
+  "finished": "2026-09-05T20:16:39.885Z",
+  "pdf": "site/whitepaper.pdf",
+  "errors": [],
+  "badResponses": [],
+  "external": []
+}

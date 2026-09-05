@@ -1,0 +1,88 @@
+{
+  "version": "industrial-01",
+  "source": "art/blender/build_machines.py",
+  "units": "meters",
+  "fps": 24,
+  "models": {
+    "seed": {
+      "name": "PIONEER / Seed lander",
+      "file": "seed.glb",
+      "triangles": 16220,
+      "rigs": [
+        "Lander_wing_-1",
+        "Lander_wing_1",
+        "Comms_scan"
+      ],
+      "clip": "Work",
+      "cycleSeconds": 12.041666666666666,
+      "bytes": 1032980,
+      "sha256": "72aae25e6a4ef8dad6df7338453b38535f3f01b1c1ea7f4eff92e0116a752c78"
+    },
+    "solar": {
+      "name": "HELIOS / Solar array",
+      "file": "solar.glb",
+      "triangles": 13812,
+      "rigs": [
+        "Solar_tracking"
+      ],
+      "clip": "Work",
+      "cycleSeconds": 12.041666666666666,
+      "bytes": 911936,
+      "sha256": "034e5f5569b2fd8282ed9da4b9a96ad1d7b02d1608713757435f60b021d1a38f"
+    },
+    "miner": {
+      "name": "REGOLITH / Harvester",
+      "file": "miner.glb",
+      "triangles": 26536,
+      "rigs": [
+        "Drill_carriage",
+        "Auger_rotation",
+        "Survey_head"
+      ],
+      "clip": "Work",
+      "cycleSeconds": 12.041666666666666,
+      "bytes": 1192244,
+      "sha256": "b7855553d20443300b619f5c8e5f38545e7ae97493ec6a580ef69126e94bab98"
+    },
+    "refinery": {
+      "name": "FRACTION / Refinery",
+      "file": "refinery.glb",
+      "triangles": 12800,
+      "rigs": [
+        "Induction_rotor"
+      ],
+      "clip": "Work",
+      "cycleSeconds": 12.041666666666666,
+      "bytes": 574940,
+      "sha256": "6fa4d40e0344240e08e2beb38c25d385dab288829788ad9f5bb3e6fe338a7465"
+    },
+    "replicator": {
+      "name": "GENESIS / Replicator",
+      "file": "replicator.glb",
+      "triangles": 12388,
+      "rigs": [
+        "Fabrication_bridge",
+        "Fabrication_tool",
+        "Manufactured_part"
+      ],
+      "clip": "Work",
+      "cycleSeconds": 12.041666666666666,
+      "bytes": 812420,
+      "sha256": "a724f12596f7a07e6378777f6993618dc5fa9126b4f7683064e2dbcd164981ed"
+    },
+    "compute": {
+      "name": "NOUS / Mind node",
+      "file": "compute.glb",
+      "triangles": 15224,
+      "rigs": [
+        "Mind_core",
+        "Inner_gimbal",
+        "Outer_gimbal"
+      ],
+      "clip": "Work",
+      "cycleSeconds": 12.041666666666666,
+      "bytes": 741628,
+      "sha256": "f466591f65264c3ff7c873755486cec795968dd76fc9bc214e98e0444cb21a2a"
+    }
+  }
+}

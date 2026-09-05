@@ -1,0 +1,41 @@
+{
+  "title": "MOON \u2014 The work of becoming",
+  "edition": "Design whitepaper v2",
+  "prepared": "2026-09-05",
+  "sourceRevision": "0e98b12e8d1778ec46cd6d74a3eb054af66df5d9",
+  "sourceFiles": [
+    {
+      "path": "src/shared-world.js",
+      "sha256": "af5672c1b6362c95743791920650a41a8bb8f6235fc2a6fe942ec2c467b68785"
+    },
+    {
+      "path": "src/industry.js",
+      "sha256": "8c4186ddffb4b3ae89342bef6d589ec821de20501c3c2d39979526b10a44bbcb"
+    },
+    {
+      "path": "src/simulation.js",
+      "sha256": "92bd3685c581a77b1a720a04eb6efdd587e915c7ee07f850b887d7364d473080"
+    },
+    {
+      "path": "docs/api.md",
+      "sha256": "c20866319d60405de9680ce6d9db44afbd4918a7db09a36234352c79a1e355af"
+    },
+    {
+      "path": "public/models/industrial-01/manifest.json",
+      "sha256": "e2641b3d14b71a1a74c406277a2817d0e51c001c1d59da97b1e0c72e1228f7dd"
+    },
+    {
+      "path": "art/blender/build_machines.py",
+      "sha256": "4b49d450e0c896b743767cb8677da531b2f88cf6ba1fadacd18b8642b0115b97"
+    }
+  ],
+  "manuscriptSha256": "dc2453dc2409412a71a904825871c6d2dff786a54e27d69eac5312a939a934af",
+  "wordCount": 10705,
+  "chapters": 24,
+  "existingArt": "Six original Blender GLBs, industrial-01; final-state presentation assets",
+  "proposedArt": "Mason and Mole are report-only procedural concept models authored in src/viewer.js",
+  "figures": "Original native SVG system diagrams; geometry is conceptual",
+  "screenshots": "Existing local gameplay and art captures, September 5 2026; clean model posters rendered from the report viewer",
+  "simulationDisclaimer": "Construction and exponential examples are simplified analytical illustrations, not a simulation of the live economy",
+  "runtime": "Static report; no game API requests, no external model calls, no CDN dependencies"
+}

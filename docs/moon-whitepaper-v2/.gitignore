@@ -1,0 +1,5 @@
+site/
+verification/*.png
+verification/*.pdf
+.build/
+__pycache__/

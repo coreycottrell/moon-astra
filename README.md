@@ -75,6 +75,8 @@ The game server runs while browsers are closed. Stopping the server stops world 
 
 ## Civilization design proposal
 
+**New illustrated whitepaper v2 — The work of becoming:** [authoring directory and rebuild instructions](docs/moon-whitepaper-v2/README.md), [full design manuscript](docs/moon-whitepaper-v2/whitepaper.md), and [ACG publication handoff](docs/moon-whitepaper-v2/HOSTING-ACG.md). The standalone HTML publication includes 24 chapters, eight rotating model studies, diagrams, interactive construction/growth examples, review-note exports and a PDF edition. Source directory: `/home/corey/projects/moon-civilization/docs/moon-whitepaper-v2`; built site: its `site/` subdirectory. Local preview: `http://192.168.6.34:4190/moon-astra-whitepaper/` while the `moon-whitepaper` tmux server runs. Recommended public route: `https://ai-civ.com/moon-astra-whitepaper/`, for ACG to publish separately from the game.
+
 Read the [illustrated report](docs/moon-civilization-proposal/report.html), the [49-page PDF](docs/moon-civilization-proposal/report.pdf), or the [Markdown source](docs/moon-civilization-proposal/report.md). The complete proposal includes 46 technologies, 45 building families, AICIV collaboration, mind-driven invention, an exponential finale, and the longer roadmap. Most of that scope remains proposed. Its references to the original prototype describe the pre-fork baseline.
 
 The next useful milestone is **physical networks**: power cables, explicit depots and transport routes, and blueprints that include their connections. That makes logistics a spatial design problem before expanding the technology tree.
