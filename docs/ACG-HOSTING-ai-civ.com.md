@@ -6,13 +6,15 @@
 
 This document is the deployment handoff for ACG. Check the current VPS and site release before acting; the host-specific findings below were added during deployment work. This handoff alone does not establish which revision is currently serving the public URL.
 
+**Blender release addendum — September 5, 2026:** local art/game source `412eef1` adds six animated GLBs and a second entry page, `machines.html`. The current economy-v2 backend at `f372e8c` remains compatible; the reviewed backend/rules/protocol/dependency files are unchanged. For this release, publish the complete client and retain the existing API and database, recording both source SHAs. A public GET at 18:42 UTC still found the earlier `index-BRsLgszM.js` bundle and a 404 gallery. Read [ops.md](../ops.md), the [art deployment notes](../art/README.md#deploy-with-acg), and the [ACG review addendum](ACG-OPS-REVIEW-2026-09-05.md), including the old bundle-name assumption in the verifier, before using the initial-install procedures below.
+
 ## Current release checkpoint — economy version 2
 
 Use the tip of `development/shared-world` from `/home/corey/projects/moon-civilization`. It must include **`25b7931`** (10× slower harvest/refining, required local mind supervision, current-rate/status UI and saved-world migration) and **`9822f9a`** (ACG's Node path, pinned build shell and symlink entrypoint fixes). The latest source is committed locally. Git `origin` currently points to `/home/corey/projects/moon-astra`, the preserved local prototype; it is not a GitHub remote or the deployment source to pull on the VPS.
 
 Record the chosen revision with `git rev-parse HEAD`, transfer an archive of that revision to the VPS, and build the website client from the same revision. A Git archive includes the checked-in terrain assets and deployment templates, but excludes the local database, private player access files, dependencies and compiled outputs. `npm ci` and `npm run build:aiciv` generate the client. Keep the API's SQLite database outside the release directory.
 
-The upgrade was checked with 30 passing simulation/API tests, all three full browser scenarios, and an isolated starter-economy lab. At full power, harvesters extract 18/24 rock per minute and refineries produce 6 metal per minute. Each mind node supplies 4 capacity; harvesters/refineries/programmed replicators use 1/2/4. A node is now the first building in the guided opening. API observations expose each claim's `industry` status, and `/catalog` exposes the production rates and mind costs.
+The original economy upgrade was checked with 30 passing simulation/API tests, all three full browser scenarios, and an isolated starter-economy lab. The subsequent Blender release passed 31 core/API/model tests and four browser scenarios, including the animated gallery. At full power, harvesters extract 18/24 rock per minute and refineries produce 6 metal per minute. Each mind node supplies 4 capacity; harvesters/refineries/programmed replicators use 1/2/4. A node is now the first building in the guided opening. API observations expose each claim's `industry` status, and `/catalog` exposes the production rates and mind costs.
 
 **Release acceptance:** the API through both the VPS HTTPS endpoint and `https://ai-civ.com/moon-astra/api/v1/health` must report `ok: true`, `ruleset: "moon-neighbors-1"`, **`economyVersion: 2`**, and an advancing tick. Check `/catalog` for `production.refinery: 100` and `mind.costs.replicator: 4`. Verify the published browser shows mind capacity and the slower rates; an old static build can otherwise appear healthy against the new API.
 
@@ -63,7 +65,7 @@ npm run test:aiciv
 
 `test:aiciv` uses a disposable local world and a reverse proxy with different frontend/backend origins. It checks the complete prefixed asset load, WebGL, browser join and mutation, CLI bootstrap, exported access URL, unrelated-Origin rejection, and preservation of the site's root. Evidence: `artifacts/aiciv-hosting-results.json` and `artifacts/aiciv-subpath.png`. It verifies our routing model locally; ACG must still check real Netlify forwarding in staging.
 
-The preserved backup/tag `first-federation-v0.2.0` predates these hosting fixes. Use the current branch containing `scripts/build-aiciv.mjs`, `src/urls.js`, and this handoff. Deploy the frontend and API from the same source revision.
+The preserved backup/tag `first-federation-v0.2.0` predates these hosting fixes. Use the current branch containing `scripts/build-aiciv.mjs`, `src/urls.js`, and this handoff. Coordinate frontend/API versions when changing protocol or rules; the Blender-only release above keeps the compatible existing backend.
 
 ## 4. Install the persistent API on the selected host
 
@@ -154,7 +156,7 @@ rsync -a --delete /home/corey/projects/moon-civilization/dist-aiciv/ "$site_work
 cp /home/corey/projects/moon-civilization/NOTICE.md "$site_work/moon-astra/NOTICE.md"
 ```
 
-Choose an unused worktree path/branch if those already exist. The `--delete` target is **only the game subdirectory**, never the site root. If ACG already has a release worktree, use its established workflow instead. The resulting public files are `moon-astra/index.html`, `moon-astra/assets/`, `moon-astra/data/`, and the attribution notice.
+Choose an unused worktree path/branch if those already exist. The `--delete` target is **only the game subdirectory**, never the site root. If ACG already has a release worktree, use its established workflow instead. The resulting public files now include `moon-astra/index.html`, `moon-astra/machines.html`, `moon-astra/assets/`, `moon-astra/models/industrial-01/`, `moon-astra/data/`, and the attribution notice. This copy command does not preserve old hashed/model assets automatically; retain the required prior asset sets separately if existing open tabs must continue loading them.
 
 Merge [deploy/netlify-moon-astra.redirects](../deploy/netlify-moon-astra.redirects) into the worktree's existing `_redirects`, before any broader match. With the proposed API hostname, the API rule is:
 
@@ -212,7 +214,7 @@ Confirm browser network requests stay under `/moon-astra/`; none should escape t
 
 ## 8. Updates, backup, and rollback
 
-Keep the frontend and API on the same source revision and economy version as well as the same game ruleset. Before backend updates, record the release path and stop the single world service gracefully. Take a backup of the entire persistent directory, then switch the `current` symlink and restart. Never start a second production worker against the same SQLite database. Health 503 after a conflicting writer requires stopping the competing processes and restarting one, not deleting the database.
+Keep frontend/API protocol, economy version and ruleset compatible, recording both source revisions. Use matching revisions for a coordinated rules update; the Blender-only release explicitly supports the existing `f372e8c` backend. Before backend updates, record the release path and stop the single world service gracefully. Take a backup of the entire persistent directory, then switch the `current` symlink and restart. Never start a second production worker against the same SQLite database. Health 503 after a conflicting writer requires stopping the competing processes and restarting one, not deleting the database. ACG's separate scheduled production lane uses SQLite online backup without stopping the service; see [the operations runbook](../dev-ops.md#backups).
 
 Example backend backup on the host:
 
