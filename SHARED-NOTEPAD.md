@@ -18,7 +18,7 @@ Corey wants ACG to host the persistent game backend on the VPS and publish the m
 | Hosting checkpoint | `9822f9a` — ACG's Node/runtime and symlink-entrypoint fixes; includes the gameplay checkpoint |
 | Current handoff revision | Use the branch tip; `git log -1 --oneline` gives its exact commit |
 | Git remote | `origin` is `/home/corey/projects/moon-astra`, a local provenance clone; no hosted Git remote is configured |
-| Transfer package | Codex is preparing a committed-source archive under `/home/corey/moon-releases/`; `LATEST.json` will identify its revision and SHA-256 |
+| Transfer package | Verified committed-source archives are under `/home/corey/moon-releases/`; read `LATEST.json` for the selected archive's exact revision, path and SHA-256 |
 | Local game | `http://localhost:4175` / Wi-Fi `http://192.168.6.34:4175`; local API is loopback 4176 |
 | Original prototype | `/home/corey/projects/moon-astra`, localhost:4173; 62 original file hashes matched after the gameplay upgrade |
 | Website checkout | `/home/corey/projects/aiciv-inc-site`; use its Git deployment process and preserve unrelated changes |
@@ -41,7 +41,7 @@ Corey wants ACG to host the persistent game backend on the VPS and publish the m
 | Done | Codex | Commit gameplay upgrade; 30 simulation/API tests and 3 browser scenarios passed; root and website builds passed |
 | Done | ACG | Commit `9822f9a`; deployment guide records interpreter and symlink launch fixes |
 | Done | Codex | Recheck website subpath/proxy integration on 2026-09-05: `npm run test:aiciv` passed, zero browser errors; this was a disposable local test |
-| In progress | Codex | Commit this shared notepad and refreshed economy-v2 handoff, then produce a verified source archive and `LATEST.json` |
+| Done | Codex | Shared notepad and economy-v2 handoff committed; source archive and `LATEST.json` created, required server/terrain/deployment files checked, private world and credentials excluded |
 | Requested | ACG | Check current VPS deployment, install/update one persistent API process from the selected revision, retain its database outside releases |
 | Requested | ACG | Build the matching client with `npm run build:aiciv`; add it under the existing site's `moon-astra/` directory with scoped API proxy routes |
 | Requested | ACG | Verify actual HTTPS/proxied health and catalog report economy version 2; test browser and AI-client actions, persistence, and existing site routes |
@@ -64,3 +64,5 @@ Corey wants ACG to host the persistent game backend on the VPS and publish the m
 ### 2026-09-05 16:51 UTC — Codex
 
 Corey requested a working notepad shared with ACG while preparing the latest game for VPS/site hosting. Verified that `9822f9a` includes `25b7931` and that the current branch has no uncommitted gameplay code. Updated the deployment handoff to require economy version 2 and distinguish the local reset from an online-world migration. The website subpath/proxy smoke test passed locally. Created this canonical notepad; linking it from the README and deployment guide. No message was sent into ACG's terminal and no public deployment was performed by this step.
+
+Handoff preparation completed: the source archive contains the committed server, gameplay code, prepared terrain and deployment templates. It excludes private state and credentials. ACG can transfer the file identified by `/home/corey/moon-releases/LATEST.json`, extract it into a revision-named release, and follow the hosting guide. Build the public client from that same archive/revision. Git still has no hosted remote; the archive is a transfer option for the VPS.
