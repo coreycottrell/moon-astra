@@ -1,0 +1,32 @@
+{
+  "credit": "Elevation: NASA / LRO / LOLA Science Team, PDS Geosciences Node. Color: Solar System Scope / INOVE, CC BY 4.0, based on NASA imagery.",
+  "sourcePage": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+  "colorSource": "https://www.solarsystemscope.com/textures/",
+  "colorLicense": "https://creativecommons.org/licenses/by/4.0/",
+  "modifications": "Heights longitude-recentered and offset to uint16, then losslessly compressed. Color resized from 8k to 4k and converted to WebP; map preview resized.",
+  "sources": [
+    {
+      "file": "ldem_16.img",
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_16.img",
+      "sha256": "a511e40d7a3ea3275945b4da2a1df377133264fab0be94b7434b1cf8907254cb"
+    },
+    {
+      "file": "ldem_16.lbl",
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_16.lbl",
+      "sha256": "9aef29463ccc6ed3a3fbe0df3ecd830a99c69e16b564f455507dee2697096579"
+    },
+    {
+      "file": "8k_moon.jpg",
+      "url": "https://www.solarsystemscope.com/textures/download/8k_moon.jpg",
+      "sha256": "d1875bcec83588ca25e4802e576f6bb9f88b39e1e403cb41ff55867419c54796"
+    }
+  ],
+  "width": 5760,
+  "height": 2880,
+  "encoding": "gzip-compressed little-endian unsigned 16-bit, row-major, north to south",
+  "heightMeters": "sample * 0.5 - 10000",
+  "radiusMeters": 1737400,
+  "longitude": "west -180 to east +180, pixel centers",
+  "latitude": "north +90 to south -90, pixel centers",
+  "notes": "Global measured terrain; procedural details below the roughly 1.9 km equatorial elevation sample spacing are artistic, not surveyed."
+}

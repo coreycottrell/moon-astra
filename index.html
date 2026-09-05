@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111519" />
+    <meta name="description" content="One machine. An entire Moon. Build a self-replicating civilization on real lunar terrain." />
+    <title>MOON — The first machine</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111519'/%3E%3Ccircle cx='32' cy='32' r='20' fill='%23eab179'/%3E%3Ccircle cx='23' cy='24' r='18' fill='%23111519'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <main id="app">
+      <div id="scene" aria-label="Interactive 3D lunar surface"></div>
+      <div class="vignette"></div>
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Moon home"><span class="moon-symbol">◐</span><span>MOON<small>THE FIRST MACHINE</small></span></a>
+        <div class="resources" aria-label="Lunar network resources">
+          <div class="resource"><span class="resource-icon">◇</span><div><span class="eyebrow">METAL</span><strong id="metal">175</strong></div><span class="unit">t</span></div>
+          <div class="resource"><span class="resource-icon">◈</span><div><span class="eyebrow">LUNAR ROCK</span><strong id="rock">0</strong></div><span class="unit">t</span></div>
+          <div class="resource power"><span class="resource-icon">ϟ</span><div><span class="eyebrow">POWER</span><strong id="power">8 / 8</strong></div><span class="unit">MW</span></div>
+        </div>
+        <div class="top-actions"><button id="pause" class="icon-button" aria-label="Pause simulation" title="Pause · Space">Ⅱ</button><button id="sound" class="icon-button" aria-label="Enable sound" title="Sound">♪</button><button id="help" class="icon-button" aria-label="Open help" title="Field guide">?</button></div>
+      </header>
+      <aside class="mission-panel">
+        <div class="eyebrow accent"><span class="live-dot"></span> EXPEDITION 001</div>
+        <h1>One machine.<br>An entire Moon.</h1>
+        <p class="intro">Turn lunar rock into a civilization<br>that can build itself.</p>
+        <div class="mission-line"></div>
+        <div class="eyebrow">YOUR NEXT STEP <span id="step-number">01 / 05</span></div>
+        <h2 id="objective-title">Harvest the surface</h2>
+        <p id="objective-body">Place a harvester to begin collecting lunar rock.</p>
+        <div class="objective-progress"><span id="objective-progress"></span></div>
+        <div class="mind-panel"><div class="mind-heading"><span class="eyebrow">THE LUNAR MIND</span><span id="mind-state">DORMANT</span></div><div class="waveform" id="waveform"></div><p id="mind-message">A silent world. For now.</p><div class="mind-stats"><span><b id="nodes">0</b> mind nodes</span><span><b id="machines">1</b> machines</span></div></div>
+      </aside>
+      <nav class="view-switch" aria-label="View scale"><button data-view="surface" class="active">Surface</button><button data-view="region">Region</button><button data-view="orbit">Orbit <span>↗</span></button></nav>
+      <aside class="place-panel"><div class="eyebrow" id="place-kicker">MARE IMBRIUM</div><div class="coordinates" id="coordinates">28.500° N · 17.500° W</div><div class="place-actions"><button id="home" class="text-button">⌂ Seed base</button><button id="atlas" class="text-button">Explore the Moon ↗</button></div></aside>
+      <div id="marker-label" class="marker-label">SEED 001<span>THE BEGINNING</span></div>
+      <section id="inspect" class="inspect-panel" hidden><button id="close-inspect" class="close" aria-label="Close machine details">×</button><span class="eyebrow" id="inspect-type">MACHINE</span><h2 id="inspect-title"></h2><p id="inspect-body"></p><div id="inspect-progress"></div></section>
+      <div id="placement-hint" class="placement-hint" hidden><span id="placement-text"></span><kbd>R</kbd> rotate <kbd>ESC</kbd> cancel</div>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <section id="construction" class="construction" aria-label="Build machines"><div class="construction-heading"><span class="eyebrow">CONSTRUCTION</span><span id="construction-hint">Choose a machine. Give it a place.</span><button id="cancel-build" hidden>Cancel ×</button></div><div class="build-cards" id="build-cards"></div></section>
+      <aside class="mini-map"><button id="mini-atlas" aria-label="Open lunar atlas"><img src="/data/moon-map.webp" alt="Map of the Moon"/><span class="map-cross" id="map-cross"></span><span class="map-name">ONE CONNECTED MOON ↗</span></button></aside>
+      <footer class="statusbar"><span><i class="live-dot"></i><span id="save-status">LOCAL EXPEDITION</span></span><span class="controls-hint">DRAG TO ORBIT <b>·</b> RIGHT-DRAG TO PAN <b>·</b> SCROLL TO ZOOM</span><button id="borders" aria-pressed="false">REGION EDGES <span>OFF</span></button><span id="scale">100 m</span></footer>
+      <div class="loading" id="loading"><div class="loading-moon"></div><div class="eyebrow">MOON / EXPEDITION 001</div><h2>A world waiting<br>to wake up.</h2><p id="loading-detail">Preparing your landing</p><div class="loading-track"><span></span></div><button id="retry" hidden>Try again</button></div>
+      <dialog id="atlas-dialog"><div class="dialog-top"><div><div class="eyebrow accent">37.93 MILLION KM² · ONE WORLD</div><h2>The lunar atlas</h2></div><button class="close" data-close aria-label="Close atlas">×</button></div><p>Select anywhere on the map to visit the surface. Your machines remain part of the same world.</p><div class="atlas-map" id="atlas-map" role="button" tabindex="0" aria-label="Choose a lunar location on the map"><img src="/data/moon-map.webp" alt="Equirectangular map of the entire Moon, north at top and zero longitude at center"/><span class="atlas-grid"></span><span class="map-cross" id="atlas-cross"></span></div><div class="atlas-coords"><span>180° W</span><span>0°</span><span>180° E</span></div><div class="destinations" id="destinations"></div><p class="source-note">Measured elevation: NASA / LRO / LOLA. Surface image: Solar System Scope, CC BY 4.0. Fine surface details are procedural.</p></dialog>
+      <dialog id="help-dialog"><div class="dialog-top"><div><div class="eyebrow accent">FIELD GUIDE</div><h2>From rock to a mind.</h2></div><button class="close" data-close aria-label="Close help">×</button></div><p>Harvest rock, refine it into metal, and build machines. A replicator spends 30 metal every 24 seconds to build solar arrays, harvesters, refineries, mind nodes, and eventually another replicator.</p><p>Power is shared across your expedition. Add solar arrays when demand exceeds supply. Mind nodes grow a simulated lunar intelligence as your industry expands.</p><div class="help-controls"><div><kbd>1–5</kbd> Select a machine</div><div><kbd>CLICK</kbd> Place / inspect</div><div><kbd>DRAG</kbd> Orbit the camera</div><div><kbd>RIGHT DRAG</kbd> Pan across terrain</div><div><kbd>SCROLL</kbd> Change scale</div><div><kbd>R</kbd> Rotate a machine</div><div><kbd>ESC</kbd> Cancel placement</div><div><kbd>SPACE</kbd> Pause / resume</div><div><kbd>H</kbd> Return to seed</div><div><kbd>G</kbd> Show region edges</div></div><p>Your world saves in this browser. Simulation pauses while the tab is hidden; there is no offline production.</p><button id="export" class="primary-button">Export expedition save ↓</button><details><summary>Terrain & credits</summary><p>All regions share a sphere with a reference radius of 1,737.4 km. NASA LOLA heights define the large-scale terrain at 16 samples per degree. Rocks and finer detail are artistic. Lighting is arranged for play, rather than a real-time ephemeris. Prototype limit: 500 machines.</p><p><a href="https://pds-geosciences.wustl.edu/missions/lro/lola.htm" target="_blank" rel="noreferrer">NASA / LOLA elevation data</a> · <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noreferrer">Solar System Scope textures</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></p></details></dialog>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
