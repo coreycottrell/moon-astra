@@ -4,7 +4,7 @@ import {distanceOnMoon,offsetPosition} from './geography.js';
 import {UNIT,BLUEPRINT} from './shared-world.js';
 import {appPath} from './urls.js';
 const ACCESS='moon-civilization-access-v1',VIEW='moon-civilization-view-v1';
-export const FACTORY={name:'Balanced factory',cost:52,description:'A solar array, harvester, and refinery built from one certified layout.'};
+export const FACTORY={name:'Factory layout (3 machines)',cost:52,description:'Builds a solar array, harvester, and refinery together. Add a replicator separately for automated construction.'};
 export async function request(path,{token,body,key}={}){
   const response=await fetch(appPath('api/v1/'+path),{method:body===undefined?'GET':'POST',headers:{...(token?{Authorization:`Bearer ${token}`}:{ }),...(body!==undefined?{'Content-Type':'application/json'}:{}),...(key?{'Idempotency-Key':key}:{})},...(body!==undefined?{body:JSON.stringify(body)}:{})});
   const value=await response.json();if(!response.ok){const e=new Error(value.message||value.error||'World service unavailable');e.status=response.status;e.code=value.error;throw e;}return value;

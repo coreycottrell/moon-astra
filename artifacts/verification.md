@@ -23,3 +23,14 @@ Run `npm test`, `npm run lab`, `npm run build`, `npm run test:browser`, and `nod
 - `npm test`: **21 passed**. `npm run build` and the ordinary root-hosted production/CLI smoke check also passed after the URL changes. The earlier three full gameplay scenarios remain the milestone evidence; this follow-up used targeted hosting and root-production regression checks.
 - `systemd-analyze verify deploy/moon-astra.service` passed locally; the selected remote host still needs a suitable Node binary, user, paths, DNS, TLS, and actual service installation. Nginx was not installed locally, so the supplied location snippet was checked against documentation but not run here.
 - Handoff links were checked; all 62 files from the preserved original snapshot remain unchanged. The site checkout was inspected read-only. No live Netlify deployment, DNS change, or remote API installation occurred. ACG must verify the real Netlify route and header forwarding in staging.
+
+## Factory discoverability and first neighbor — September 5, 2026
+
+A live player's completed balanced factory was difficult to recognize because it appeared as three ungrouped machines and the objective panel stayed on a generic research-unlocked message. The event log confirmed that all three machines had commissioned successfully, with no queued construction remaining.
+
+- Added **Production layouts → Show on terrain**, three projected machine labels, and an explanation of the separate production pieces. Existing layouts are recognized from their authored geometry, so the locator works without a world migration or a retained construction event.
+- Replaced the generic post-research objective with guidance for missing/pending replicators, programs left Off, and the remaining delivered/in-transit federation share.
+- **25 core/API checks passed**, including four targeted layout/guidance regressions. The build passed. A separate 2560×1080 browser view of the live world successfully found the existing layout through the new button, displayed three labels, and showed the correct next action with no browser errors.
+- At the player's explicit request, Codex joined the live world as a separate neighbor, built its own starter settlement, delivered its own 60-metal project share, and used one paid replicator cycle to manufacture a second refinery before returning its program to Off. No player token was borrowed and no other player's machines, resources, or settings were changed by the review.
+- The desktop compositor denied direct wide-monitor capture. The screenshots are separate browser views of the same live settlement, saved privately outside the source repository at `/home/corey/moon-play-review/20260905/`.
+- The preserved original's 62-file snapshot remains unchanged. The pre-existing change to `artifacts/aiciv-subpath.png` was left alone.

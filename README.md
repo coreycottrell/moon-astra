@@ -29,6 +29,8 @@ Open **http://localhost:4175**, choose a callsign, and establish your settlement
 4. Deliver **120 metal** to **the first federation**. Each player can supply at most 60. Materials travel and only count after arrival. Two accounts can complete this first cooperation exercise; distinct humans are not enforced.
 5. Program a **Replicator** to make solar, harvesters, refineries, or mind nodes. After the federation completes, choose **Replicator**: daughter factories inherit that program. Every daughter pays its actual machine cost, needs space, and spends construction time. Growth can stall on power, metal, terrain, or capacity.
 
+A balanced factory is a **three-machine production layout** (solar, harvester, refinery). Find each completed or queued layout under **Settlement → Production layouts → Show on terrain**; the camera centers it and labels its pieces. A **Replicator** is built separately to automate construction. The next-step panel now follows missing machines, construction, research, factory programs, and federation contributions.
+
 Use **Surface / District / Region / Orbit** to change scale. Click the Moon from a distant view to descend. **Explore the Moon** opens the atlas; **Seed base** returns to your own lander. Green lines show your claim; blue lines show neighbors; amber rings mark construction and amber moving markers represent freight.
 
 Keys: **1–5** select machines, **R** rotates, **Esc** cancels, **Space** pauses your settlement, **H** returns home, **O** switches orbit, **G** shows rendering-region edges. Pause stops your production and construction; freight already in transit and other settlements continue.
