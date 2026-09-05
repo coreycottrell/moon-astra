@@ -1,0 +1,46 @@
+=== MOON deploy verification — STAGING (2026-09-05T18:41:01Z) ===
+
+== 1. Service is enabled and active on the host
+  PASS  moon-astra-staging is enabled (survives reboot)
+  PASS  moon-astra-staging is active
+  PASS  CONTROL: is-active goes red on a nonexistent unit
+
+== 2. The process is actually LISTENING (a started service is not a serving one)
+  PASS  listening on 127.0.0.1:4181
+  PASS  CONTROL: the listener probe goes red on an unused port
+
+== 3. ExecStart names an interpreter that EXISTS on this host
+  PASS  interpreter /opt/node-v24.20.0-linux-x64/bin/node exists and is executable
+  PASS  CONTROL: /usr/bin/node correctly absent (this is why the template path was wrong)
+
+== 4. --preserve-symlinks-main is present
+  PASS  --preserve-symlinks-main is on the ExecStart line
+
+== 5. Health over public HTTPS, and the world is ADVANCING
+  PASS  GET https://moon-astra-api-staging.ai-civ.com/api/v1/health -> 200
+  PASS  tick advancing 11600 -> 11603 (simulation is alive, not just the HTTP layer)
+
+== 6. Catalog reports the economy ruleset the client was built against
+  PASS  economyVersion = 2 (expect 2)
+  PASS  production.refinery = 100 (expect 100)
+  PASS  production.standardHarvester = 300 (expect 300)
+  PASS  production.bulkHarvester = 400 (expect 400)
+  PASS  production.rockPerMetal = 2 (expect 2)
+  PASS  mind.capacityPerNode = 4 (expect 4)
+  PASS  mind.costs.replicator = 4 (expect 4)
+
+== 7. Origin gate discriminates THREE ways (not just 'it answered')
+  PASS  untrusted origin -> 403 (fails CLOSED)
+  PASS  trusted origin + invalid name -> 400 (so 403 above was ABOUT THE ORIGIN, not a blanket refusal)
+  PASS  unauthenticated observe -> 401
+
+== 10. Backup lane — STAGING IS DELIBERATELY NOT BACKED UP
+  NOTE  staging has NO backup lane, by decision, not by oversight: it is a
+        disposable world fed by the Netlify branch-deploy preview. Losing it
+        costs a redeploy, not player state. If that ever stops being true,
+        add a second --label to moon_astra_backup.py pointing at
+        /var/lib/moon-astra-staging/world.sqlite. Owner: fleet-lead.
+        The manifest checked in production mode covers the PRODUCTION world
+        ONLY — do not read a green there as cover for this one.
+
+=== STAGING: 0 failed, 0 skipped ===

@@ -1,0 +1,52 @@
+=== MOON deploy verification — PRODUCTION (2026-09-05T18:40:18Z) ===
+
+== 1. Service is enabled and active on the host
+  SKIP  host root@203.0.113.222 unreachable — sections 1-4 and 9 not run (skipped, NOT passed)
+
+== 5. Health over public HTTPS, and the world is ADVANCING
+  FAIL  health did not return 200 (curl rc=0 http=404)
+  FAIL  tick did NOT advance ( -> ) — the server answers but the world is frozen
+
+== 6. Catalog reports the economy ruleset the client was built against
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+  File "/usr/lib/python3.12/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+== 7. Origin gate discriminates THREE ways (not just 'it answered')
+  FAIL  untrusted origin returned 404, expected 403 — the origin gate is not holding
+  FAIL  trusted origin + bad name returned 404, expected 400
+  FAIL  unauthenticated observe returned 404, expected 401
+
+== 8. The site proxy reaches PRODUCTION, not staging
+  PASS  GET https://ai-civ.com/moon-astra/api/v1/health -> 200
+  PASS  proxy tick 14361 != staging tick 11564 — the site is NOT wired to the staging world
+
+== 9. Entry page and asset integrity
+  PASS  https://ai-civ.com/moon-astra/ -> 200
+  PASS  entry page references a hashed JS bundle
+  PASS  CONTROL: a missing asset 404s (no SPA fallback masking broken builds)
+
+== 10. Backup lane is ALIVE, not merely configured
+  PASS  newest GREEN snapshot is 0.01h old (hourly lane; >3h means it stopped)
+  PASS  sha256_match = True
+  PASS  row_counts_match = True
+  PASS  offmachine_confirmed = True
+  PASS  local_opened = True
+  PASS  remote_opened = True
+  PASS  restored-copy integrity_check = ok
+  PASS  CONTROL: this gate HAS gone red 3x historically — it is not a false-green
+  PASS  no MOON-ASTRA-BACKUP-FAILED.flag
+
+=== PRODUCTION: 6 failed, 1 skipped ===
+NOTE: a SKIP is not a PASS. Those checks did not run.

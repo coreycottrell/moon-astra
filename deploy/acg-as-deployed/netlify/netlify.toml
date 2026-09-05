@@ -1,0 +1,88 @@
+[build]
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Old keptvoices/ dir migrated to dedicated keptvoices.com (2026-05-04).
+# Permanent redirect for any inbound links / SEO equity to new home.
+[[redirects]]
+  from = "/keptvoices/*"
+  to = "https://keptvoices.com/:splat"
+  status = 301
+  force = true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MOON /moon-astra/ — send NON-PRODUCTION deploys to the STAGING world
+# (added 2026-09-05, web-frontend-lead)
+#
+# THE HAZARD THIS CLOSES: _redirects proxies /moon-astra/api/* to the PRODUCTION
+# world. _redirects is not context-aware, so without this block a deploy preview
+# built from this branch would let test visitors join, build, and mutate the REAL
+# shared world from an untrusted build. Previews must play in their own sandbox.
+#
+# WHY IT IS DONE THIS WAY — verified against Netlify's docs, not assumed:
+#   • "Rules in the _redirects file are always processed first, followed by rules
+#     in the Netlify configuration file." First match wins, so a [[redirects]]
+#     block here can never override the _redirects line for the same path.
+#   • "Certain keys, such as [build] and [[plugins]] but not [[redirects]] or
+#     [[headers]], allow you to set [context] properties based on the kind of
+#     deploy." and "Redirects and headers are GLOBAL for all builds - they do not
+#     get scoped to contexts no matter where you define them in the file. For
+#     context-specific rules, use _headers or _redirects files, which are
+#     PER-DEPLOY."
+#   ⇒ Context-scoped redirect RULES are impossible. A per-deploy _redirects FILE
+#     is the documented mechanism, and [build].command IS context-scopable. So a
+#     context build command rewrites the one API line before publish.
+#
+# PRODUCTION IS DELIBERATELY UNTOUCHED: there is no `command` in [build] and no
+# [context.production] block, so a production deploy runs exactly the build it
+# ran before this change and serves _redirects verbatim -> production world.
+# This adds no build step to the main site; it only adds one to previews.
+#
+# THE COMMAND IS ITS OWN GATE. It does not just rewrite — it then PROVES the
+# rewrite took, and exits non-zero if not:
+#   • asserts the staging host is now present, AND
+#   • asserts no production API host survives anywhere in the file.
+# A half-applied rewrite fails the build instead of publishing a preview that
+# talks to production. Both assertions were tested to go red before shipping.
+#
+# STAGING BACKEND (fleet-lead-provisioned, isolated from production):
+#   staging  moon-astra-api-staging.ai-civ.com -> 127.0.0.1:4181, own SQLite world
+#   prod     moon-astra-api.ai-civ.com         -> 127.0.0.1:4180, live world
+# Verified from OFF the host (public internet, not from the box itself):
+#   both resolve to 87.99.131.49, both 200 with valid certs, and they are
+#   genuinely different worlds (staging tick 2419 vs production tick 5228).
+#
+# ⚠️ STILL OWED BEFORE A PREVIEW CAN ACTUALLY JOIN: the staging world's
+# MOON_PUBLIC_ORIGIN must list the preview's exact HTTPS origin, or the staging
+# world will correctly reject the join with ORIGIN_REJECTED. That is a backend
+# env change owned by fleet-lead, not a routing change. Per the hosting doc:
+# never "fix" a rejected preview join by broadening PRODUCTION origins.
+#
+# 🩹 npm-ci PREFIX ADDED 2026-09-05 (fleet-lead) — MEASURED, NOT PREDICTED.
+# The first real branch-deploy of this branch FAILED: deploy 6a9c42707825d00008e34172,
+# "Build script returned non-zero exit code: 2".
+#
+# CAUSE: a context `command` REPLACES the site's build command, it does not append
+# to it. The site's stored build command (Netlify API, build_settings.cmd) is
+# `cd netlify/functions && npm ci` — the only thing that installs `stripe`, which
+# netlify/functions/{create-checkout,stripe-webhook}.js both `require()`. The
+# original context blocks silently displaced it, so preview builds bundled
+# functions with no node_modules and died before publishing anything.
+#
+# WHY THE ORIGINAL LOOKED CORRECT: the sed half was verified in isolation and is
+# fine — it still returns 0 on a fresh clone under both bash and sh. The defect was
+# never in the command that was written; it was in the command that was ERASED.
+# A context build command is a REPLACEMENT, so it inherits the duty of everything
+# the site-level command was doing.
+#
+# PRODUCTION REMAINS UNTOUCHED: there is still no [build].command and no
+# [context.production] block, so production continues to run the stored site
+# command exactly as before and serves _redirects verbatim -> production world.
+
+[context.deploy-preview]
+  command = '''cd netlify/functions && npm ci && cd ../.. && sed -i 's|https://moon-astra-api\.ai-civ\.com/api/|https://moon-astra-api-staging.ai-civ.com/api/|g' _redirects && grep -q 'moon-astra-api-staging\.ai-civ\.com/api/' _redirects && ! grep -q 'https://moon-astra-api\.ai-civ\.com/api/' _redirects && echo "moon-astra: _redirects repointed to STAGING world for context=$CONTEXT"'''
+
+[context.branch-deploy]
+  command = '''cd netlify/functions && npm ci && cd ../.. && sed -i 's|https://moon-astra-api\.ai-civ\.com/api/|https://moon-astra-api-staging.ai-civ.com/api/|g' _redirects && grep -q 'moon-astra-api-staging\.ai-civ\.com/api/' _redirects && ! grep -q 'https://moon-astra-api\.ai-civ\.com/api/' _redirects && echo "moon-astra: _redirects repointed to STAGING world for context=$CONTEXT"'''

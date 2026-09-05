@@ -1,0 +1,58 @@
+=== MOON deploy verification — PRODUCTION (2026-09-05T18:40:48Z) ===
+
+== 1. Service is enabled and active on the host
+  PASS  moon-astra is enabled (survives reboot)
+  PASS  moon-astra is active
+  PASS  CONTROL: is-active goes red on a nonexistent unit
+
+== 2. The process is actually LISTENING (a started service is not a serving one)
+  PASS  listening on 127.0.0.1:4180
+  PASS  CONTROL: the listener probe goes red on an unused port
+
+== 3. ExecStart names an interpreter that EXISTS on this host
+  PASS  interpreter /usr/local/bin/node exists and is executable
+  PASS  CONTROL: /usr/bin/node correctly absent (this is why the template path was wrong)
+
+== 4. --preserve-symlinks-main is present
+  PASS  --preserve-symlinks-main is on the ExecStart line
+
+== 5. Health over public HTTPS, and the world is ADVANCING
+  PASS  GET https://moon-astra-api.ai-civ.com/api/v1/health -> 200
+  PASS  tick advancing 14383 -> 14387 (simulation is alive, not just the HTTP layer)
+
+== 6. Catalog reports the economy ruleset the client was built against
+  PASS  economyVersion = 2 (expect 2)
+  PASS  production.refinery = 100 (expect 100)
+  PASS  production.standardHarvester = 300 (expect 300)
+  PASS  production.bulkHarvester = 400 (expect 400)
+  PASS  production.rockPerMetal = 2 (expect 2)
+  PASS  mind.capacityPerNode = 4 (expect 4)
+  PASS  mind.costs.replicator = 4 (expect 4)
+
+== 7. Origin gate discriminates THREE ways (not just 'it answered')
+  PASS  untrusted origin -> 403 (fails CLOSED)
+  PASS  trusted origin + invalid name -> 400 (so 403 above was ABOUT THE ORIGIN, not a blanket refusal)
+  PASS  unauthenticated observe -> 401
+
+== 8. The site proxy reaches PRODUCTION, not staging
+  PASS  GET https://ai-civ.com/moon-astra/api/v1/health -> 200
+  PASS  proxy tick 14388 != staging tick 11591 — the site is NOT wired to the staging world
+  PASS  proxy tick 14388 within 1s of direct-API tick 14387 — same world
+
+== 9. Entry page and asset integrity
+  PASS  https://ai-civ.com/moon-astra/ -> 200
+  PASS  entry page references a hashed JS bundle
+  PASS  CONTROL: a missing asset 404s (no SPA fallback masking broken builds)
+
+== 10. Backup lane is ALIVE, not merely configured
+  PASS  newest GREEN snapshot is 0.01h old (hourly lane; >3h means it stopped)
+  PASS  sha256_match = True
+  PASS  row_counts_match = True
+  PASS  offmachine_confirmed = True
+  PASS  local_opened = True
+  PASS  remote_opened = True
+  PASS  restored-copy integrity_check = ok
+  PASS  CONTROL: this gate HAS gone red 3x historically — it is not a false-green
+  PASS  no MOON-ASTRA-BACKUP-FAILED.flag
+
+=== PRODUCTION: 0 failed, 0 skipped ===

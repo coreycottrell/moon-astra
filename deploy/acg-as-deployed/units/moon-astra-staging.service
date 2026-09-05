@@ -1,0 +1,39 @@
+[Unit]
+Description=MOON Astra STAGING world API (isolated from production)
+After=network.target
+
+[Service]
+Type=simple
+User=moon-astra
+Group=moon-astra
+WorkingDirectory=/srv/moon-astra-staging/current
+# Same system-wide Node 24.20 binary as production. /usr/bin/node does NOT exist on this host.
+# --preserve-symlinks-main is REQUIRED: launched through the `current` symlink without it the
+# entrypoint guard is false and the process exits 0 in ms with no listener (handoff doc s4).
+ExecStart=/opt/node-v24.20.0-linux-x64/bin/node --preserve-symlinks-main /srv/moon-astra-staging/current/server/world-server.mjs
+Environment=NODE_ENV=production
+Environment=MOON_HOST=127.0.0.1
+Environment=MOON_PORT=4181
+Environment=MOON_DB=/var/lib/moon-astra-staging/world.sqlite
+# The BRANCH-DEPLOY origin for branch deploy/moon-astra. Netlify slugifies the branch name
+# (slash -> dash): deploy/moon-astra -> deploy-moon-astra. Set 2026-09-05 from deploy
+# 6a9c440e97694a0007408759 (context=branch-deploy, state=ready, commit e059f43).
+# world-server.mjs takes ONE origin, not a list (new URL(...).origin) - a second origin cannot
+# be appended here. Fails CLOSED (ORIGIN_REJECTED) for every other origin, by design.
+# NEVER put this origin on the PRODUCTION unit; production trusts https://ai-civ.com only.
+Environment=MOON_PUBLIC_ORIGIN=https://deploy-moon-astra--aiciv-inc.netlify.app
+# StateDirectory grants the ONLY writable path. With ProtectSystem=strict the whole rest of the
+# filesystem is read-only to this unit, so it CANNOT write /var/lib/moon-astra/world.sqlite.
+StateDirectory=moon-astra-staging
+StateDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

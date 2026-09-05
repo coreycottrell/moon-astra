@@ -1,0 +1,153 @@
+{
+  "schema": "acg.fleet.service-inventory/1",
+  "source": "ACG data/fleet/service-inventory.json (fleet-lead)",
+  "extracted_ts": "2026-09-05T18:35:00Z",
+  "services": [
+    {
+      "id": "moon-astra-prod",
+      "title": "MOON Astra shared world API (PRODUCTION)",
+      "status": "LIVE",
+      "owner_vp": "fleet-lead",
+      "collaborating_vps": [
+        "architecto-lead",
+        "web-frontend-lead"
+      ],
+      "board_identity": [
+        "moon-astra-prod",
+        "moon-astra.service",
+        "moon-astra-api.ai-civ.com"
+      ],
+      "host": "aiciv-hub",
+      "unit": "moon-astra.service",
+      "unit_path": "/etc/systemd/system/moon-astra.service",
+      "run_user": "moon-astra",
+      "release_path": "/srv/moon-astra",
+      "current_release": "releases/f372e8c",
+      "exec_start": "/usr/local/bin/node --preserve-symlinks-main /srv/moon-astra/current/server/world-server.mjs",
+      "listen": [
+        {
+          "addr": "127.0.0.1",
+          "port": 4180,
+          "scope": "loopback"
+        }
+      ],
+      "vhosts": [
+        "moon-astra-api.conf"
+      ],
+      "public_endpoints": [
+        {
+          "url": "https://moon-astra-api.ai-civ.com/api/v1/health",
+          "expect_status": 200,
+          "note": "everything outside /api/v1/ returns 404 by design"
+        }
+      ],
+      "tls": [
+        {
+          "cert_name": "moon-astra-api.ai-civ.com",
+          "path": "/etc/letsencrypt/live/moon-astra-api.ai-civ.com/fullchain.pem",
+          "renewal": "certbot"
+        }
+      ],
+      "dns": [
+        {
+          "name": "moon-astra-api.ai-civ.com",
+          "a": "87.99.131.49"
+        }
+      ],
+      "stores": [
+        {
+          "kind": "sqlite",
+          "path": "/var/lib/moon-astra/world.sqlite",
+          "mode": "WAL",
+          "note": "the live world; accumulates player state continuously"
+        }
+      ],
+      "backup_lane": {
+        "covered": true,
+        "mechanism": "tools/moon_astra_backup.py \u2014 sqlite ONLINE BACKUP API on the host (never a cp of a live db, never a service stop) -> integrity_check + per-table row counts on the hub -> gzip+sha256 -> scp to workstation -> local sha256 must equal the hub's -> local OPEN whose row counts must equal the hub's",
+        "chronos_event": "evt_moon_astra_world_backup_hourly",
+        "schedule": "DTSTART:20260905T155300Z RRULE:FREQ=HOURLY",
+        "manifest": "data/durability/moon_astra_manifest.jsonl",
+        "offmachine_dir": "data/durability/moon-astra/",
+        "fail_flag": "data/durability/MOON-ASTRA-BACKUP-FAILED.flag",
+        "note": "Born 2026-09-05: before that the world had been live and accumulating state with ZERO backups \u2014 /var/backups/moon-astra did not exist at all."
+      },
+      "declared_by": "fleet-lead",
+      "declared_ts": "2026-09-05T17:50:00Z",
+      "verified_ts": "2026-09-05T17:45:00Z",
+      "verified_how": "ssh aiciv-hub systemctl show + ss -lntp + nginx -T + certbot certificates + stat; public HTTPS probe from the workstation returned 200"
+    },
+    {
+      "id": "moon-astra-staging",
+      "title": "MOON Astra STAGING world API (isolated from production)",
+      "status": "LIVE",
+      "owner_vp": "fleet-lead",
+      "collaborating_vps": [
+        "architecto-lead",
+        "web-frontend-lead"
+      ],
+      "board_identity": [
+        "moon-astra-staging",
+        "moon-astra-staging.service",
+        "moon-astra-api-staging.ai-civ.com"
+      ],
+      "host": "aiciv-hub",
+      "unit": "moon-astra-staging.service",
+      "unit_path": "/etc/systemd/system/moon-astra-staging.service",
+      "run_user": "moon-astra",
+      "release_path": "/srv/moon-astra-staging",
+      "current_release": "releases/f372e8c",
+      "exec_start": "/opt/node-v24.20.0-linux-x64/bin/node --preserve-symlinks-main /srv/moon-astra-staging/current/server/world-server.mjs",
+      "listen": [
+        {
+          "addr": "127.0.0.1",
+          "port": 4181,
+          "scope": "loopback"
+        }
+      ],
+      "vhosts": [
+        "moon-astra-staging-api.conf"
+      ],
+      "public_endpoints": [
+        {
+          "url": "https://moon-astra-api-staging.ai-civ.com/api/v1/health",
+          "expect_status": 200
+        }
+      ],
+      "tls": [
+        {
+          "cert_name": "moon-astra-api-staging.ai-civ.com",
+          "path": "/etc/letsencrypt/live/moon-astra-api-staging.ai-civ.com/fullchain.pem",
+          "renewal": "certbot"
+        }
+      ],
+      "dns": [
+        {
+          "name": "moon-astra-api-staging.ai-civ.com",
+          "a": "87.99.131.49"
+        }
+      ],
+      "stores": [
+        {
+          "kind": "sqlite",
+          "path": "/var/lib/moon-astra-staging/world.sqlite",
+          "mode": "WAL",
+          "note": "StateDirectory grants the ONLY writable path; ProtectSystem=strict means this unit CANNOT reach the production world file"
+        }
+      ],
+      "backup_lane": {
+        "covered": false,
+        "why_not": "DELIBERATE, and stated so it is a decision rather than an oversight: staging is a disposable world fed by the Netlify branch-deploy preview. Losing it costs a redeploy, not player state.",
+        "if_that_changes": "add a second --label to tools/moon_astra_backup.py pointing at /var/lib/moon-astra-staging/world.sqlite; owner fleet-lead"
+      },
+      "config_hazards": [
+        "MOON_PUBLIC_ORIGIN is a SINGLE origin (new URL(...).origin), not a list \u2014 a second origin cannot be appended. Fails CLOSED with ORIGIN_REJECTED for every other origin, by design.",
+        "Staging trusts https://deploy-moon-astra--aiciv-inc.netlify.app only. NEVER put that origin on the production unit; production trusts https://ai-civ.com only."
+      ],
+      "declared_by": "fleet-lead",
+      "declared_ts": "2026-09-05T17:50:00Z",
+      "verified_ts": "2026-09-05T17:45:00Z",
+      "verified_how": "ssh aiciv-hub systemctl show + ss -lntp + nginx -T + certbot certificates + stat; public HTTPS probe from the workstation returned 200"
+    }
+  ]
+}
