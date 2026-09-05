@@ -23,13 +23,17 @@ npm run dev
 
 Open **http://localhost:4175**, choose a callsign, and establish your settlement. Friends on the same trusted network can use `http://YOUR-MACHINE-IP:4175`. Each player receives a neighboring claim, a seed lander, and 240 metal. To resume elsewhere, use **Settlement → Export my access token** and enter that token in the join screen.
 
-1. Build a **Harvester**, **Solar array**, and **Refinery**. Each machine occupies real terrain, costs local metal, and takes 5–12 simulation seconds to construct. Deposits are finite; power belongs to that settlement.
-2. Add a **Mind node**. At 120 research work, it unlocks a complete **balanced factory layout** and **programmable replicators**. A powered node produces one work per second. The first layouts are authored game designs, not live model-generated CAD.
+1. Build a **Mind node**, **Harvester**, **Solar array**, and **Refinery**. Each machine occupies real terrain, costs local metal, and takes 5–12 simulation seconds to construct. A mind node supplies 4 shared capacity: a harvester needs 1, a refinery 2, and a programmed replicator 4. Industry waits until it has supervision.
+2. Keep the node powered. At 120 research work, it unlocks a complete **balanced factory layout** and **programmable replicators**. A powered node produces one work per second while supervising machines. The first layouts are authored game designs, not live model-generated CAD.
 3. Open **Settlement** to visit neighbors, send material shipments, or grant construction access. A builder you authorize spends your settlement's metal; they do not gain control of shipments or factory programs.
 4. Deliver **120 metal** to **the first federation**. Each player can supply at most 60. Materials travel and only count after arrival. Two accounts can complete this first cooperation exercise; distinct humans are not enforced.
-5. Program a **Replicator** to make solar, harvesters, refineries, or mind nodes. After the federation completes, choose **Replicator**: daughter factories inherit that program. Every daughter pays its actual machine cost, needs space, and spends construction time. Growth can stall on power, metal, terrain, or capacity.
+5. Add a second **Mind node**, then program a **Replicator** to make solar, harvesters, refineries, or mind nodes. One harvester, one refinery and one programmed replicator use 7 capacity, so they need two nodes. After the federation completes, choose **Replicator**: daughters inherit that program but each needs another 4 capacity. Every daughter pays its actual machine cost, needs space, and spends construction time.
 
 A balanced factory is a **three-machine production layout** (solar, harvester, refinery). Find each completed or queued layout under **Settlement → Production layouts → Show on terrain**; the camera centers it and labels its pieces. A **Replicator** is built separately to automate construction. The next-step panel now follows missing machines, construction, research, factory programs, and federation contributions.
+
+Harvesting and refining now run at **one-tenth the initial preview speed**. At full power, each supervised harvester extracts **18 or 24 rock/min**, depending on its claim; each refinery consumes **12 rock/min** to produce **6 metal/min**. These are gameplay resource units. Deposits remain finite. Settlement shows current throughput, mind capacity, and individual waiting machines. The resource counters include tenths so slow progress stays visible.
+
+Capacity belongs to the local claim. Harvesters receive supervision first, then refineries, then replicators; older machines go first within each type. Unsupplied machines wait and draw no operating power. Replicators set to **Off** release capacity; waiting replicators retain their cycle progress. Power shortages slow supervised work and research together. Nodes and solar can always be built manually. One node supports a production line; two support that line plus a replicator; three support two production lines plus a replicator. Adding machines never creates free supervision.
 
 Use **Surface / District / Region / Orbit** to change scale. Click the Moon from a distant view to descend. **Explore the Moon** opens the atlas; **Seed base** returns to your own lander. Green lines show your claim; blue lines show neighbors; amber rings mark construction and amber moving markers represent freight.
 
@@ -46,7 +50,7 @@ npm run agent -- --access .agent-access/acg.json bootstrap
 npm run agent -- --access .agent-access/acg.json cooperate
 ```
 
-`bootstrap` queues one of each starter machine, searching for suitable terrain through the preview endpoint. Repeating it skips types already built or queued. `cooperate` supplies the player's remaining federation contribution. These are finite scripted helpers, not autonomous model agents. They run only when you invoke them. Access files are private, Git-ignored, and created with mode `0600`.
+`bootstrap` queues one of each starter machine, searching for suitable terrain through the preview endpoint. Repeating it skips types already built or queued. Its replicator starts Off; add a second mind node before programming it alongside the production line. `cooperate` supplies the player's remaining federation contribution. These are finite scripted helpers, not autonomous model agents. They run only when you invoke them. Access files are private, Git-ignored, and created with mode `0600`.
 
 Use `--url http://HOST:4175` for another machine. See the [API contract and command examples](docs/api.md) for observations, permissions, previews, idempotent commands, and event streams.
 

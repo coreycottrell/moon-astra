@@ -22,6 +22,16 @@ The fork is an independent Git clone on `development/shared-world`. Tag `prototy
 
 Work in the fork. Do not change the original directory, its running server, or browser key `moon-astra-world-v1`. The fork's browser stores only its private token under `moon-civilization-access-v1` and view under `moon-civilization-view-v1`; economic state belongs to SQLite. There is no migration from the original browser-only save.
 
+## Economy version 2 update
+
+The slower production and local mind-capacity rules are enforced by the API server. Restart that server after updating; Vite hot reload alone does not change live production. Before restarting an existing deployment, stop its one world process cleanly and back up its entire database directory, including any SQLite WAL files. Preserve player access files separately. Never copy a disposable test world over the live database.
+
+On startup, a format-2 world with no `economyVersion` (or version 1) is migrated once to economy version 2: stored harvester rates are divided by ten, a rules-update event is recorded, and claim revisions advance. Inventory, deposits, machines, jobs, programs, research, shipments, identities and command receipts are retained. The update uses the existing transactional single-writer check. Future unknown economy versions are rejected. Subsequent restarts do not divide rates again. `/api/v1/health` and `/catalog` report `economyVersion: 2`; `/observe` includes per-claim `industry` status and current rates.
+
+Existing factories may wait if their local mind capacity is insufficient. Each node supplies 4 capacity; harvester/refinery/programmed replicator use 1/2/4. The UI identifies the affected machines and offers node placement. Do not grant replacement resources or modify player programs during migration. Rates and supervision constants live in `src/industry.js`; the deterministic lab verifies that the starter economy can fund expansion without injected materials.
+
+For the local upgrade, the user explicitly requested a fresh start. The stopped pre-reset world (116 machines, tick 13,040) is preserved at `/home/corey/moon-world-backups/before-economy-v2-reset-2026-09-05T160725-150Z/world/`, with `reset-report.json` beside it. Both existing player IDs and claim addresses were retained; the world was recreated with only starting landers, 240 metal per claim, full deposits and zero progress. Old command receipts were cleared. This was a one-time requested reset, **not** automatic startup behavior. Saved browser and CLI logins still work.
+
 ## Runtime and commands
 
 Tested on Node 24.13.1 and npm 11.8.0 on Linux. Use Node 24.13 or newer in the 24.x series. `node:sqlite` is bundled with Node and currently emits an experimental warning. Dependencies remain the locked Three.js, Vite, and Playwright packages; no database package or cloud account is needed.

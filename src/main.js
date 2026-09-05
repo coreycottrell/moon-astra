@@ -9,12 +9,17 @@ import {createMachine,positionMachine,animateMachine,createRocks,disposeMachine}
 import {TYPES} from './simulation.js';
 import {connectWorld,FACTORY} from './network.js';
 import {cellBoundary} from './claims.js';
-import {BLUEPRINT,UNIT,PROJECT_COST,PLANNER_WORK} from './shared-world.js';
+import {BLUEPRINT,UNIT,PROJECT_COST,PLANNER_WORK,industryFor} from './shared-world.js';
+import {MIND,PRODUCTION} from './industry.js';
 import {appPath,BASE_URL} from './urls.js';
 import {factoryLayouts,nextObjective} from './guidance.js';
 
 const $=id=>document.getElementById(id);
 const format=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
+const resourceFormat=new Intl.NumberFormat('en-US',{maximumFractionDigits:1,minimumFractionDigits:1});
+const industryStatus={active:'Supervised', 'mind-limited':'Waiting for mind capacity','deposit-empty':'Deposit exhausted','no-feedstock':'Waiting for rock',off:'Off · capacity released',paused:'Settlement paused'};
+const claimIndustry=cid=>sim.state.industry?.[cid]||industryFor(sim.state,cid);
+function machineStatus(m){const i=claimIndustry(m.claimId);return industryStatus[i.states[m.id]]||'Online';}
 const coordText=({lat,lon})=>`${Math.abs(lat).toFixed(3)}° ${lat<0?'S':'N'} · ${Math.abs(lon).toFixed(3)}° ${lon<0?'W':'E'}`;
 const sites=[{name:'Mare Imbrium',lat:28.5,lon:-17.5},{name:'Copernicus crater',lat:9.62,lon:-20.08},{name:'Tycho crater',lat:-43.3,lon:-11.2},{name:'Sea of Tranquility',lat:8.5,lon:31.4},{name:'The far side',lat:0,lon:180},{name:'South pole',lat:-89.9,lon:0}];
 const icons={
@@ -80,9 +85,11 @@ function renderColony(force=false){
   const w=sim.state,c=sim.activeClaim,own=c.ownerId===sim.actor.id,unlocked=c.unlocks.includes('factory-plans'),canBuild=own||c.builders.includes(sim.actor.id);
   const reserved=w.shipments.filter(s=>s.project&&s.ownerId===sim.actor.id).reduce((n,s)=>n+s.metal,0),contribution=w.project.contributions[sim.actor.id]||0,available=Math.max(0,(PROJECT_COST/2-contribution-reserved)/UNIT);
   const localJobs=w.jobs.filter(j=>j.claimId===c.id),replicas=w.machines.filter(m=>m.claimId===c.id&&m.type==='replicator'),layouts=factoryLayouts(w,c.id);
+  const industry=claimIndustry(c.id);
   $('colony-title').textContent=c.name;
   $('colony-content').innerHTML=`
-    <section class="colony-box"><h3>Your place in the Moon</h3><p>${escapeHTML(c.id)} · ${c.areaKm2.toFixed(2)} km²</p><p>${escapeHTML(c.profile)}</p><p>${format.format(c.deposit/UNIT)} rock remains · ${c.yieldPerSecond/UNIT} / powered harvester / s</p><p>${Math.floor(c.metal/UNIT)} metal · ${Math.floor(c.rock/UNIT)} stored rock</p><p>${own?'You own this settlement.':canBuild?'You have construction access here.':'Visit, learn, and ask the owner for construction access.'}</p><button id="district-view">View district ↗</button><button id="access-export">Export my access token ↓</button></section>
+    <section class="colony-box"><h3>Your place in the Moon</h3><p>${escapeHTML(c.id)} · ${c.areaKm2.toFixed(2)} km²</p><p>${escapeHTML(c.profile)}</p><p>${format.format(c.deposit/UNIT)} rock remains · ${c.yieldPerSecond/UNIT*60} rock/min per supervised harvester at full power</p><p>${resourceFormat.format(c.metal/UNIT)} metal · ${resourceFormat.format(c.rock/UNIT)} stored rock</p><p id="production-rates">Current output: ${resourceFormat.format(industry.harvestPerSecond/UNIT*60)} rock/min · ${resourceFormat.format(industry.refinePerSecond/UNIT*60)} metal/min</p><p>${own?'You own this settlement.':canBuild?'You have construction access here.':'Visit, learn, and ask the owner for construction access.'}</p><button id="district-view">View district ↗</button><button id="access-export">Export my access token ↓</button></section>
+    <section class="colony-box" id="mind-capacity"><h3>Mind capacity · ${industry.used} / ${industry.capacity} in use</h3><p>${industry.nodes} mind nodes · ${industry.requiredNodes} needed for the current workload</p><p>Each node supplies 4 capacity. Harvester: 1 · Refinery: 2 · Replicator: 4. Harvesters, then refineries, then replicators receive supervision; oldest first.</p><p>${industry.blockedIds.length?`${industry.blockedIds.length} machine(s) waiting for mind capacity. Build another node or switch a replicator Off.`:'All requested work has supervision.'} Power shortages slow supervised work and research together.</p>${w.machines.filter(m=>m.claimId===c.id&&MIND.costs[m.type]).map(m=>`<p>${escapeHTML(TYPES[m.type].name)} ${m.id} · ${machineStatus(m)}</p>`).join('')}<button id="add-mind" ${canBuild?'':'disabled'}>Place mind node · 35 metal</button></section>
     <section class="colony-box"><h3>01 · Intelligence changes the plan</h3><p>${unlocked?'Factory plans are online. One instruction can now place a working production layout.':'Powered mind nodes research factory layouts and programmable replication.'}</p><progress value="${Math.min(c.thought,PLANNER_WORK)}" max="${PLANNER_WORK}"></progress><p>${Math.floor(c.thought/UNIT)} / ${PLANNER_WORK/UNIT} research work</p><button id="deploy-factory" class="factory-button" ${!unlocked||!canBuild?'disabled':''}>Place factory layout · 3 machines · 52 metal</button><p>Builds a solar array, harvester, and refinery. The three machines appear separately after 5–8 seconds. A replicator is a separate machine.</p></section>
     <section class="colony-box colony-wide"><h3>Production layouts · ${layouts.length}</h3>${layouts.map(l=>`<div class="neighbor"><strong>Balanced factory layout ${l.id} · ${l.completed} / 3 machines complete</strong><small>Solar array + harvester + refinery</small><button data-show-layout="${l.id}">Show on terrain ↗</button></div>`).join('')||'<p>Your factory layouts will appear here, with a button to find their three machines on the terrain.</p>'}</section>
     <section class="colony-box"><h3>02 · The first federation</h3><p>${w.project.complete?'Recursive factory designs are shared. Replicators can build replicators that inherit their program.':'Deliver a shared 120 metal. Each player can supply at most 60, so this capability needs a partner.'}</p><progress value="${Math.min(w.project.delivered,PROJECT_COST)}" max="${PROJECT_COST}"></progress><p>${w.project.delivered/UNIT} / 120 delivered · your share ${contribution/UNIT} delivered + ${reserved/UNIT} in transit</p><button id="contribute" ${!own||available<1||w.project.complete?'disabled':''}>Ship ${Math.min(20,available)} metal to federation</button><p>Freight travels at an abstract 50 m/s. Metal changes hands only on arrival.</p></section>
@@ -90,6 +97,7 @@ function renderColony(force=false){
     <section class="colony-box colony-wide"><h3>Neighbors · ${w.players.length} / 24 settlements</h3>${w.players.filter(p=>p.id!==sim.actor.id).map(p=>{const other=w.claims.find(x=>x.id===p.homeClaimId);return `<div class="neighbor"><strong>${escapeHTML(p.name)}</strong><small>${escapeHTML(other.profile)} · ${(distanceOnMoon(c.home,p.home)/1000).toFixed(1)} km away · ${Math.floor(other.metal/UNIT)} metal</small><button data-visit="${p.id}">Visit ↗</button><button data-send="${other.id}" ${!own||other.id===c.id?'disabled':''}>Send 20 metal</button><button data-grant="${p.id}" ${!own?'disabled':''}>${c.builders.includes(p.id)?'Revoke':'Grant'} construction access</button></div>`;}).join('')||'<p>Your first neighbor could be a friend or an AI client. They join the same game address and use the same construction rules.</p>'}<p class="source-note">Granting access lets that player build using this settlement’s metal. Ownership, shipments, and factory programs remain yours.</p></section>
     <section class="colony-box colony-wide"><h3>Work in motion</h3><p>${localJobs.length?localJobs.map(j=>`${escapeHTML(TYPES[j.type].name)} · ${j.remaining}s${c.paused?' (paused)':''}`).join(' / '):'No local construction queued.'}</p>${w.shipments.map(s=>`<p class="construction-job">${s.metal/UNIT} metal → ${s.project?'federation':escapeHTML(w.claims.find(x=>x.id===s.to).name)} · ${Math.max(0,s.arrivesAt-w.tick)}s to arrival</p>`).join('')}<div id="colony-events">${w.events.slice(-8).reverse().map(e=>`<div>T+${e.tick} · ${escapeHTML(e.message)}</div>`).join('')}</div></section>`;
   $('district-view').onclick=()=>{$('colony-dialog').close();setLocation(c.home,c.name,'district');};
+  $('add-mind').onclick=()=>{$('colony-dialog').close();selectBuild('compute');};
   $('deploy-factory').onclick=()=>{$('colony-dialog').close();selectBuild('factory');};
   document.querySelectorAll('[data-show-layout]').forEach(b=>b.onclick=()=>focusLayout(Number(b.dataset.showLayout)));
   $('access-export').onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({game:new URL(BASE_URL,location.origin).href,player:sim.actor.name,token:sim.token},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='moon-private-player-access.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);$('colony-notice').textContent='Access exported. Whoever has this token can play as you.';};
@@ -225,18 +233,20 @@ function bind(){
 function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
 function updateUI(){
   const w=sim.world,p=sim.power,count=type=>w.machines.filter(m=>m.type===type&&m.claimId===sim.activeClaim.id).length;
-  $('metal').textContent=format.format(Math.floor(w.metal));$('rock').textContent=format.format(Math.floor(w.rock));$('power').textContent=`${Math.max(0,p.supply-p.demand)} / ${p.supply}`;document.querySelector('.power').style.color=p.factor<1?'#f39b7f':'';
+  $('metal').textContent=resourceFormat.format(w.metal);$('rock').textContent=resourceFormat.format(w.rock);$('power').textContent=`${Math.max(0,p.supply-p.demand)} / ${p.supply}`;document.querySelector('.power').style.color=p.factor<1?'#f39b7f':'';
   $('power').title=`${p.demand} MW required, ${p.supply} MW available${p.factor<1?'. Production slowed; add solar arrays.':''}`;
-  $('nodes').textContent=count('compute');$('machines').textContent=w.machines.filter(m=>m.claimId===sim.activeClaim.id).length;
+  const industry=claimIndustry(sim.activeClaim.id);
+  $('nodes').textContent=count('compute');$('nodes').title=`${industry.used} / ${industry.capacity} mind capacity in use · ${industry.blockedIds.length} machines waiting`;$('machines').textContent=w.machines.filter(m=>m.claimId===sim.activeClaim.id).length;
   const complete=buildOrder.filter(type=>count(type)>0).length;
   const unlocked=sim.activeClaim.unlocks.includes('factory-plans');
   const next=nextObjective(sim.state,sim.activeClaim);$('objective-title').textContent=next.title;$('objective-body').textContent=next.body;
   $('step-number').textContent=`${String(Math.min(5,complete+1)).padStart(2,'0')} / 05`;$('objective-progress').style.width=complete/5*100+'%';
   const minds=count('compute');$('mind-state').textContent=unlocked?'FACTORY PLANS':minds?'LEARNING':'DORMANT';
   $('mind-message').textContent=unlocked?'I can turn a working idea into a whole factory.':!minds?'A silent world. For now.':`${Math.floor(w.thought)} / 120 research. New capabilities are taking shape.`;
+  if(industry.blockedIds.length){$('mind-state').textContent='CAPACITY NEEDED';$('mind-message').textContent=`${industry.blockedIds.length} machines need supervision. Add a mind node to bring them online.`;}
   [...$('waveform').children].forEach((bar,i)=>bar.style.height=(minds?3+Math.abs(Math.sin(i*.5+now*.001)*Math.cos(i*.19-now*.0007))*24:2)+'px');
   for(const b of document.querySelectorAll('[data-build]')){b.classList.toggle('unaffordable',w.metal<TYPES[b.dataset.build].cost);b.querySelector('.cost').style.color=w.metal<TYPES[b.dataset.build].cost?'#aa8373':'';}
-  if(inspected){const definition=TYPES[inspected.type];$('inspect-progress').textContent=inspected.type==='replicator'?`${inspected.mode==='off'?'Awaiting a program':inspected.mode+' · '+Math.floor(inspected.progress/24*100)+'%'} · configure in Settlement`:`${definition.power>0?'+':''}${definition.power} MW · local claim grid`;}
+  if(inspected){const definition=TYPES[inspected.type],cost=MIND.costs[inspected.type];$('inspect-progress').textContent=cost?`${machineStatus(inspected)} · ${cost} mind capacity · ${inspected.type==='replicator'?`${inspected.mode} · ${Math.floor(inspected.progress/24*100)}% · configure in Settlement`:inspected.type==='miner'?`${sim.state.claims.find(c=>c.id===inspected.claimId).yieldPerSecond/UNIT*60} rock/min rated`:`${PRODUCTION.refinery/UNIT*60} metal/min rated`}`:`${definition.power>0?'+':''}${definition.power} MW · ${inspected.type==='compute'?'4 mind capacity':'local claim grid'}`;}
   if(focusedLayout){
     const parts=[...sim.state.machines,...sim.state.jobs],complete=new Set(sim.state.machines.map(m=>m.id));
     $('inspect-progress').textContent=`${focusedLayout.parts.filter(p=>complete.has(p.id)).length} / 3 machines complete · grouped production`;
@@ -260,7 +270,7 @@ function animate(time){
   if(mode==='surface'&&!tween){const w=frame.toWorld(camera.position.toArray()),d=normalize(w),floor=RADIUS+data.height(d)+4;if(Math.hypot(...w)<floor)camera.position.fromArray(frame.toLocal(d.map(v=>v*floor)));}
   if(time-lastLod>200){terrain.update(camera);lastLod=time;}
   terrain.process(8);
-  for(const g of modelMap.values())animateMachine(g,sim.world.elapsed,sim.power.factor);
+  for(const g of modelMap.values()){const m=g.userData.machine,i=claimIndustry(m.claimId),c=sim.state.claims.find(c=>c.id===m.claimId),active=!c.paused&&(!MIND.costs[m.type]||i.states[m.id]==='active');if(active)animateMachine(g,sim.world.elapsed,i.powerFactor*((m.type==='miner'||m.type==='refinery')?0.1:1));}
   if(time-lastUI>180){updateUI();lastUI=time;}
   if(time-lastSave>4000){save();lastSave=time;}
   renderer.render(scene,camera);
@@ -279,7 +289,10 @@ async function init(){
     [data,texture]=await Promise.all([LunarData.load(s=>$('loading-detail').textContent=s),new THREE.TextureLoader().loadAsync(appPath('data/moon-color.webp'))]);texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=THREE.RepeatWrapping;texture.anisotropy=renderer.capabilities.getMaxAnisotropy();
     ghostRing=new THREE.Mesh(new THREE.RingGeometry(6.6,6.72,64),new THREE.MeshBasicMaterial({color:0xf2bd80,side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false}));ghostRing.rotation.x=-Math.PI/2;ghostRing.visible=false;scene.add(ghostRing);
     sim.onBuild=m=>{addMachine(m);rebuildMarkers();};sim.message=message=>{toast(message);beep(760);};
-    let claimCount=0;sim.onSnapshot=()=>{if(!frame)return;rebuildJobs();if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};
+    let claimCount=0,lastSnapshotTick=sim.state.tick;sim.onSnapshot=()=>{if(!frame)return;
+      // A requested campaign reset also removes the old world's rendered machines.
+      if(sim.state.tick<lastSnapshotTick)setLocation(sim.world.view,locationName(sim.world.view),mode);
+      lastSnapshotTick=sim.state.tick;rebuildJobs();if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};
     setLocation(sim.world.view,locationName(sim.world.view));resize();bind();
     $('loading-detail').textContent='Stitching the first regions';
     while(terrain.pending.length){terrain.process(12);await new Promise(resolve=>setTimeout(resolve,0));}

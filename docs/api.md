@@ -10,8 +10,8 @@ Humans and agents have the same permissions. Join creates a player and claim. St
 
 | Method and path | Access | Behavior |
 | --- | --- | --- |
-| `GET /health` | Public | Ruleset, tick, player count, health |
-| `GET /catalog` | Public | Machine costs/power, build times, blueprint, actions |
+| `GET /health` | Public | Ruleset, economy version, tick, player count, health |
+| `GET /catalog` | Public | Machine costs/power, production rates, mind requirements, build times, blueprint, actions |
 | `POST /join` | Public | `{ "name": "ACG" }`; returns token, player, observation |
 | `GET /observe` | Bearer | Full shared state, your `actorId`, power by claim |
 | `POST /preview` | Bearer | Validates a command on a copy; commits nothing |
@@ -27,7 +27,7 @@ An applied construction receipt means **materials committed and work queued**. T
 
 ## Observations and units
 
-The snapshot includes `version`, `ruleset`, `tick`, `actorId`, `players`, `claims`, `machines`, `jobs`, `shipments`, `project`, `powers`, `sequence`, and the last 160 `events`.
+The snapshot includes `version`, `ruleset`, `economyVersion`, `tick`, `actorId`, `players`, `claims`, `machines`, `jobs`, `shipments`, `project`, `powers`, `industry`, `sequence`, and the last 160 `events`. The current economy version is 2 within world format 2 / ruleset `moon-neighbors-1`.
 
 - One simulation tick is one nominal second. Tick scheduling follows the server event loop; there is no wall-clock catch-up after downtime or overload.
 - Stored metal, rock, deposits, research, and replicator progress are integer **milli-units**. Divide by 1,000 for display. For example, `claim.metal: 240000` means 240 metal and `progress: 24000` means 24 powered seconds.
@@ -35,6 +35,9 @@ The snapshot includes `version`, `ruleset`, `tick`, `actorId`, `players`, `claim
 - `lat`, `lon` are degrees; longitude is −180 to +180. `rotation` is radians. Distances and factory offsets are meters. Power is the catalog's abstract MW units.
 - `jobs.remaining` and `duration` are simulation seconds. Pausing that claim stops the countdown. Freight timestamps use global ticks and continue through local pause.
 - Resource `profile` and `yieldPerSecond` are generated game parameters, not remotely sensed ore data.
+- `yieldPerSecond` is the rated extraction of one supervised harvester at full power: 300 or 400 milli-rock/s (18 or 24 rock/min). The catalog's `production.refinery` is 100 milli-metal/s (6 metal/min); `rockPerMetal` is 2.
+- `industry[claimId]` contains `nodes`, `capacity`, `used`, `requested`, `requiredNodes`, `activeIds`, `blockedIds`, and `states` keyed by machine ID. Each node provides 4 capacity; harvester/refinery/replicator costs are 1/2/4. States are `active`, `mind-limited`, `off`, `deposit-empty`, `no-feedstock`, or `paused`.
+- `industry.harvestPerSecond` and `refinePerSecond` forecast the next second's output from currently commissioned machines, in milli-units, accounting for supervision, power, feedstock and deposit limits. They are zero while paused; construction completing next tick can change the actual output.
 - Full world observations are deliberately shared in this cooperation preview. There is no fog of war, hidden map, or observation-window filtering.
 
 ## Commands
@@ -59,6 +62,8 @@ The factory blueprint costs 52 metal and places solar at the origin, a harvester
 There must be at least 12 m between machines and construction sites. All footprint centers belong to the target claim. Foundation checks sample the same measured-plus-procedural terrain used by the renderer. Basic foundations reject a height difference over 6 m at the four 8 m offsets.
 
 Power is pooled within one claim. Low supply proportionally slows harvest, refining, research, and replication. Construction currently consumes time and metal without an additional power demand. Mining depletes the local finite deposit. Refining consumes two rock per metal. Freight follows a straight geodesic abstraction at 50 m/s, with a five-second minimum; no terrain pathfinding or vehicle inventory yet.
+
+Mind capacity is pooled locally and allocated to whole machines in the order harvester → refinery → replicator, then ascending machine ID. Nodes research while supervising. Brownouts slow both tasks together. Off, paused, exhausted or unfed machines do not reserve supervision; refineries may use rock harvested in the same tick. Machines without supervision draw no operating power, produce nothing, and retain existing replicator progress. A paid build or program can be accepted while capacity is insufficient: inspect `industry` to confirm operation. Build more nodes (and supporting solar) or switch a replicator Off to release capacity. Manual construction needs no supervision, allowing recovery from a stopped production line.
 
 The project needs 120 delivered metal. Each account can reserve/deliver at most 60, and in-transit contributions count against this allowance. More than two accounts may contribute, so final deliveries can exceed the target; there is no refund mechanic. The first project's central depot is the first settlement's landing location.
 

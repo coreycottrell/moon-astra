@@ -3,11 +3,11 @@ export const SAVE_KEY='moon-astra-world-v1';
 export const MAX_MACHINES=500;
 export const TYPES={
   seed:{name:'Seed lander',cost:0,power:8,description:'Your first foothold. Supplies 8 power and construction tools.'},
-  miner:{name:'Harvester',cost:12,power:-2,description:'Collects local rock from a finite deposit. Yield depends on the settlement.',icon:'excavate'},
+  miner:{name:'Harvester',cost:12,power:-2,description:'Collects 18–24 rock/min from a finite deposit at full power. Requires 1 mind capacity.',icon:'excavate'},
   solar:{name:'Solar array',cost:15,power:12,description:'Adds 12 power to this settlement’s grid.',icon:'solar'},
-  refinery:{name:'Refinery',cost:25,power:-3,description:'Turns 2 rock into 1 metal per second.',icon:'refine'},
-  replicator:{name:'Replicator',cost:65,power:-5,description:'After research, program an output. Every 24 powered seconds it funds construction at the machine’s full metal cost.',icon:'replicate'},
-  compute:{name:'Mind node',cost:35,power:-4,description:'Produces research work. At 120 work, unlock factory layouts and programmable replication.',icon:'mind'},
+  refinery:{name:'Refinery',cost:25,power:-3,description:'Processes 12 rock into 6 metal/min at full power. Requires 2 mind capacity.',icon:'refine'},
+  replicator:{name:'Replicator',cost:65,power:-5,description:'Requires 4 mind capacity while programmed. Every 24 powered, supervised seconds it funds construction at full metal cost. Off releases its capacity.',icon:'replicate'},
+  compute:{name:'Mind node',cost:35,power:-4,description:'Supplies 4 shared mind capacity: harvester 1, refinery 2, replicator 4. Also researches factory plans at 120 work.',icon:'mind'},
 };
 export function freshWorld() {
   return {version:1,paused:false,metal:175,rock:0,thought:0,elapsed:0,nextId:2,replications:0,machines:[{id:1,type:'seed',lat:28.5,lon:-17.5,rotation:0,progress:0,generation:0}],view:{lat:28.5,lon:-17.5}};

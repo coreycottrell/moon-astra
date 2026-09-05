@@ -72,7 +72,7 @@ export function positionMachine(object,m,data,frame) {
 }
 export function animateMachine(g,t,power=1) {
   for(const o of g.userData.spinners||[])o.rotation.y=t*power*.8;
-  if(g.userData.arm){g.userData.arm.position.x=Math.sin(t*.8)*2;g.userData.arm.position.z=Math.cos(t*.55)*1.8;}
+  if(g.userData.arm){g.userData.arm.position.x=Math.sin(t*power*.8)*2;g.userData.arm.position.z=Math.cos(t*power*.55)*1.8;}
   if(g.userData.ring)g.userData.ring.position.y=3.2+Math.sin(t*1.5)*.3;
   if(g.userData.work)g.userData.work.scale.y=.4+(g.userData.machine?.progress||0)/24;
 }

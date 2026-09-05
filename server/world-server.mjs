@@ -5,7 +5,8 @@ import {mkdirSync,readFileSync,existsSync,createReadStream,statSync} from 'node:
 import {resolve,dirname,extname,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {gunzipSync} from 'node:zlib';
-import {freshSharedWorld,addPlayer,applyCommand,stepWorld,observe,preview,GameError,RULESET,BUILD_TIME,BLUEPRINT} from '../src/shared-world.js';
+import {freshSharedWorld,addPlayer,applyCommand,stepWorld,observe,preview,GameError,RULESET,BUILD_TIME,BLUEPRINT,migrateEconomy} from '../src/shared-world.js';
+import {ECONOMY_VERSION,PRODUCTION,MIND} from '../src/industry.js';
 import {TYPES} from '../src/simulation.js';
 import {LunarData,direction} from '../src/geography.js';
 
@@ -42,6 +43,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
     if(db.prepare('SELECT data FROM world WHERE id=1').get().data!==JSON.stringify(world))throw Error('Another server changed this database. Run one world process per database.');
     extra();save.run(JSON.stringify(next));db.exec('COMMIT');world=next;
   }catch(e){db.exec('ROLLBACK');failed=true;throw e;}}
+  try{const migrated=structuredClone(world);if(migrateEconomy(migrated))commit(migrated);}catch(e){db.close();throw e;}
   function broadcast(){for(const [res,actor] of viewers){if(res.writableLength>1024*1024){res.end();viewers.delete(res);continue;}res.write(`event: snapshot\nid: ${world.sequence}\ndata: ${JSON.stringify(observe(world,actor))}\n\n`);}}
   function rate(id){
     const now=Date.now();let b=buckets.get(id);if(!b||now-b.start>10000){b={start:now,n:0};buckets.set(id,b);}
@@ -56,8 +58,8 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
         let origin;try{origin=new URL(req.headers.origin);}catch{throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);}
         if(origin.origin!==publicOrigin&&origin.host!==req.headers.host)throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);
       }
-      if(path==='/api/v1/health')return json(res,failed?503:200,{ok:!failed,ruleset:RULESET,tick:world.tick,players:world.players.length});
-      if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,unit:'metal and rock quantities use milli-units internally; command amounts use whole metal units',types:TYPES,constructionSeconds:BUILD_TIME,blueprint:BLUEPRINT,actions:['build.place','blueprint.deploy','replicator.configure','shipment.send','project.contribute','claim.pause','claim.grant','claim.revoke']});
+      if(path==='/api/v1/health')return json(res,failed?503:200,{ok:!failed,ruleset:RULESET,economyVersion:world.economyVersion,tick:world.tick,players:world.players.length});
+      if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,economyVersion:ECONOMY_VERSION,unit:'metal and rock quantities use milli-units internally; command amounts use whole metal units',production:PRODUCTION,mind:MIND,types:TYPES,constructionSeconds:BUILD_TIME,blueprint:BLUEPRINT,actions:['build.place','blueprint.deploy','replicator.configure','shipment.send','project.contribute','claim.pause','claim.grant','claim.revoke']});
       if(path==='/api/v1/join'&&req.method==='POST'){
         rate(`join:${req.socket.remoteAddress}`);const input=await body(req);
         if(failed)throw new GameError('WORLD_PAUSED','Persistence is unavailable',503);

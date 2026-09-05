@@ -4,6 +4,7 @@ import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {once} from 'node:events';
+import {DatabaseSync} from 'node:sqlite';
 import {createWorldServer} from '../server/world-server.mjs';
 import {offsetPosition} from '../src/geography.js';
 
@@ -22,10 +23,19 @@ test('HTTP identity, atomic commands, duplicate receipts, and restart persistenc
     results.forEach(r=>{assert.equal(r.status,200);assert.deepEqual(r.value,results[0].value);});assert.equal(app.state.jobs.length,1);assert.equal(app.state.claims[0].metal,228000);
     assert.equal((await request(url,'commands',{token,body:{...command,type:'solar'},key:'place-miner-0001'})).status,409);
     const observers=await request(url,'observe',{token});assert.equal(JSON.stringify(observers).includes(token),false);assert.equal(JSON.stringify(observers).includes(bob.token),false);
+    assert.equal((await request(url,'commands',{token,body:{...command,type:'compute',...offsetPosition(player.home.lat,player.home.lon,60,0)},key:'place-mind-00001'})).status,200);
     app.advance(10);const saved=app.state;await app.close();active=null;
-    ({app,url}=await serve(join(dir,'world.sqlite')));active=app;assert.deepEqual(app.state,saved);
+    // Recreate an existing economy-v1 save while retaining identities and receipts.
+    const old=structuredClone(saved);delete old.economyVersion;for(const c of old.claims)c.yieldPerSecond*=10;
+    const db=new DatabaseSync(join(dir,'world.sqlite'));db.prepare('UPDATE world SET data=? WHERE id=1').run(JSON.stringify(old));db.close();
+    ({app,url}=await serve(join(dir,'world.sqlite')));active=app;
+    assert.equal(app.state.economyVersion,2);assert.equal(app.state.claims[0].yieldPerSecond,300);assert.equal(app.state.claims[1].yieldPerSecond,400);
+    assert.deepEqual(app.state.machines,saved.machines);assert.deepEqual(app.state.jobs,saved.jobs);assert.deepEqual(app.state.project,saved.project);assert.equal(app.state.claims[0].metal,saved.claims[0].metal);assert.equal(app.state.claims[0].rock,saved.claims[0].rock);
+    const migrated=app.state;await app.close();active=null;({app,url}=await serve(join(dir,'world.sqlite')));active=app;assert.deepEqual(app.state,migrated,'A second restart must not slow rates again');
     assert.equal((await request(url,'observe',{token})).status,200);assert.deepEqual((await request(url,'commands',{token,body:command,key:'place-miner-0001'})).value,results[0].value);
-    app.advance(5);assert.equal(app.state.claims[0].rock,saved.claims[0].rock+15000);
+    const observation=(await request(url,'observe',{token})).value,catalog=(await request(url,'catalog')).value;
+    assert.equal(observation.industry[player.homeClaimId].used,1);assert.equal(catalog.mind.costs.replicator,4);assert.equal(catalog.production.refinery,100);
+    app.advance(5);assert.equal(app.state.claims[0].rock,saved.claims[0].rock+1500);
   }finally{if(active)await active.close();rmSync(dir,{recursive:true,force:true});}
 });
 test('concurrent conflicting construction is serialized and cannot double spend or overlap',async()=>{

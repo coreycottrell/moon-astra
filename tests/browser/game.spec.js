@@ -24,6 +24,9 @@ test('browser construction, research, a partner delivery, factory programs, and 
   await expect.poll(()=>page.evaluate(()=>window.__moon.state.jobs.length),{timeout:20000}).toBe(0);
   const bob=await (await request.post('/api/v1/join',{data:{name:'Neighbor agent'}})).json();
   const donated=await request.post('/api/v1/commands',{data:{action:'project.contribute',claimId:bob.player.homeClaimId,amount:60},headers:{Authorization:'Bearer '+bob.token,'Idempotency-Key':randomUUID()}});expect(donated.ok()).toBeTruthy();
+  // The neighbor supplies its remaining real starter metal; no free test inventory.
+  const target=await page.evaluate(()=>window.__moon.state.claims[0].id);
+  const freight=await request.post('/api/v1/commands',{data:{action:'shipment.send',claimId:bob.player.homeClaimId,toClaimId:target,amount:180},headers:{Authorization:'Bearer '+bob.token,'Idempotency-Key':randomUUID()}});expect(freight.ok()).toBeTruthy();
   await page.locator('#colony').click();
   await expect(page.locator('#colony-content')).toContainText('Neighbor agent');
   await expect(page.locator('#deploy-factory')).toBeDisabled();
@@ -31,6 +34,7 @@ test('browser construction, research, a partner delivery, factory programs, and 
   await expect.poll(()=>page.evaluate(()=>window.__moon.state.project.complete),{timeout:100000}).toBe(true);
   await expect.poll(()=>page.evaluate(()=>window.__moon.state.claims[0].unlocks.includes('factory-plans')),{timeout:150000,intervals:[1000]}).toBe(true);
   await expect(page.locator('#deploy-factory')).toBeEnabled();
+  await expect(page.locator('#production-rates')).toContainText('6.0 metal/min');
   await page.locator('#deploy-factory').click();
   const factory=await page.evaluate(()=>window.__moon.screenLocation(-50,-28));
   await page.mouse.move(factory.x,factory.y);await page.mouse.click(factory.x,factory.y);
@@ -38,6 +42,16 @@ test('browser construction, research, a partner delivery, factory programs, and 
   await page.keyboard.press('Escape');await page.locator('#colony').click();
   await page.locator('[data-replicator]').selectOption('replicator');await expect(page.locator('#colony-notice')).toHaveText('Instructions accepted by the world.');
   await expect.poll(()=>page.evaluate(()=>window.__moon.state.machines.find(m=>m.type==='replicator').mode)).toBe('replicator');
+  await expect(page.locator('#mind-capacity')).toContainText('Waiting for mind capacity');
+  await expect(page.locator('#objective-title')).toHaveText('Add mind capacity');
+  await page.getByRole('button',{name:'Close settlement',exact:true}).click();
+  await page.getByRole('button',{name:'Pause settlement',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>window.__moon.state.claims[0].paused)).toBe(true);
+  await build(page,'Mind node',54,32);await build(page,'Mind node',57,4);await build(page,'Solar array',50,-29);
+  await page.getByRole('button',{name:'Resume settlement',exact:true}).click();
+  await expect.poll(()=>page.evaluate(()=>window.__moon.state.jobs.length),{timeout:20000}).toBe(0);
+  await page.locator('#colony').click();
+  await expect(page.locator('#mind-capacity')).toContainText('10 / 12 in use');
   await page.screenshot({path:'artifacts/federation-online.png'});
   await page.getByRole('button',{name:'Close settlement',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.__moon.state.machines.some(m=>m.type==='replicator'&&m.generation===1)),{timeout:45000,intervals:[1000]}).toBe(true);

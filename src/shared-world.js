@@ -1,6 +1,7 @@
 import {TYPES} from './simulation.js';
 import {distanceOnMoon,offsetPosition} from './geography.js';
 import {cellAt,cellArea,cellCenter,startingCell,validLocation} from './claims.js';
+import {ECONOMY_VERSION,PRODUCTION,mindFor} from './industry.js';
 
 export const RULESET='moon-neighbors-1';
 export const UNIT=1000;
@@ -12,7 +13,16 @@ export const BLUEPRINT=[{type:'solar',east:0,north:0},{type:'miner',east:24,nort
 export class GameError extends Error{constructor(code,message,status=400){super(message);this.code=code;this.status=status;}}
 const fail=(code,message,status)=>{throw new GameError(code,message,status);};
 const clone=value=>structuredClone(value);
-export function freshSharedWorld(){return {version:2,ruleset:RULESET,tick:0,nextId:1,players:[],claims:[],machines:[],jobs:[],shipments:[],events:[],sequence:0,project:{id:'first-federation',name:'The first federation',delivered:0,contributions:{},complete:false}};}
+export function freshSharedWorld(){return {version:2,ruleset:RULESET,economyVersion:ECONOMY_VERSION,tick:0,nextId:1,players:[],claims:[],machines:[],jobs:[],shipments:[],events:[],sequence:0,project:{id:'first-federation',name:'The first federation',delivered:0,contributions:{},complete:false}};}
+export function migrateEconomy(w){
+  const version=w.economyVersion??1;
+  if(version===ECONOMY_VERSION)return false;
+  if(version!==1)throw Error('Unsupported saved economy. Preserve the database and use its matching version.');
+  for(const c of w.claims){c.yieldPerSecond=Math.floor(c.yieldPerSecond/10);bump(c);}
+  w.economyVersion=ECONOMY_VERSION;
+  emit(w,'economy.updated','Harvesting and refining now run at one-tenth speed. Mind nodes supervise active industry: harvester 1, refinery 2, replicator 4; each node supplies 4 capacity.');
+  return true;
+}
 export function emit(w,type,message,details={}){
   w.events.push({sequence:++w.sequence,tick:w.tick,type,message,...details});
   if(w.events.length>160)w.events.splice(0,w.events.length-160);
@@ -28,14 +38,22 @@ export function addPlayer(w,id,name){
   if(w.players.length>=24)fail('WORLD_FULL','This collaboration preview supports 24 settlements',409);
   const cid=startingCell(w.players.length),home=cellCenter(cid),index=w.players.length;
   const p={id,name,homeClaimId:cid,home,joinedAt:w.tick};
-  const c={id:cid,ownerId:id,name:`${name}'s settlement`,home,areaKm2:cellArea(cid),builders:[],metal:240*UNIT,rock:0,thought:0,deposit:250000*UNIT,yieldPerSecond:(index%2?4:3)*UNIT,profile:index%2?'Loose regolith · bulk yield':'Dense regolith · standard yield',revision:1,paused:false,unlocks:[],replications:0};
+  const c={id:cid,ownerId:id,name:`${name}'s settlement`,home,areaKm2:cellArea(cid),builders:[],metal:240*UNIT,rock:0,thought:0,deposit:250000*UNIT,yieldPerSecond:index%2?PRODUCTION.bulkHarvester:PRODUCTION.standardHarvester,profile:index%2?'Loose regolith · bulk yield':'Dense regolith · standard yield',revision:1,paused:false,unlocks:[],replications:0};
   w.players.push(p);w.claims.push(c);w.machines.push({id:w.nextId++,type:'seed',...home,rotation:0,generation:0,progress:0,claimId:cid,ownerId:id,mode:'off'});
   emit(w,'player.joined',`${name} established a neighboring settlement`,{actor:id,claimId:cid});return p;
 }
-export function powerFor(w,cid){
+export function powerFor(w,cid,minds=mindFor(w,cid)){
   let supply=0,demand=0;
-  for(const m of w.machines)if(m.claimId===cid){const p=TYPES[m.type].power;if(p>0)supply+=p;else demand-=p;}
+  for(const m of w.machines)if(m.claimId===cid){if(minds.states[m.id]&&minds.states[m.id]!=='active')continue;const p=TYPES[m.type].power;if(p>0)supply+=p;else demand-=p;}
   const factor=demand?Math.min(1,supply/demand):1;return {supply,demand,factor};
+}
+export function industryFor(w,cid){
+  const c=claim(w,cid),minds=mindFor(w,cid),power=powerFor(w,cid,minds);
+  const active=w.machines.filter(m=>m.claimId===cid&&minds.activeIds.includes(m.id));
+  const count=type=>active.filter(m=>m.type===type).length,f=Math.floor(power.factor*UNIT);
+  const mined=Math.min(c.deposit,Math.floor(count('miner')*c.yieldPerSecond*f/UNIT));
+  const refined=Math.min(Math.floor((c.rock+mined)/PRODUCTION.rockPerMetal),Math.floor(count('refinery')*PRODUCTION.refinery*f/UNIT));
+  return {...minds,harvestPerSecond:mined,refinePerSecond:refined,powerFactor:power.factor};
 }
 function placement(w,c,type,loc,terrain){
   if(!Object.hasOwn(BUILD_TIME,type))fail('INVALID_MACHINE','Choose a supported machine');
@@ -126,15 +144,15 @@ export function stepWorld(w,{terrain}={}){
       emit(w,'construction.completed',`${TYPES[j.type].name} commissioned`,{claimId:c.id,machineId:j.id});
     }
     const machines=w.machines.filter(m=>m.claimId===c.id),count=t=>machines.filter(m=>m.type===t).length;
-    const f=Math.floor(powerFor(w,c.id).factor*UNIT);
-    const mined=Math.min(c.deposit,Math.floor(count('miner')*c.yieldPerSecond*f/UNIT));
+    const industry=industryFor(w,c.id),f=Math.floor(industry.powerFactor*UNIT);
+    const mined=industry.harvestPerSecond;
     c.deposit-=mined;c.rock+=mined;
-    const refined=Math.min(Math.floor(c.rock/2),count('refinery')*f);c.rock-=refined*2;c.metal+=refined;
+    const refined=industry.refinePerSecond;c.rock-=refined*PRODUCTION.rockPerMetal;c.metal+=refined;
     c.thought+=count('compute')*f;
     if(c.thought>=PLANNER_WORK&&!c.unlocks.includes('factory-plans')){
       c.unlocks.push('factory-plans');emit(w,'research.unlocked','Factory plans unlocked: deploy a complete production layout and program replicators',{claimId:c.id,actor:c.ownerId});
     }
-    for(const m of machines)if(m.type==='replicator'&&m.mode!=='off'){
+    for(const m of machines)if(m.type==='replicator'&&industry.activeIds.includes(m.id)){
       m.progress=Math.min(24*UNIT,m.progress+f);
       if(m.progress>=24*UNIT&&c.metal>=TYPES[m.mode].cost*UNIT){
         for(let i=0;i<100;i++){
@@ -148,5 +166,5 @@ export function stepWorld(w,{terrain}={}){
     bump(c);
   }
 }
-export function observe(w,actor){player(w,actor);return {...clone(w),actorId:actor,powers:Object.fromEntries(w.claims.map(c=>[c.id,powerFor(w,c.id)]))};}
+export function observe(w,actor){player(w,actor);return {...clone(w),actorId:actor,powers:Object.fromEntries(w.claims.map(c=>[c.id,powerFor(w,c.id)])),industry:Object.fromEntries(w.claims.map(c=>[c.id,industryFor(w,c.id)]))};}
 export function preview(w,actor,cmd,options){const copy=clone(w);return {ok:true,result:applyCommand(copy,actor,cmd,options),atTick:w.tick};}

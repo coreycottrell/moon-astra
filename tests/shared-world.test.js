@@ -23,7 +23,7 @@ test('construction is paid up front, delayed, and cannot spend a neighbor’s de
   assert.deepEqual(w,before);
   build(w,'alice','miner',30);assert.equal(w.claims[0].metal,228*UNIT);assert.equal(w.machines.length,2);
   assert.throws(()=>build(w,'alice','solar',31),{code:'OCCUPIED'});
-  steps(w,5);assert.equal(w.machines.length,2);steps(w,1);assert.equal(w.machines.length,3);assert.equal(w.claims[0].rock,3*UNIT);assert.equal(w.claims[1].rock,0);
+  steps(w,5);assert.equal(w.machines.length,2);steps(w,1);assert.equal(w.machines.length,3);assert.equal(w.claims[0].rock,0,'A completed harvester waits for a mind node');assert.equal(w.claims[1].rock,0);
 });
 test('local power, deposits, and pause determine real production',()=>{
   const w=setup();build(w,'alice','miner',30);build(w,'alice','refinery',60);build(w,'alice','compute',90);build(w,'bob','solar',30);steps(w,10);

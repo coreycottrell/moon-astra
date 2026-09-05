@@ -1,5 +1,6 @@
 import {BLUEPRINT,PLANNER_WORK,PROJECT_COST,UNIT} from './shared-world.js';
 import {offsetPosition,distanceOnMoon,direction,coordinates} from './geography.js';
+import {mindFor} from './industry.js';
 
 // Recognize the authored layout from its actual pieces, even after its event
 // ages out of the recent log. This adds presentation, not new economic state.
@@ -19,10 +20,12 @@ export function factoryLayouts(w,claimId){
 export function nextObjective(w,c){
   const machines=w.machines.filter(m=>m.claimId===c.id),jobs=w.jobs.filter(j=>j.claimId===c.id);
   if(c.paused)return {title:'Resume your settlement',body:'Use the pause button to resume production and finish construction. Your neighbors continue while you are paused.'};
-  const basics=[['miner','Harvest your claim','Place a harvester to collect rock from your local deposit.'],['refinery','Give rock a purpose','Place a refinery to turn local rock into construction metal.'],['solar','Catch the sunlight','Place a solar array to power this settlement.'],['compute','Research your first factory plans','Place a mind node. At 120 powered research work it unlocks layouts and factory programs.']];
+  const basics=[['compute','Bring your first mind online','Place a mind node · 35 metal. Its 4 capacity supervises harvesters (1 each), refineries (2), and replicators (4). It also researches new plans.'],['miner','Harvest your claim','Place a harvester to collect rock from your local deposit.'],['refinery','Give rock a purpose','Place a refinery to turn local rock into construction metal.'],['solar','Catch the sunlight','Place a solar array to power this settlement.']];
   for(const [type,title,body] of basics)if(!machines.some(m=>m.type===type)){
     const job=jobs.find(j=>j.type===type);return job?{title:'Construction is underway',body:`Your ${type==='compute'?'mind node':type==='miner'?'harvester':type} will finish in ${job.remaining} seconds. Its materials are already supplied.`}:{title,body};
   }
+  const minds=mindFor(w,c.id);
+  if(minds.blockedIds.length){const pending=jobs.filter(j=>j.type==='compute');return {title:pending.length?'Mind capacity is being built':'Add mind capacity',body:`${minds.blockedIds.length} machine${minds.blockedIds.length===1?' is':'s are'} waiting for supervision. ${minds.nodes} / ${minds.requiredNodes} mind nodes needed for the current workload. ${pending.length?`${pending.length} node(s) under construction.`:'Build a mind node · 35 metal, or switch a replicator Off.'} Harvesting and refining get priority.`};}
   if(!c.unlocks.includes('factory-plans'))return {title:'Teach your factories',body:`${Math.floor(c.thought/UNIT)} / ${PLANNER_WORK/UNIT} research work. Keep the mind nodes powered to unlock layouts and replication programs.`};
   const replicas=machines.filter(m=>m.type==='replicator');
   if(!replicas.length){const job=jobs.find(j=>j.type==='replicator');return job?{title:'Your replicator is being built',body:`${job.remaining} seconds remain. Then open Settlement and choose what it should manufacture.`}:{title:'Build your first replicator',body:'Choose Replicator below · 65 metal. A balanced factory is three production machines; a replicator adds automated construction.'};}
@@ -33,5 +36,5 @@ export function nextObjective(w,c){
     return {title:'Bring the federation online',body:`${w.project.delivered/UNIT} / 120 metal delivered. Your share is supplied; wait for shipments and your partners’ contributions.`};
   }
   if(!replicas.some(m=>m.mode==='replicator'))return {title:'Let a factory build factories',body:'The federation is online. Open Settlement and set a replicator’s output to Replicator. Its daughters inherit that program.'};
-  return {title:'Feed the growing factory network',body:'Daughter replicators still need metal, power, and space. Add production layouts and solar as the network grows.'};
+  return {title:'Feed the growing factory network',body:'Daughter replicators need mind capacity, metal, power, and space. Add mind nodes, production layouts, and solar as the network grows.'};
 }
