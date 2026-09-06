@@ -13,6 +13,8 @@
 
 **Shared working notepad:** [Corey / Codex / ACG](SHARED-NOTEPAD.md). Read and update this file for the current task queue, deployment status, verified checkpoints and handoff notes. Its canonical shared location is `/home/corey/projects/moon-civilization/SHARED-NOTEPAD.md` on the tower.
 
+**Shared ideas:** [Moon design notebook](ideas/README.md), including [deeper resource loops](ideas/deeper-resource-loops.md). Canonical path: `/home/corey/projects/moon-civilization/ideas`; proposals belong to the whole project, across development forks.
+
 **Operations:** [ops.md](ops.md) is the entrypoint for the maintained [development and operations runbook](dev-ops.md), including the persistent local server, hosted worlds, backups and Blender release procedure.
 
 **Blender machinery:** [Explore the animated equipment gallery](http://localhost:4175/machines.html). All six machine types have detailed models, operating animations and lightweight distant representations. The in-game field guide and machine inspector also link to the gallery. [Editable Blender source, rebuilding and deployment notes](art/README.md).
