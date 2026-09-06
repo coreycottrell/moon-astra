@@ -4,7 +4,11 @@ Corey requested an isolated next phase and preservation of the current playable 
 
 Source: `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. Start from the release revision and package described in RELEASE.md. The canonical shared note remains `/home/corey/projects/moon-civilization/SHARED-NOTEPAD.md`.
 
-## Recommended deployment shape
+## Requested public deployment
+
+Corey selected **https://ai-civ.com/moon-astra-v2/**. Use the concrete [v2 deployment instructions](../../deploy/moon-astra-v2/README.md) and matching systemd/nginx templates. The earlier alternatives below remain reference configurations.
+
+## Alternative deployment shapes
 
 Use a separate hostname such as `moon-foundry.ai-civ.com` for the simplest deployment: one Node 24 process serves the built static site and its API behind HTTPS. Alternatively, host the client at `/moon-foundry/` with a dedicated backend and explicit API proxy. Keep `https://ai-civ.com/moon-astra/` and its current API unchanged.
 

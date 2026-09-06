@@ -1,0 +1,32 @@
+[Unit]
+Description=MOON Foundry v2 production world
+After=network.target
+
+[Service]
+Type=simple
+User=moon-astra-v2
+Group=moon-astra-v2
+WorkingDirectory=/srv/moon-astra-v2/current
+ExecStart=/usr/local/bin/node --preserve-symlinks-main /srv/moon-astra-v2/current/server/world-server.mjs --production
+Environment=NODE_ENV=production
+Environment=MOON_HOST=127.0.0.1
+Environment=MOON_PORT=4182
+Environment=MOON_DB=/var/lib/moon-astra-v2/world.sqlite
+Environment=MOON_PUBLIC_ORIGIN=https://ai-civ.com
+StateDirectory=moon-astra-v2
+StateDirectoryMode=0700
+UMask=0077
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+CPUQuota=75%
+MemoryHigh=384M
+MemoryMax=768M
+TasksMax=64
+
+[Install]
+WantedBy=multi-user.target

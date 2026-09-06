@@ -7,6 +7,7 @@
 
 A separate playable development world where robot crews deliver materials, assemble machines, maintain the colony, and manufacture more workers. The original Neighbors game remains at `/home/corey/projects/moon-civilization` on ports **4175/4176**.
 
+- **Public v2 deployment target:** https://ai-civ.com/moon-astra-v2/
 - **Play Foundry:** http://localhost:4205/ — Wi-Fi: http://192.168.6.34:4205/
 - **Rotating equipment collection:** http://localhost:4205/machines.html?model=mason
 - **Available now / coming later:** http://localhost:4205/phase.html

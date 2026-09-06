@@ -2,7 +2,7 @@
 
 The published design is at [ai-civ.com/moon-astra-whitepaper](https://ai-civ.com/moon-astra-whitepaper/). Foundry is the next development fork of that vision. The current Neighbors game remains a separate world.
 
-**Three different things:** the live game is at [moon-astra](https://ai-civ.com/moon-astra/); this Foundry preview runs locally on port 4205; the whitepaper describes the much larger destination. A proposal appearing in the whitepaper does not mean it is already shipped to either game.
+**Three different things:** the live game is at [moon-astra](https://ai-civ.com/moon-astra/); this Foundry edition has its own [moon-astra-v2](https://ai-civ.com/moon-astra-v2/) destination; the whitepaper describes the much larger destination. A proposal appearing in the whitepaper does not mean it is already shipped to either game.
 
 ![Mason builder, authored and rendered in Blender](images/foundry/mason.webp)
 

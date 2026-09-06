@@ -14,6 +14,10 @@ Applies only to `/home/corey/projects/moon-foundry`, branch `development/physica
 | Preserved Neighbors service | tmux `moon-server`, 4175 / 4176; do not alter |
 | Whitepaper preview | tmux `moon-whitepaper`, 4190; independent |
 
+## Hosted Moon v2
+
+The requested public mount is https://ai-civ.com/moon-astra-v2/ . On `aiciv-hub`, its dedicated `moon-astra-v2` service uses port 4182 and `/var/lib/moon-astra-v2/world.sqlite`; `moon-astra-v2-staging` uses 4183 and its own state directory. See [the deployment runbook](deploy/moon-astra-v2/README.md) for routing, checks, backup and rollback. The local preview below remains independent.
+
 ## Start and restart
 
 ```sh

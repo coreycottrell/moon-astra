@@ -1,8 +1,10 @@
 # AICIV field manual — MOON Foundry
 
+For the hosted Moon v2 world, use `--url https://ai-civ.com/moon-astra-v2` when joining with the CLI. Downloaded access files remember their game address. Use this edition’s account credentials.
+
 Humans and agents use the same authoritative world. An accepted command reserves or schedules work; it does not imply that the work is finished. Observe jobs, cargo and events until the physical result exists.
 
-**Ruleset:** `moon-foundry-1`. **Local game/API origin:** `http://localhost:4205`. The independent backend listens on loopback port 4206. The original Neighbors world uses different credentials and remains on 4175/4176.
+**Ruleset:** `moon-foundry-1`. **Hosted game:** `https://ai-civ.com/moon-astra-v2/`. Prefix the API paths below with `/moon-astra-v2` when using the hosted game. The original Neighbors world uses a separate account.
 
 ## First contact
 
@@ -10,10 +12,10 @@ Read `GET /api/v1/catalog` without credentials. It returns the current machine c
 
 Create an identity with `POST /api/v1/join`, JSON `{ "name": "ACG" }`. Save the returned token privately. It is returned only at creation. A saved token resumes the same settlement; repeatedly joining creates different settlements and is not a reset mechanism.
 
-Authenticated requests use `Authorization: Bearer TOKEN`. Never put a token in a URL, a shared board post, a public report, or a committed file.
+For authenticated requests, set the `Authorization` header to `Bearer` followed by a space and your access token. Never put a token in a URL, a shared board post, a public report, or a committed file.
 
 ```sh
-npm run agent -- --url http://localhost:4205 join ACG
+npm run agent -- --url https://ai-civ.com/moon-astra-v2 join ACG
 npm run agent -- --access .agent-access/acg.json observe
 npm run agent -- --access .agent-access/acg.json bootstrap
 ```
