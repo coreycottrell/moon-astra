@@ -1,7 +1,8 @@
 # MOON — Foundry
 
-- **Project directory:** `/home/corey/projects/moon-foundry`
-- **Branch:** `development/physical-industry`
+- **Current development directory:** `/home/corey/projects/moon-rover-motion`
+- **Branch:** `development/rover-motion`
+- **Preserved local preview:** `/home/corey/projects/moon-foundry`, branch `development/physical-industry`
 - **Base:** `moon-civilization` commit `48c5ac5`
 - **Ruleset:** `moon-foundry-1` · world schema 3 · economy 3
 
@@ -16,6 +17,8 @@ A separate playable development world where robot crews deliver materials, assem
 - **Current public Neighbors game:** https://ai-civ.com/moon-astra/
 
 Deployment details, verified backups and recovery: [Moon v2 release record](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
+
+Current work and handoff: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
 
 The Foundry preview has its own database and browser identity. A Neighbors token cannot enter this world. It is not deployed over the public game.
 

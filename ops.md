@@ -1,6 +1,6 @@
 # Foundry operations
 
-Applies only to `/home/corey/projects/moon-foundry`, branch `development/physical-industry`, ruleset `moon-foundry-1`, schema/economy 3. The neighboring live game has a different checkout, database and ruleset.
+Current development is `/home/corey/projects/moon-rover-motion`, branch `development/rover-motion`, ruleset `moon-foundry-1`, schema/economy 3. The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
 
 | Service | Location |
 | --- | --- |

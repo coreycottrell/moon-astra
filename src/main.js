@@ -4,6 +4,7 @@ import './colony.css';
 import './foundry/style.css';
 import {FoundryScene} from './foundry/scene.js';
 import {renderFoundryPanel} from './foundry/panel.js';
+import {machineStatus as describeMachineStatus} from './foundry/machine-status.js';
 import {ROBOTS,DESIGNS} from './foundry/catalog.js';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -23,9 +24,8 @@ import {loadMachineAssets,loadedMachineTypes} from './machine-assets.js';
 const $=id=>document.getElementById(id);
 const format=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
 const resourceFormat=new Intl.NumberFormat('en-US',{maximumFractionDigits:1,minimumFractionDigits:1});
-const industryStatus={active:'Supervised', 'mind-limited':'Waiting for mind capacity','deposit-empty':'Deposit exhausted','no-feedstock':'Waiting for rock',off:'Off · capacity released',paused:'Settlement paused'};
 const claimIndustry=cid=>sim.state.industry?.[cid]||industryFor(sim.state,cid);
-function machineStatus(m){const i=claimIndustry(m.claimId);return industryStatus[i.states[m.id]]||'Online';}
+function machineStatus(m){return describeMachineStatus(m,claimIndustry(m.claimId));}
 const coordText=({lat,lon})=>`${Math.abs(lat).toFixed(3)}° ${lat<0?'S':'N'} · ${Math.abs(lon).toFixed(3)}° ${lon<0?'W':'E'}`;
 const sites=[{name:'Mare Imbrium',lat:28.5,lon:-17.5},{name:'Copernicus crater',lat:9.62,lon:-20.08},{name:'Tycho crater',lat:-43.3,lon:-11.2},{name:'Sea of Tranquility',lat:8.5,lon:31.4},{name:'The far side',lat:0,lon:180},{name:'South pole',lat:-89.9,lon:0}];
 const icons={
