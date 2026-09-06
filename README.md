@@ -16,7 +16,7 @@ A separate playable development world where robot crews deliver materials, assem
 - **Published whitepaper:** https://ai-civ.com/moon-astra-whitepaper/
 - **Current public Neighbors game:** https://ai-civ.com/moon-astra/
 
-Deployment details, verified backups and recovery: [current guide/collaboration release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2 deployment](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
+Deployment details, verified backups and recovery: [build-order release](deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md), [guide/collaboration release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2 deployment](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
 
 Current work and handoff: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
 
