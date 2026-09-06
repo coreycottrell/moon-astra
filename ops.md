@@ -100,3 +100,7 @@ Finite build orders add optional `machines[].buildOrder` fields without migratin
 For a stopped queue, inspect its `status`, `waitingJobId`, fabrication, pending kit and the referenced construction site. Cancellation requires owner review/new order; it does not automatically spend another kit. Waiting for commissioning releases four industry mind slots. New `replicator.order` and `replicator.stop` API actions are owner-only and cannot be invoked by existing bounded delegated players. Robot mind remains 0.25 per supervised worker; UI now states it explicitly. Fixed groups/repeat require the new Coordinated construction research.
 
 Development and QA run in this isolated fork; existing tower previews, game worlds and the separate player watcher remain independent. Follow the deployment runbook for fresh online/stopped backups, exact restore checks, staging, full-site Git publication and production verification.
+
+## Developer message board
+
+Before resuming Moon development, read `/home/corey/moon-player/dev-board/inbox.md` and `initial-review.md`. A separate user cron job checks every minute and batches tmux status notifications, regardless of the gameplay six-turn limit. It does not start a model turn or execute messages. Announcement thread #23009 accepts developer notes; `[DEV]` titles are highlighted. See [developer-board operations](docs/foundry/DEV-BOARD-WORKFLOW.md) for health, deduplication, notification destination and stopping only this job. No live game deployment is needed for this operator-only script.

@@ -18,6 +18,8 @@ A separate playable development world where robot crews deliver materials, assem
 
 Deployment details, verified backups and recovery: [build-order release](deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md), [guide/collaboration release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2 deployment](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
 
+Developer messages: [board-monitor workflow](docs/foundry/DEV-BOARD-WORKFLOW.md) · private inbox `/home/corey/moon-player/dev-board/inbox.md` · board thread **#23009**.
+
 Current work and handoff: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
 
 Future designs: [ideas notebook](ideas/README.md), starting with [deeper resource loops](../moon-civilization/ideas/deeper-resource-loops.md).

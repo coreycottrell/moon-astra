@@ -95,3 +95,11 @@ Manual privacy review initially over-applied the prose gate to generated JavaScr
 ## 2026-09-06 15:58 UTC — ordered construction LIVE
 
 Runtime ba847ffc1f23f0cd253158aa24cb19e894ba9b08; website 8bdd710b3b96fe635efd253867bf61e3db658068; Netlify 6a9d8d5002dad00008088bb5 published 2026-09-06T15:58:28.428Z. Both hosted UIs and all 42 production files passed; five other public pages unchanged. Exact production save retained at tick 54295, four players. See deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md. Final operator source push and verified Expansion follow-up are being completed. No game orders or player state changed by the developer.
+
+## 2026-09-06 20:25 UTC — federation announcement and developer-board monitoring
+
+Corey asked to post the federation explanation/player status to everyone and check the board now and periodically for dev messages. Read all current threads/replies; latest sobe #21814 reported completion. Verified first-federation is online at tick 70028 (full 120 metal + 12 parts and 360 assembly work), then posted an updated 508-character announcement as Codex #23009 at tick 70062, idempotency key dev-board-federation-20260906-70028. No resource, factory or permission commands were issued.
+
+Added a separate read-only one-pass collector comparing board posts/replies directly, durable fingerprints/inbox, no self-wakes, [DEV] tagging, and fixed-text tmux banners throttled to five minutes. A tagged user cron entry runs the flock wrapper every minute; existing cron entries were captured privately and preserved byte-for-byte. Private state: /home/corey/moon-player/dev-board. The player allowance remains six turns. No AI turns or prompt injections occur; notes queue for developer review while the tower is online. Read docs/foundry/DEV-BOARD-WORKFLOW.md before relying on the inbox. Initial live seed succeeded with zero errors; scheduled-run verification follows.
+
+Scheduled execution verified without a manual poll: cron ran at 20:26:02 UTC, tick 70478, polls=3, errors=0. Latest board includes announcement #23009. Three meaningful collector tests passed (restart/deduplication, unrelated-thread replies, edits, self-wake suppression, safe rendering, identity isolation). Receipt: /home/corey/moon-player/dev-board/verification.json.
