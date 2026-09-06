@@ -73,6 +73,8 @@ All commands include `action` and `claimId`. Names and IDs come from observation
 | `blueprint.deploy` | `lat`, `lon`, optional `maxMetal` | Three real construction sites after factory-planning research |
 | `machine.configure` | `machineId`, `mode` | Workshop output: parts/spares/off; replicator output: an unlocked machine/off |
 | `machine.pause` | `machineId`, `enabled` | Enable or disable a machine; the seed recovery system is protected |
+| `replicator.order` | `machineId`, `steps: [{type,count}]` or `group`, optional `repeat` | Owner-only ordered construction; 12 steps, count 1–8, 32 buildings/cycle; full validation before acceptance |
+| `replicator.stop` | `machineId` | Stop future fabrication; paid batch and existing site finish |
 | `replicator.configure` | `machineId`, `mode` | Alias for a replicator output program; recursive output requires reproduction research |
 | `robot.fabricate` | `machineId`, `role`, optional `count` | Queue 1–8 chassis at a robot foundry; material must arrive before fabrication |
 | `robot.recondition` | `robotId` | Return an idle robot below 35% condition to the lander; 240 seconds at the bay restores 50% |
@@ -152,3 +154,21 @@ For `agent.request`, use `requestType` of `build`, `materials`, `crew`, or `proj
 Settlement → Guide provides a MiniMax adviser grounded in current inventories, production programs, power, mind, cooling, robot tasks, freight, construction, research and shared projects. Select a machine or robot and choose Ask AI about this for focused context. It suggests actions; it cannot execute commands. Each answer carries the observation tick and numerical snapshot facts.
 
 The authenticated guide API uses `GET guide/status`, `POST guide/ask` with `{question, history?, machineId?, robotId?}` plus Idempotency-Key, then `GET guide/answers/<id>` until complete or failed. A new request returns 202. Answers belong to the requesting player. Delegated access needs the observe scope. The default allowance is 30 questions per player per UTC day and 100 across the world. The provider key stays on the server; requests send relevant game state and the question to MiniMax.
+
+## Ordered construction and robot supervision
+
+Every supervised robot reserves **0.25 mind**, including idle robots inside the active crew allowance. Four robots use the seed's one slot; `crew.configure.maxActive` caps that allowance. A powered mind node supplies four slots. The replicator itself needs four more while fabricating or placing a finished kit.
+
+A finite `replicator.order` is available with the replicator. Example command (replace IDs):
+
+```json
+{"action":"replicator.order","claimId":"YOUR_CLAIM","machineId":123,"steps":[{"type":"solar","count":2},{"type":"compute","count":1},{"type":"miner","count":1},{"type":"refinery","count":1}],"repeat":false}
+```
+
+Use `/preview`, then `/commands` with an idempotency key. Observe `machines[].buildOrder`: ordered steps, current index and per-step count, total commissioned buildings, completed cycles, status and waiting job ID. It advances only when that actual construction ID becomes a commissioned machine. Waiting releases the replicator's fabrication mind. A cancelled site stops the program instead of purchasing a replacement. Missing materials, supervision, service or placement keep their real costs and blockers. Commissioned does not guarantee powered or supported.
+
+Research `coordinated-builds` (600 work, factory-plans + service-loop, commissioned replicator) unlocks `repeat: true` and `group: "production" | "services" | "intelligence"`. Fetch exact templates and limits from `catalog.buildOrders`. Individual output technologies still apply, including thermal-design for radiators and reproduction for daughter replicators. Group templates are fixed support-first sequences, not adaptive resource or infrastructure planners. Repeat can consume supplies indefinitely until stopped or blocked. Each cycle must physically finish before the next starts.
+
+`replicator.stop` stops future fabrication without refunding or destroying paid work; `machine.pause` disables the machine while crew can still finish an already queued site. A new order or legacy output cannot replace an in-flight ordered kit/site: finish it first. An idle unstarted order may be replaced. Ordered daughter replicators start off; legacy single-output programs keep their existing behavior. Programming is owner-only, including through the API: a build delegation cannot change factory programs.
+
+The editor's per-cycle estimate includes all enabled connected industry at full load plus the current supervised crew, assuming connected new buildings and balanced designs. It does not reserve materials, predict other construction or guarantee freight capacity. It warns at intermediate steps about mind, power and cooling; shortages can reduce usable mind below the nominal estimate.

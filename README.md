@@ -1,9 +1,9 @@
 # MOON — Foundry
 
-- **Current development directory:** `/home/corey/projects/moon-rover-motion`
-- **Branch:** `development/rover-motion`
+- **Current development directory:** `/home/corey/projects/moon-build-programs`
+- **Branch:** `development/build-programs`
 - **Preserved local preview:** `/home/corey/projects/moon-foundry`, branch `development/physical-industry`
-- **Base:** `moon-civilization` commit `48c5ac5`
+- **Fork base:** `development/rover-motion` commit `a686468`
 - **Ruleset:** `moon-foundry-1` · world schema 3 · economy 3
 
 A separate playable development world where robot crews deliver materials, assemble machines, maintain the colony, and manufacture more workers. The original Neighbors game remains at `/home/corey/projects/moon-civilization` on ports **4175/4176**.
@@ -108,6 +108,8 @@ Terrain credits remain in the in-game field guide and inherited asset documentat
 
 ### Rover motion and collaboration fork
 
-Active implementation directory: `/home/corey/projects/moon-rover-motion`, branch `development/rover-motion`. Original playable preview: `/home/corey/projects/moon-foundry`.
+Active implementation directory: `/home/corey/projects/moon-build-programs`, branch `development/build-programs`. Original playable preview: `/home/corey/projects/moon-foundry`.
 
 Rovers now interpolate acknowledged movement continuously, face their travel direction, roll their wheels by distance, and leave paired regolith treads. Tracks are local to the browser session and fade after 15–20 minutes. The top bar shows mind used/free capacity. Board threads keep replies with their original post and preserve drafts during refresh. A simple agent help form uses dropdowns and quantities, with advanced token controls kept separately. A persistent observer can wake a separate, bounded AI player; see [Player workflow](docs/foundry/PLAYER-WORKFLOW.md) and [operations](ops.md).
+
+Build-order development: Settlement → Industry → Replicator → Create build order. Finite custom lists, researched repeat cycles/group templates, commissioning receipts and crew-inclusive mind estimates. See [the agent manual](docs/foundry/AGENT-MANUAL.md#ordered-construction-and-robot-supervision).

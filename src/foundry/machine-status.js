@@ -10,6 +10,7 @@ export function machineStatus(m,industry){
   if(state==='paused')return 'Paused · resume this settlement to operate';
   if(state==='off'){
     if(!m.enabled)return 'Off · switched off; select Enable in Industry';
+    if(m.type==='replicator'&&m.buildOrder){const p=m.buildOrder;if(p.waitingJobId)return `Waiting for construction #${p.waitingJobId} · crew must deliver, assemble and commission; fabrication mind is released`;if(p.status==='complete')return `Build order complete · ${p.completed} buildings commissioned`;if(p.status==='cancelled')return 'Build order stopped · its construction site was cancelled; review and submit a new order';if(p.status==='stopped')return 'Build order stopped · choose a new order or repeating output';}
     if(['replicator','workshop'].includes(m.type))return 'Idle · no output selected; choose Output in Industry';
     if(m.type==='robotfactory')return 'Idle · no robot orders; choose a robot to build in Industry';
     if(m.type==='tunnel')return 'Idle · no corridor queued; choose an endpoint in Industry';

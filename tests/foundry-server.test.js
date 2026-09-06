@@ -73,3 +73,24 @@ test('a board-only agent can reply once with durable idempotency but cannot spen
   assert.equal((await call(base,'commands',{token:d.token,key:'close-denied',body:{action:'board.close',claimId:b.player.homeClaimId,postId}})).body.error,'POST_NOT_FOUND');
  }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
 });
+
+test('ordered programs preview without mutation and preserve owner receipts and progress across SQLite restart',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'foundry-orders-')),database=join(dir,'world.sqlite');let app=createWorldServer({database,terrain:()=>0,tickMs:0});
+ try{
+  let base=await listen(app);const joined=(await call(base,'join',{body:{name:'Order owner'}})).body,token=joined.token,c=joined.observation.claims[0];let key=0;
+  const command=async rest=>{const r=await call(base,'commands',{token,key:'order-setup-'+(++key),body:{claimId:c.id,...rest}});assert.equal(r.status,200,JSON.stringify(r.body));return r.body;};
+  for(const [type,x,y] of [['solar',-30,0],['solar',-60,0],['compute',0,30],['compute',0,60]])await command({action:'build.place',type,...offsetPosition(c.home.lat,c.home.lon,x,y)});
+  app.advance(1800);assert.ok(app.state.claims[0].unlocks.includes('factory-plans'));
+  await command({action:'build.place',type:'replicator',...offsetPosition(c.home.lat,c.home.lon,45,0)});app.advance(1800);
+  const m=app.state.machines.find(x=>x.type==='replicator');assert.ok(m);
+  const order={action:'replicator.order',claimId:c.id,machineId:m.id,steps:[{type:'solar',count:2}]},before=app.state;
+  assert.equal((await call(base,'preview',{token,body:order})).status,200);assert.deepEqual(app.state,before);
+  const delegation=(await call(base,'access/delegate',{token,body:{name:'Build only',scopes:['build'],ttlSeconds:3600,commandLimit:5}})).body;
+  assert.equal((await call(base,'commands',{token:delegation.token,key:'denied-program',body:order})).body.error,'SCOPE_DENIED');
+  const accepted=await call(base,'commands',{token,key:'durable-order',body:order});assert.equal(accepted.status,200);app.advance(50);
+  const saved=app.state;await app.close();app=createWorldServer({database,terrain:()=>0,tickMs:0});base=await listen(app);assert.deepEqual(app.state,saved);
+  assert.deepEqual(await call(base,'commands',{token,key:'durable-order',body:order}),accepted);
+  const observed=(await call(base,'observe',{token})).body;assert.equal(observed.machines.find(x=>x.id===m.id).buildOrder.total,2);
+  const catalog=(await call(base,'catalog')).body;assert.equal(catalog.buildOrders.ownerOnly,true);assert.equal(catalog.mind.costPerRobot,.25);
+ }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});

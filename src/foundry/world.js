@@ -5,6 +5,7 @@ import {autoLogistics,stepRobots} from './logistics.js';
 import {placement,createJob} from './commands.js';
 import {offsetPosition,distanceOnMoon} from '../geography.js';
 import {lunarPosition,localXY} from './navigation.js';
+import {replicatorOutput,advanceBuildOrders} from './build-orders.js';
 const funded=(inventory,cost)=>Object.entries(cost).every(([k,n])=>stock(inventory,k)>=n);
 function consume(inventory,cost){for(const [k,n] of Object.entries(cost))inventory[k]-=n;}
 function startBatch(m,batch){consume(m.inventory,batch.cost);m.fabrication={...batch,progress:0};}
@@ -60,9 +61,9 @@ function production(w,industries,{terrain}={}){
         if(stock(m.inventory,output)<8000&&funded(m.inventory,cost))startBatch(m,{output,amount:output==='parts'?1000:2000,cost,seconds});
       }
       if(m.type==='robotfactory'&&!m.fabrication&&m.queue?.length&&funded(m.inventory,m.queue[0].cost))startBatch(m,m.queue.shift());
-      if(m.type==='replicator'&&m.mode!=='off'&&!m.fabrication&&!m.pendingBuild){
-        const cost=machineCost(m.mode);m.planCost=cost;
-        if(funded(m.inventory,cost)){startBatch(m,{output:'kit.'+m.mode,amount:UNIT,cost,seconds:Math.max(60,BUILDINGS[m.mode].work/2),machineType:m.mode});m.planCost=null;}
+      if(m.type==='replicator'&&replicatorOutput(m)!=='off'&&!m.fabrication&&!m.pendingBuild){
+        const output=replicatorOutput(m),cost=machineCost(output);m.planCost=cost;
+        if(funded(m.inventory,cost)){startBatch(m,{output:'kit.'+output,amount:UNIT,cost,seconds:Math.max(60,BUILDINGS[output].work/2),machineType:output});m.planCost=null;}
       }
       if(m.fabrication){
         const b=m.fabrication;b.progress=Math.min(b.seconds*UNIT,b.progress+Math.floor(f*UNIT));m.progress=b.progress;
@@ -83,15 +84,15 @@ function production(w,industries,{terrain}={}){
     }
     for(const m of machines)if(m.pendingBuild&&i.states[m.id]==='active'){
       const pending=m.pendingBuild,loc=nextFree(w,c,m,pending.type,terrain);if(!loc){m.productionStatus='no-free-site';continue;}
-      try{createJob(w,c,pending.type,loc,{generation:m.generation+1,mode:pending.type==='replicator'?'replicator':'off',forceKit:true});m.pendingBuild=null;c.replications++;}
+      try{const job=createJob(w,c,pending.type,loc,{generation:m.generation+1,mode:!m.buildOrder&&pending.type==='replicator'?'replicator':'off',forceKit:true});if(m.buildOrder)m.buildOrder.waitingJobId=job.id;m.pendingBuild=null;c.replications++;}
       catch(e){if(!e.code)throw e;m.productionStatus=e.code;}
     }
     c.revision++;
   }
 }
 export function stepWorld(w,options={}){
-  w.tick++;prepareJobs(w);
-  for(const m of w.machines)if(m.type==='replicator'&&m.mode!=='off'&&!m.fabrication&&!m.pendingBuild)m.planCost=machineCost(m.mode);
+  w.tick++;prepareJobs(w);advanceBuildOrders(w);
+  for(const m of w.machines)if(m.type==='replicator'&&!m.fabrication&&!m.pendingBuild){const output=replicatorOutput(m);if(output!=='off')m.planCost=machineCost(output);else if(m.buildOrder)m.planCost=null;}
   if(w.tick%3===0)autoLogistics(w);
   const industries=Object.fromEntries(w.claims.map(c=>[c.id,industryFor(w,c.id)]));
   const worked=stepRobots(w,industries,options);finishJobs(w,worked);production(w,industries,options);syncClaims(w);

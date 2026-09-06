@@ -1,6 +1,6 @@
 # Foundry operations
 
-Current development is `/home/corey/projects/moon-rover-motion`, branch `development/rover-motion`, ruleset `moon-foundry-1`, schema/economy 3. The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
+Current development is `/home/corey/projects/moon-build-programs`, branch `development/build-programs`, ruleset `moon-foundry-1`, schema/economy 3. The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
 
 | Service | Location |
 | --- | --- |
@@ -92,3 +92,11 @@ The simplified AI help form dispatches `agent.request` as a directed board threa
 The [current deployed release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) records runtime `d5d66e7`, website `e657a70`, verified save preservation and rollback targets. Both V2 services load `/etc/moon-astra-v2-guide.env` through their own `30-guide.conf` systemd drop-in; original Moon services do not. Open Settlement → Guide in the hosted V2 client. The older local preview is preserved and does not receive this feature through a server restart.
 
 See [Moon Guide operations](docs/foundry/MOON-GUIDE.md). The dedicated key is held outside the repository at `/home/corey/moon-secrets/minimax.env` (0600); load a private copy with systemd EnvironmentFile only for V2 services. A missing or failed provider disables advice without stopping the game. `guide_answers` is an additive table in the V2 database; all world schema-3 snapshots remain compatible. Provider requests are asynchronous and bounded, with daily allowances persisted across restarts. Do not publish provider credentials or raw reasoning. The source devlog records actual staging and production status.
+
+## Ordered construction fork — 2026-09-06
+
+Finite build orders add optional `machines[].buildOrder` fields without migrating the schema-3 save. Existing single-output programs remain unchanged. New orders keep legacy `mode` off so an older runtime cannot turn a finite list into endless fabrication on rollback. Rollback should preserve the live database; it suspends ordered automation until the new runtime is restored. Never reset colony state.
+
+For a stopped queue, inspect its `status`, `waitingJobId`, fabrication, pending kit and the referenced construction site. Cancellation requires owner review/new order; it does not automatically spend another kit. Waiting for commissioning releases four industry mind slots. New `replicator.order` and `replicator.stop` API actions are owner-only and cannot be invoked by existing bounded delegated players. Robot mind remains 0.25 per supervised worker; UI now states it explicitly. Fixed groups/repeat require the new Coordinated construction research.
+
+Development and QA run in this isolated fork; existing tower previews, game worlds and the separate player watcher remain independent. Follow the deployment runbook for fresh online/stopped backups, exact restore checks, staging, full-site Git publication and production verification.

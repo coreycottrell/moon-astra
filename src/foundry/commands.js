@@ -5,6 +5,8 @@ import {distanceOnMoon,offsetPosition} from '../geography.js';
 import {lunarPosition} from './navigation.js';
 import {available,reserve,cancelJob,makeFreight,incoming} from './logistics.js';
 
+import {validateBuildOrder} from './build-orders.js';
+
 export const BLUEPRINT=[{type:'solar',east:0,north:0},{type:'miner',east:26,north:0},{type:'refinery',east:0,north:26}];
 export function placement(w,c,type,loc,terrain){
   if(!Object.hasOwn(BUILDINGS,type)||type==='seed')fail('INVALID_MACHINE','Choose a catalog machine',400);
@@ -35,7 +37,7 @@ function ownedRobot(w,c,id){const r=w.robots.find(r=>r.id===id&&r.claimId===c.id
 function spendLocal(m,cost){if(Object.entries(cost).some(([k,n])=>stock(m.inventory,k)<n))fail('LOCAL_MATERIALS_REQUIRED','Deliver the upgrade materials to this machine first');for(const [k,n] of Object.entries(cost))m.inventory[k]-=n;}
 export function applyCommand(w,actor,cmd,{terrain}={}){
   player(w,actor);if(!cmd||typeof cmd!=='object'||Array.isArray(cmd)||!ACTIONS.includes(cmd.action))fail('UNKNOWN_ACTION','Choose a supported command action',400);
-  const known=['action','claimId','type','lat','lon','rotation','amount','toClaimId','machineId','mode','playerId','paused','maxMetal','jobId','robotId','role','count','maxActive','workers','autoLogistics','targetClaimId','duration','techId','profile','resource','fromId','toId','projectId','title','body','kind','postId','enabled','requestType','supplies'];
+  const known=['action','claimId','type','lat','lon','rotation','amount','toClaimId','machineId','mode','playerId','paused','maxMetal','jobId','robotId','role','count','maxActive','workers','autoLogistics','targetClaimId','duration','techId','profile','resource','fromId','toId','projectId','title','body','kind','postId','enabled','requestType','supplies','steps','repeat','group'];
   if(Object.keys(cmd).some(k=>!known.includes(k)))fail('INVALID_COMMAND','Unknown command field',400);
   const c=own(w,actor,cmd.claimId,['build.place','blueprint.deploy'].includes(cmd.action));let result={};
   if(cmd.action==='build.place'){
@@ -61,7 +63,19 @@ export function applyCommand(w,actor,cmd,{terrain}={}){
       if(cmd.mode==='replicator'&&!c.unlocks.includes('reproduction'))fail('TECH_LOCKED','Supported reproduction research is required');
       const required=BUILDINGS[cmd.mode]?.tech;if(required&&!c.unlocks.includes(required))fail('TECH_LOCKED',`Research ${TECH[required].name} first`);
     }else fail('INVALID_MACHINE','This machine has no production program',400);
+    if(m.type==='replicator'&&m.buildOrder){if(m.fabrication||m.pendingBuild||m.buildOrder.waitingJobId)fail('MACHINE_BUSY','Finish the current ordered kit and site before choosing a repeating output');delete m.buildOrder;}
     m.mode=cmd.mode;m.planCost=null;result={machineId:m.id,mode:m.mode,finishingCurrentBatch:!!m.fabrication};emit(w,'machine.programmed',`${BUILDINGS[m.type].name} output set to ${m.mode}`,{claimId:c.id,machineId:m.id});
+  }else if(cmd.action==='replicator.order'){
+    const m=ownedMachine(w,c,cmd.machineId,'replicator');
+    const order=validateBuildOrder(c,cmd);
+    if(m.fabrication||m.pendingBuild||m.buildOrder?.waitingJobId)fail('MACHINE_BUSY','Finish the current kit and construction site before replacing the build order');
+    m.buildOrder=order;m.mode='off';m.planCost=null;m.productionStatus=null;
+    result={machineId:m.id,buildOrder:structuredClone(order)};emit(w,'replicator.ordered','An ordered construction program was saved',{claimId:c.id,machineId:m.id,total:order.total,repeat:order.repeat});
+  }else if(cmd.action==='replicator.stop'){
+    const m=ownedMachine(w,c,cmd.machineId,'replicator');
+    if(m.buildOrder)m.buildOrder.status='stopped';m.mode='off';m.planCost=null;
+    result={machineId:m.id,finishingCurrentBatch:!!(m.fabrication||m.pendingBuild||m.buildOrder?.waitingJobId)};
+    emit(w,'replicator.order-stopped','Future fabrication stopped; paid work and construction remain',{claimId:c.id,machineId:m.id});
   }else if(cmd.action==='machine.pause'){
     const m=ownedMachine(w,c,cmd.machineId);if(typeof cmd.enabled!=='boolean')fail('INVALID_VALUE','enabled must be true or false',400);if(m.type==='seed'&&!cmd.enabled)fail('PROTECTED_LANDER','The landing recovery system stays available');m.enabled=cmd.enabled;result={machineId:m.id,enabled:m.enabled};
   }else if(cmd.action==='robot.fabricate'){

@@ -1,4 +1,5 @@
 import {BUILDINGS,MIND,DESIGNS,PRODUCTION} from './catalog.js';
+import {replicatorOutput} from './build-orders.js';
 import {stock} from './state.js';
 import {distanceOnMoon} from '../geography.js';
 
@@ -30,7 +31,7 @@ export function industryFor(w,cid){
   }
   for(const type of MIND.priority)for(const m of machines.filter(m=>m.type===type).sort((a,b)=>a.id-b.id)){
     if(states[m.id])continue;
-    const noWork=(type==='workshop'&&m.mode==='off'&&!m.fabrication)||(type==='replicator'&&m.mode==='off'&&!m.fabrication)||(type==='robotfactory'&&!m.fabrication&&!m.queue?.length)||(type==='tunnel'&&!w.corridors.some(t=>t.fromId===m.id&&!t.complete));
+    const noWork=(type==='workshop'&&m.mode==='off'&&!m.fabrication)||(type==='replicator'&&replicatorOutput(m)==='off'&&!m.fabrication&&!m.pendingBuild)||(type==='robotfactory'&&!m.fabrication&&!m.queue?.length)||(type==='tunnel'&&!w.corridors.some(t=>t.fromId===m.id&&!t.complete));
     if(noWork){states[m.id]='off';continue;}
     if(type==='miner'&&c.deposit<=0){states[m.id]='deposit-empty';continue;}
     if(type==='miner'&&stock(m.inventory,'rock')>=40000){states[m.id]='output-full';continue;}
