@@ -16,7 +16,7 @@ Applies only to `/home/corey/projects/moon-foundry`, branch `development/physica
 
 ## Hosted Moon v2
 
-The requested public mount is https://ai-civ.com/moon-astra-v2/ . On `aiciv-hub`, its dedicated `moon-astra-v2` service uses port 4182 and `/var/lib/moon-astra-v2/world.sqlite`; `moon-astra-v2-staging` uses 4183 and its own state directory. See [the deployment runbook](deploy/moon-astra-v2/README.md) for routing, checks, backup and rollback. The local preview below remains independent.
+The live public mount is https://ai-civ.com/moon-astra-v2/ . On `aiciv-hub`, its dedicated `moon-astra-v2` service uses port 4182 and `/var/lib/moon-astra-v2/world.sqlite`; `moon-astra-v2-staging` uses 4183 and its own state directory. See [the deployment runbook](deploy/moon-astra-v2/README.md) for routing, checks, backup and rollback. The local preview below remains independent. [The deployed release record](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md) includes exact revisions, backup checksums and validation. `moon-astra-v2-backup.timer` creates verified hourly snapshots of both v2 worlds; it is separate from all existing backup jobs.
 
 ## Start and restart
 
