@@ -48,7 +48,7 @@ export function createGuide({db,apiKey,model='MiniMax-M2.7',fetchImpl=fetch,time
     db.prepare('INSERT INTO guide_answers(id,actor,request_key,digest,created,day,tick,status) VALUES(?,?,?,?,?,?,?,?)').run(id,actor,key,d,now,day,world.tick,'pending');
     pending.set(id,{actor,controller});
     // Async provider work never blocks world ticks or waits on the website proxy.
-    void complete(id,context,data,controller);
+    void complete(id,context,data,controller).catch(()=>console.error('Moon guide answer could not be saved; no game command was issued.'));
     return {id,tick:world.tick,status:'pending'};
   }
   return {status,answer,ask,close(){closed=true;for(const p of pending.values())p.controller.abort();pending.clear();}};

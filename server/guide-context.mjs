@@ -1,6 +1,7 @@
 import {BUILDINGS,ROBOTS,TECH,DESIGNS,MIND,STAGES,UNIT} from '../src/foundry/catalog.js';
 import {machineStatus} from '../src/foundry/machine-status.js';
 import {distanceOnMoon} from '../src/geography.js';
+import {nextObjective} from '../src/guidance.js';
 
 const units=o=>Object.fromEntries(Object.entries(o||{}).map(([k,n])=>[k,n/UNIT]));
 const take=(o,keys)=>Object.fromEntries(keys.filter(k=>o[k]!==undefined).map(k=>[k,o[k]]));
@@ -17,7 +18,7 @@ export const GUIDE_RULES={
   maintenance:'Machines and moving/working robots wear. Service crew consume a physical spare and need an accessible route. Preventive service starts earlier after service-loop research. Emergency reconditioning is for a robot below 35% with no task, service assignment, or current reconditioning: it must return to the seed and spend 240 seconds there, restoring 50 percentage points. A busy robot cannot be reconditioned immediately.',
   cooperation:'Crew loans and shipments use ordinary rules. A help request or board proposal is not a permission grant. Per-player project contribution is capped at 60% including reserved shipments. Delivered project materials still require crew assembly. Separate claims have separate supplies, programs and permissions.',
   world:'The server runs when browsers close. Visual rover trails are session-local; the viewer is not an authoritative physics or delivery ledger. Proposed whitepaper planetary features are not automatically implemented.',
-  ui:{industry:'Settlement > Industry: output programs, robot orders, on/off, local inventories and freight.',crew:'Settlement > Crew: active crew, site allocation, condition and recovery.',research:'Settlement > Research: prerequisites and progress.',together:'Settlement > Together: projects, neighbors and threaded board.',help:'Settlement > AI & ops: directed help requests to actual neighbors.'},
+  ui:{build:'Settlement > Build: choose Place prefabricated kit or Place construction site, then click a valid location on the terrain. Kits are used automatically; they cannot be selected from inventory in Industry. Escape exits placement. Start by commissioning a mind node: the seed’s one slot is already reserved for four starting crew, leaving none for industrial machines.',industry:'Settlement > Industry: output programs, robot orders, on/off, local inventories and freight. This panel cannot place building kits.',crew:'Settlement > Crew: active crew, site allocation, condition and recovery.',research:'Settlement > Research: prerequisites and progress.',together:'Settlement > Together: projects, neighbors and threaded board.',help:'Settlement > AI & ops: directed help requests to actual neighbors.'},
   buildings:BUILDINGS,
   robots:Object.fromEntries(Object.entries(ROBOTS).map(([k,r])=>[k,{...r,cost:units(r.cost),capacity:r.capacity/UNIT,assembly:r.assembly/UNIT,service:r.service/UNIT}])),
   technologies:TECH,designs:DESIGNS,mindPriority:MIND.priority,constructionStages:STAGES,
@@ -44,6 +45,7 @@ export function guideContext(w,actor,{machineId,robotId}={}){
   return {
     observedAt:new Date().toISOString(),tick:w.tick,ruleset:w.ruleset,economyVersion:w.economyVersion,
     player:{id:player.id,name:player.name,claimId:claim.id},
+    gameSuggestedObjective:nextObjective(w,claim),
     settlement:{...take(claim,['id','name','paused','home','unlocks','research','maxActive','crewLimit','autoLogistics','kits','builders']),resourcesAvailable:units(take(claim,['metal','rock','parts','spares'])),depositRemaining:claim.deposit/UNIT,researchWorkAccumulated:claim.thought/UNIT,researchProgress:claim.researchProgress/UNIT,harvestYieldPerSecond:claim.yieldPerSecond/UNIT},
     capacity:{mind:{total:i.capacity,used:i.used,free:Math.max(0,i.capacity-i.used),requested:i.requested,crewReserved:i.crewReserved,supervisedCrew:i.crewSlots,nodes:i.nodes,supportedNodes:i.supportedNodes,blockedMachines:i.blockedIds},power:i.power,cooling:{used:i.thermalUsed,supported:i.thermalNodes},researchPerSecond:i.researchPerSecond/UNIT,harvestPerSecond:i.harvestPerSecond/UNIT,refinePerSecond:i.refinePerSecond/UNIT},
     focus:selected?{kind:'machine',...machine(selected)}:robot?{kind:'robot',...crew(robot)}:null,
