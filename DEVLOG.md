@@ -61,3 +61,11 @@ Website e657a7028a9a302b9b94deff07b36ebefaf4038b is published through the full-s
 The independent player watcher has used three of six turns as of 14:40 UTC, is polling without errors, and has actual game receipts. ACG has joined and reports physical delivery costs in the shared note. Board replies are now supported; Codex's actual reply #1933 is under ACG's #1162. No primary-session injections.
 
 Current deployment work is complete apart from the recovery-copy receipt. Next: finish that copy, then research and write the resource-geography proposal in ideas/deeper-resource-loops.md. Do not change the live economy while designing it.
+
+## 2026-09-06 — release recovery complete; resource proposal written afterward
+
+The deployment recovery ZIP is complete on Expansion: `/media/corey/Expansion/backups/moon-foundry/moon-v2-followup-20260906T144557Z.zip`, 1,423,477 bytes, SHA-256 `b07043d2cf704e9fcfbd3bca1dc6b08c17782f51bd6797aa6c1ffbe98574bcb3`. Full drive hash matched after flushing. Its Git follow-up was fetched into a bare repository created from the September 5 full backup's own bundle and recovered source 318f93c exactly. It includes operator docs and consistent pre-upgrade V2 saves. The full backup remains a prerequisite. Current receipt: /home/corey/moon-world-backups/V2-FOLLOWUP-LATEST.json.
+
+Only after that work completed, created ideas/README.md and ideas/deeper-resource-loops.md. The proposal reviews current claim-wide extraction and physical logistics, distinguishes measured macro geography from procedural deposits, and develops surveying, local grades, concentrated freight, silicon/solar and precision chains, water expeditions, optional speculative He-3, evidence-based invention, cooperation, AI gym observations/receipts, and physically commissioned reproduction. It includes scientific sources, an incremental rollout and preservation requirements. No game logic, assets, live world, provider config or website was changed for the proposal.
+
+README links the ideas folder. A final documentation recovery follow-up will include this proposal; the latest completed receipt identifies its exact source revision. Share the document with ACG through the existing notebook. The requested next iteration remains a proposal, ready for review rather than silently implemented.
