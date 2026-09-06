@@ -4,7 +4,7 @@ const SEGMENTS=16;
 export class MoonTerrain {
   constructor(scene,data,frame,texture) {
     this.data=data;this.frame=frame;this.group=new THREE.Group();scene.add(this.group);
-    this.cache=new Map();this.active=[];this.pending=[];this.desired=[];this.showBorders=false;
+    this.cache=new Map();this.active=[];this.pending=[];this.desired=[];this.showBorders=false;this.revision=0;
     this.material=new THREE.MeshStandardMaterial({map:texture,roughness:1,metalness:0,color:0xe3e3e3,side:THREE.FrontSide});
     // Fine regolith grain is world anchored; macro albedo comes from the lunar map.
     this.material.onBeforeCompile=shader=>{
@@ -63,6 +63,7 @@ diffuseColor.rgb*=1.0+regional+local+fine;`);
   }
   commit() {
     const desired=new Set(this.desired.map(n=>n.key));
+    if(desired.size!==this.active.length||this.active.some(key=>!desired.has(key)))this.revision++;
     for(const key of this.active)if(!desired.has(key)){const tile=this.cache.get(key);if(tile){tile.mesh.visible=false;tile.border.visible=false;}}
     this.active=[...desired];
     for(const key of this.active){const tile=this.cache.get(key);tile.mesh.visible=true;tile.border.visible=this.showBorders;tile.used=performance.now();}
@@ -123,6 +124,28 @@ diffuseColor.rgb*=1.0+regional+local+fine;`);
     this.group.add(mesh,line);this.cache.set(n.key,{mesh,border:line,used:performance.now(),level:n.level});
   }
   setBorders(show) {this.showBorders=show;for(const key of this.active)this.cache.get(key).border.visible=show;}
+  // Sample the triangle actually being drawn, so tires and decals share the
+  // visible surface even while the lunar quadtree changes detail levels.
+  surfacePoint(location,target=new THREE.Vector3()) {
+    const lat=location.lat*Math.PI/180,lon=location.lon*Math.PI/180;
+    const x=Math.cos(lat)*Math.cos(lon),y=Math.sin(lat),z=Math.cos(lat)*Math.sin(lon);
+    const ax=Math.abs(x),ay=Math.abs(y),az=Math.abs(z);let face,u,v;
+    if(ax>=ay&&ax>=az){face=x>=0?0:1;u=(x>=0?-z:z)/ax;v=y/ax;}
+    else if(ay>=az){face=y>=0?2:3;u=x/ay;v=(y>=0?-z:z)/ay;}
+    else{face=z>=0?4:5;u=(z>=0?x:-x)/az;v=y/az;}
+    for(let level=18;level>=0;level--){
+      const n=2**level,tx=clamp((u+1)*.5*n,0,n-1e-10),ty=clamp((v+1)*.5*n,0,n-1e-10);
+      const ix=Math.floor(tx),iy=Math.floor(ty),tile=this.cache.get(`${face}/${level}/${ix}/${iy}`);
+      if(!tile?.mesh.visible)continue;
+      const gx=(tx-ix)*SEGMENTS,gy=(ty-iy)*SEGMENTS,i=Math.min(15,Math.floor(gx)),j=Math.min(15,Math.floor(gy)),a=j*17+i;
+      const fx=gx-i,fy=gy-j,positions=tile.mesh.geometry.attributes.position;
+      const indices=fx+fy<=1?[a,a+1,a+17]:[a+18,a+17,a+1],weights=fx+fy<=1?[1-fx-fy,fx,fy]:[fx+fy-1,1-fx,1-fy];
+      target.set(0,0,0);
+      for(let k=0;k<3;k++){target.x+=positions.getX(indices[k])*weights[k];target.y+=positions.getY(indices[k])*weights[k];target.z+=positions.getZ(indices[k])*weights[k];}
+      return target;
+    }
+    return target.fromArray(this.frame.toLocal(this.data.point([x,y,z])));
+  }
   get meshes(){return this.active.map(key=>this.cache.get(key).mesh);}
   get stats(){return {tiles:this.active.length,pending:this.pending.length,maxLevel:Math.max(0,...this.active.map(k=>this.cache.get(k).level)),cached:this.cache.size};}
   dispose(){for(const t of this.cache.values()){t.mesh.geometry.dispose();t.border.geometry.dispose();}this.material.dispose();this.borderMaterial.dispose();this.group.removeFromParent();}

@@ -58,3 +58,18 @@ test('a failed multi-site command is atomic at the API boundary',async()=>{
 test('revocation closes an already-open delegated stream',async()=>{const app=createWorldServer({database:':memory:',terrain:()=>0,tickMs:0});try{const base=await listen(app),owner=(await call(base,'join',{body:{name:'Stream owner'}})).body.token,d=(await call(base,'access/delegate',{token:owner,body:{name:'Observer',scopes:['observe'],ttlSeconds:3600,commandLimit:1}})).body;
 const stream=await fetch(base+'/api/v1/stream',{headers:{Authorization:'Bearer '+d.token}});assert.equal(stream.status,200);const reader=stream.body.getReader();assert.equal((await reader.read()).done,false);await call(base,'access/revoke',{token:owner,body:{id:d.id}});assert.equal((await reader.read()).done,true);assert.equal((await call(base,'observe',{token:d.token})).status,401);
 }finally{await app.close();}});
+
+test('a board-only agent can reply once with durable idempotency but cannot spend supplies',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'foundry-board-')),database=join(dir,'world.sqlite');let app=createWorldServer({database,terrain:()=>0,tickMs:0});
+ try{
+  let base=await listen(app);const a=(await call(base,'join',{body:{name:'Ada'}})).body,b=(await call(base,'join',{body:{name:'Babbage'}})).body;
+  const post=(await call(base,'commands',{token:a.token,key:'new-thread',body:{action:'board.post',claimId:a.player.homeClaimId,kind:'note',title:'Coordination',body:'Ready?'}})).body;
+  const postId=app.state.board[0].id,d=(await call(base,'access/delegate',{token:b.token,body:{name:'Board agent',scopes:['board'],ttlSeconds:3600,commandLimit:5}})).body;
+  const body={action:'board.reply',claimId:b.player.homeClaimId,postId,body:'Ready.'},first=await call(base,'commands',{token:d.token,key:'reply-once',body});assert.equal(first.status,200);
+  assert.deepEqual(await call(base,'commands',{token:d.token,key:'reply-once',body}),first);
+  assert.equal((await call(base,'commands',{token:d.token,key:'spend-denied',body:{action:'shipment.send',claimId:b.player.homeClaimId,toClaimId:a.player.homeClaimId,amount:1}})).body.error,'SCOPE_DENIED');
+  await app.close();app=createWorldServer({database,terrain:()=>0,tickMs:0});base=await listen(app);
+  assert.deepEqual(await call(base,'commands',{token:d.token,key:'reply-once',body}),first);assert.equal(app.state.board[0].replies.length,1);
+  assert.equal((await call(base,'commands',{token:d.token,key:'close-denied',body:{action:'board.close',claimId:b.player.homeClaimId,postId}})).body.error,'POST_NOT_FOUND');
+ }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});

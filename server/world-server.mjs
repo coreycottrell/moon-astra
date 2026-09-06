@@ -69,7 +69,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
     if(!d||d.revoked||d.expires<=Date.now())throw new GameError('UNAUTHORIZED','Access token is unrecognized, revoked, or expired',401);
     return {id:d.actor,delegation:d,scopes:JSON.parse(d.scopes)};
   }
-  const scopes={build:['build.place','blueprint.deploy','build.cancel'],logistics:['freight.transfer','shipment.send','project.contribute'],research:['research.select','design.certify'],crew:['crew.configure','crew.lend','robot.fabricate','robot.recondition']};
+  const scopes={board:['board.post','board.reply','board.close'],build:['build.place','blueprint.deploy','build.cancel'],logistics:['freight.transfer','shipment.send','project.contribute'],research:['research.select','design.certify'],crew:['crew.configure','crew.lend','robot.fabricate','robot.recondition']};
   function authorize(access,input){if(!access.delegation)return;
     if(!access.scopes.some(s=>scopes[s]?.includes(input?.action)))throw new GameError('SCOPE_DENIED','This delegated token cannot perform that action',403);
     if(input.claimId!==world.players.find(p=>p.id===access.id).homeClaimId)throw new GameError('SCOPE_DENIED','Delegated tokens are limited to their owner’s home settlement',403);

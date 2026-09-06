@@ -6,6 +6,6 @@ for source,target in [('IMPLEMENTATION.md','phase.html'),('AGENT-MANUAL.md','age
     md=(root/'docs/foundry'/source).read_text()
     body=markdown.markdown(md,extensions=['tables','fenced_code','toc'])
     title=md.splitlines()[0].lstrip('# ')
-    html=f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0d171d"><title>{title}</title><style>{style}</style></head><body><main><nav><a href="./">Play Foundry ↗</a><a href="phase.html">Available now / coming later</a><a href="agent-manual.html">Agent manual</a><a href="https://ai-civ.com/moon-astra-whitepaper/">Published whitepaper ↗</a></nav><p class="stamp">MOON / FOUNDRY / DEVELOPMENT EDITION · 2026-09-05</p>{body}</main></body></html>'
+    html=f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0d171d"><title>{title}</title><style>{style}</style></head><body><main><nav><a href="./">Play Foundry ↗</a><a href="phase.html">Available now / coming later</a><a href="agent-manual.html">Agent manual</a><a href="https://ai-civ.com/moon-astra-whitepaper/">Published whitepaper ↗</a></nav><p class="stamp">MOON / FOUNDRY / DEVELOPMENT EDITION · 2026-09-06</p>{body}</main></body></html>'
     (root/'public'/target).write_text(html)
     print(target,len(html),'characters')

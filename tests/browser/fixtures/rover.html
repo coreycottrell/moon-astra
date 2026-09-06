@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Rover driving verification</title><style>body{margin:0;background:#111;font:14px monospace;color:#fff}canvas{display:block}aside{position:absolute;top:20px;left:24px;pointer-events:none}small{color:#b9cdc5}</style><aside>ROVER DRIVING / REGOLITH CONTACT<br><small>Production renderer · one snapshot per second</small></aside><script type="module">
+import * as THREE from 'three';
+import {FoundryScene} from '/src/foundry/scene.js';
+import {loadMachineAssets} from '/src/machine-assets.js';
+import {MoonTerrain} from '/src/terrain.js';
+import {frameAt,offsetPosition,RADIUS} from '/src/geography.js';
+const renderer=new THREE.WebGLRenderer({antialias:true,logarithmicDepthBuffer:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(1);renderer.setClearColor(0x080b10);renderer.toneMapping=THREE.ACESFilmicToneMapping;document.body.append(renderer.domElement);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,10000);camera.position.set(10,8,13);camera.lookAt(0,0,-2);
+scene.add(new THREE.HemisphereLight(0xc3daef,0x38322a,2));const sun=new THREE.DirectionalLight(0xfff0d7,4);sun.position.set(-20,18,12);scene.add(sun);
+const home={lat:28.43,lon:-17.4},frame=frameAt(home.lat,home.lon),data={height:()=>0,point:d=>d.map(v=>v*RADIUS)};
+const terrain=new MoonTerrain(scene,data,frame,null);terrain.update(camera,true);while(terrain.pending.length)terrain.process(100);terrain.process(10);
+await loadMachineAssets();const foundry=new FoundryScene(scene);foundry.setTerrain(terrain);
+const state={tick:0,robots:[],claims:[{id:'demo',home}],jobs:[],industry:{},corridors:[],machines:[],freight:[],projects:[]};
+let tick=-1,last=0,start=performance.now(),connected=true;const samples=[];
+window.roverProbe={get samples(){return samples;},get stats(){return foundry.motionStats;},disconnect(){connected=false;},reconnect(){connected=true;},recenter(){foundry.reset();foundry.setTerrain(terrain);tick=-1;},setTime(value){start=performance.now()-value;tick=-1;},ready:true};
+function draw(now){
+ const t=now-start,delta=last?Math.min((now-last)/1000,.1):0;last=now;
+ const next=Math.floor(t/1000);
+ if(next!==tick&&connected){tick=next;const distance=Math.min(tick*1.2,18),x=Math.min(12,distance)-6,y=Math.max(0,distance-12);
+  state.tick=tick;state.robots=[{id:1,claimId:'demo',role:'builder',x,y,...offsetPosition(home.lat,home.lon,x,y),rotation:distance<12?Math.PI/2:0,path:distance<12?[{x:6,y:0},{x:6,y:6}]:[{x:6,y:6}],status:distance<18?'delivering':'idle',cargo:[]}];foundry.sync(state,data,frame,home,now);
+ }
+ foundry.animate(delta,camera,connected,now);renderer.render(scene,camera);
+ if(samples.length<2000)samples.push({time:t,...foundry.motionStats.rovers[0],tracks:foundry.tracks.count});requestAnimationFrame(draw);
+}requestAnimationFrame(draw);
+</script></html>

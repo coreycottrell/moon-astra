@@ -2,11 +2,11 @@
   "config": {
     "argv": [
       "/home/corey/.nvm/versions/node/v24.13.1/bin/node",
-      "/home/corey/projects/moon-foundry/node_modules/.bin/playwright",
+      "/home/corey/projects/moon-rover-motion/node_modules/.bin/playwright",
       "test"
     ],
-    "configFile": "/home/corey/projects/moon-foundry/playwright.config.js",
-    "rootDir": "/home/corey/projects/moon-foundry/tests/browser",
+    "configFile": "/home/corey/projects/moon-rover-motion/playwright.config.js",
+    "rootDir": "/home/corey/projects/moon-rover-motion/tests/browser",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -22,7 +22,7 @@
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "/home/corey/projects/moon-foundry/test-results",
+        "outputDir": "/home/corey/projects/moon-rover-motion/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
@@ -30,7 +30,7 @@
         },
         "id": "",
         "name": "",
-        "testDir": "/home/corey/projects/moon-foundry/tests/browser",
+        "testDir": "/home/corey/projects/moon-rover-motion/tests/browser",
         "testIgnore": [
           "**/legacy/**"
         ],
@@ -93,12 +93,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 45509,
+                  "duration": 40688,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T22:31:44.807Z",
+                  "startTime": "2026-09-06T13:17:42.145Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -127,12 +127,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 13204,
+                  "duration": 14970,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T22:32:30.472Z",
+                  "startTime": "2026-09-06T13:18:23.009Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -161,12 +161,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 5970,
+                  "duration": 5917,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T22:32:43.693Z",
+                  "startTime": "2026-09-06T13:18:38.004Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -195,12 +195,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 879,
+                  "duration": 721,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-05T22:32:49.675Z",
+                  "startTime": "2026-09-06T13:18:43.935Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -212,15 +212,91 @@
           "file": "foundry.spec.js",
           "line": 53,
           "column": 1
+        },
+        {
+          "title": "mind HUD and threaded board preserve drafts through polling and accept a neighbor reply",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14061,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-06T13:18:44.663Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "625210ce57cafbc2d2c8-4385d0fb0cfb32989571",
+          "file": "foundry.spec.js",
+          "line": 65,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "rover.spec.js",
+      "file": "rover.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "one Hz driving rolls the Blender wheels, lays paired tracks and stops safely",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 240000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18605,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-06T13:18:58.750Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "54563b08e49a4a1b2104-8726f3cb13253a6fc8e0",
+          "file": "rover.spec.js",
+          "line": 2,
+          "column": 1
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-05T22:31:43.563Z",
-    "duration": 67183.147,
-    "expected": 4,
+    "startTime": "2026-09-06T13:17:40.931Z",
+    "duration": 97042.379,
+    "expected": 6,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

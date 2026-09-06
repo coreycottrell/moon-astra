@@ -122,8 +122,17 @@ export function applyCommand(w,actor,cmd,{terrain}={}){
     if(w.board.filter(p=>!p.closed).length>=LIMITS.board)fail('BOARD_FULL','Close completed requests before posting more');
     if(!['need','offer','note'].includes(cmd.kind))fail('INVALID_KIND','Choose need, offer, or note',400);
     const post={id:w.nextId++,actor,claimId:c.id,kind:cmd.kind,title:text(cmd.title,80,'Title'),body:text(cmd.body,600,'Message'),createdAt:w.tick,closed:false};w.board.push(post);if(w.board.length>200)w.board=w.board.filter(p=>!p.closed).concat(w.board.filter(p=>p.closed).slice(-100));result={postId:post.id};
+    emit(w,'board.posted','A new collaboration thread was posted',{actor,claimId:c.id,postId:post.id});
+  }else if(cmd.action==='board.reply'){
+    integer(cmd.postId,1,Number.MAX_SAFE_INTEGER,'Post ID');
+    const post=w.board.find(p=>p.id===cmd.postId);if(!post)fail('POST_NOT_FOUND','This thread is no longer on the board',404);
+    if(post.closed)fail('POST_CLOSED','This thread has been marked complete');
+    if((post.replies?.length||0)>=100)fail('THREAD_FULL','This thread has 100 replies. Continue in a new thread.');
+    const body=text(cmd.body,600,'Reply'),reply={id:w.nextId++,actor,claimId:c.id,body,createdAt:w.tick};
+    (post.replies??=[]).push(reply);result={postId:post.id,replyId:reply.id};
+    emit(w,'board.replied','A collaboration thread received a reply',{actor,claimId:c.id,postId:post.id,replyId:reply.id,threadActor:post.actor});
   }else if(cmd.action==='board.close'){
-    const post=w.board.find(p=>p.id===cmd.postId&&p.actor===actor);if(!post)fail('POST_NOT_FOUND','Select a post you own',404);post.closed=true;result={postId:post.id};
+    const post=w.board.find(p=>p.id===cmd.postId&&p.actor===actor);if(!post)fail('POST_NOT_FOUND','Select a post you own',404);post.closed=true;result={postId:post.id};emit(w,'board.closed','A collaboration thread was marked complete',{actor,claimId:c.id,postId:post.id});
   }else if(cmd.action==='tunnel.dig'){
     const from=ownedMachine(w,c,cmd.machineId,'tunnel'),to=ownedMachine(w,c,cmd.toId),length=Math.ceil(distanceOnMoon(from,to));
     if(length<20||length>500)fail('INVALID_CORRIDOR','Choose an endpoint 20–500 m from the bore');if(w.corridors.some(t=>t.fromId===from.id&&!t.complete))fail('BORE_BUSY','This bore already has an active corridor');

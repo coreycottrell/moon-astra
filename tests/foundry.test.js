@@ -66,3 +66,19 @@ test('automatic freight applies backpressure at capacity without losing stock or
   assert.doesNotThrow(()=>autoLogistics(w));assert.ok(w.freight.length>=4000&&w.freight.length<=4096);assert.equal(total(),before);
   assert.doesNotThrow(()=>autoLogistics(w));assert.equal(total(),before);
 });
+
+test('neighbors reply in durable bounded threads, while only the author can close a thread',()=>{
+ const {w,c}=setup();addPlayer(w,'p2','Babbage');const other=w.claims[1];
+ const {postId}=cmd(w,c,'board.post',{kind:'need',title:'Bring parts',body:'Six at the seed'});
+ const {replyId}=cmd(w,other,'board.reply',{postId,body:'On my way.'});
+ assert.equal(w.board.length,1);assert.equal(w.board[0].replies[0].actor,'p2');assert.equal(w.board[0].replies[0].id,replyId);
+ assert.equal(observe(JSON.parse(JSON.stringify(w)),'p1').board[0].replies[0].body,'On my way.');
+ assert.ok(w.events.some(e=>e.type==='board.replied'&&e.threadActor==='p1'&&e.replyId===replyId));
+ assert.throws(()=>cmd(w,other,'board.close',{postId}),e=>e.code==='POST_NOT_FOUND');
+ assert.throws(()=>cmd(w,other,'board.reply',{postId,body:' '.repeat(20)}),e=>e.code==='INVALID_TEXT');
+ assert.throws(()=>cmd(w,other,'board.reply',{postId,body:'x'.repeat(601)}),e=>e.code==='INVALID_TEXT');
+ for(let i=1;i<100;i++)cmd(w,other,'board.reply',{postId,body:'Reply '+i});
+ assert.throws(()=>cmd(w,other,'board.reply',{postId,body:'One too many'}),e=>e.code==='THREAD_FULL');
+ cmd(w,c,'board.close',{postId});assert.throws(()=>cmd(w,other,'board.reply',{postId,body:'Late reply'}),e=>e.code==='POST_CLOSED');
+ assert.equal(w.board[0].replies.length,100);
+});

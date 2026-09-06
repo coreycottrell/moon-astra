@@ -61,3 +61,20 @@ test('a foreign backend is rejected before opening an account or sending saved c
   await expect(page.locator('#join-dialog')).not.toBeVisible();
   expect(requests).toEqual([{path:'/api/v1/catalog',authorization:undefined}]);
 });
+
+test('mind HUD and threaded board preserve drafts through polling and accept a neighbor reply',async({page,request})=>{
+ await page.setViewportSize({width:1100,height:800});const a=await(await request.post('/api/v1/join',{data:{name:'Thread author '+Date.now()}})).json(),b=await(await request.post('/api/v1/join',{data:{name:'Thread neighbor '+Date.now()}})).json();
+ await page.addInitScript(token=>localStorage.setItem('moon-foundry-access-v1',JSON.stringify({token})),a.token);await page.goto('/');await expect(page.locator('#loading')).toBeHidden({timeout:180000});
+ await expect(page.locator('#mind-capacity')).toHaveText('1 / 0');await expect(page.locator('#mind-resource')).toHaveAttribute('title',/1 total/);
+ await page.locator('#colony').click();await page.getByRole('button',{name:'Together',exact:true}).click();
+ await page.locator('#board-form input[name=title]').fill('Draft survives updates');await page.locator('#board-form textarea').fill('Meet at the seed.');await page.locator('h3').filter({hasText:'The collaboration board'}).click();await page.waitForTimeout(2200);await expect(page.locator('#board-form input[name=title]')).toHaveValue('Draft survives updates');
+ await page.getByRole('button',{name:'Post to the shared board'}).click();const thread=page.locator('.board-thread').filter({has:page.getByRole('heading',{name:'Draft survives updates',exact:true})});await expect(thread).toBeVisible();
+ const postId=Number((await thread.getAttribute('id')).replace('board-post-',''));
+ await thread.locator('summary').click();await thread.locator('textarea').fill('My reply draft');await page.locator('h3').filter({hasText:'The collaboration board'}).click();await page.waitForTimeout(1600);await expect(thread.locator('textarea')).toHaveValue('My reply draft');
+ const reply=await request.post('/api/v1/commands',{headers:{Authorization:'Bearer '+b.token,'Idempotency-Key':'neighbor-reply-'+Date.now()},data:{action:'board.reply',claimId:b.player.homeClaimId,postId,body:'<script>unsafe()</script> Supplies are coming.'}});expect(reply.ok()).toBeTruthy();
+ await expect(thread.locator('.board-reply')).toContainText('<script>unsafe()</script> Supplies are coming.');await expect(thread.locator('textarea')).toHaveValue('My reply draft');expect(await thread.locator('script').count()).toBe(0);
+ await thread.getByRole('button',{name:'Send reply',exact:true}).click();await expect(thread.locator('.board-reply')).toHaveCount(2);await expect(thread.locator('textarea')).toHaveValue('');
+ await page.screenshot({path:'artifacts/foundry/board-threads.png'});await page.getByRole('button',{name:'Close settlement',exact:true}).click();await page.setViewportSize({width:390,height:844});await expect(page.locator('#mind-resource')).toBeVisible();
+ const boxes=await page.locator('.resource').evaluateAll(els=>els.map(e=>{const b=e.getBoundingClientRect();return {left:b.left,right:b.right};}));for(const b of boxes){expect(b.left).toBeGreaterThanOrEqual(0);expect(b.right).toBeLessThanOrEqual(390);}
+ await page.screenshot({path:'artifacts/foundry/mobile-mind-hud.png'});
+});

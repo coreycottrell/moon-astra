@@ -84,7 +84,7 @@ const escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 let colonyBusy=false;
 async function colonyCommand(command){
   if(colonyBusy)return;colonyBusy=true;$('colony-notice').textContent='Sending instructions…';
-  try{await sim.command(command);$('colony-notice').textContent='Instructions accepted by the world.';beep(520);}catch(e){$('colony-notice').textContent=e.message;}
+  try{await sim.command(command);$('colony-notice').textContent='Instructions accepted by the world.';beep(520);return true;}catch(e){$('colony-notice').textContent=e.message;return false;}
   finally{colonyBusy=false;renderColony(true);}
 }
 function renderColony(force=false){
@@ -115,7 +115,7 @@ function setLocation(loc,name,requestedMode='surface'){
   sim.world.view={lat:loc.lat,lon:loc.lon};
   sim.setView(loc);
   frame=frameAt(loc.lat,loc.lon,data.height(direction(loc.lat,loc.lon)));
-  terrain?.dispose();terrain=new MoonTerrain(scene,data,frame,texture);
+  terrain?.dispose();terrain=new MoonTerrain(scene,data,frame,texture);foundryScene?.setTerrain(terrain);
   terrain.setBorders($('borders').getAttribute('aria-pressed')==='true');
   removeModels();sim.world.machines.forEach(addMachine);
   if(rocks){rocks.geometry.dispose();rocks.material.dispose();rocks.removeFromParent();}rocks=createRocks(data,frame);scene.add(rocks);
@@ -227,6 +227,9 @@ function updateUI(){
   $('metal').textContent=resourceFormat.format(w.metal);$('rock').textContent=resourceFormat.format(w.rock);$('power').textContent=`${Math.max(0,p.supply-p.demand)} / ${p.supply}`;document.querySelector('.power').style.color=p.factor<1?'#f39b7f':'';
   $('power').title=`${p.demand} MW required, ${p.supply} MW available${p.factor<1?'. Production slowed; add solar arrays.':''}`;
   const industry=claimIndustry(sim.activeClaim.id);
+  const mindFree=Math.max(0,industry.capacity-industry.used);$('mind-capacity').textContent=`${industry.used} / ${mindFree}`;
+  $('mind-resource').title=`${industry.used} mind slots used, ${mindFree} available, ${industry.capacity} total. Includes ${industry.crewReserved} reserved for crew. ${industry.blockedIds.length} machines waiting for supervision.`;
+  $('mind-resource').classList.toggle('warning',industry.blockedIds.length>0);
   $('nodes').textContent=count('compute');$('nodes').title=`${industry.used} / ${industry.capacity} mind capacity in use · ${industry.blockedIds.length} machines waiting`;$('machines').textContent=w.machines.filter(m=>m.claimId===sim.activeClaim.id).length;
   const complete=buildOrder.filter(type=>count(type)>0).length;
   const unlocked=sim.activeClaim.unlocks.includes('factory-plans');
@@ -273,7 +276,7 @@ function animate(time){
   if(time-lastLod>200){terrain.update(camera);lastLod=time;}
   terrain.process(8);
   for(const g of modelMap.values()){const m=g.userData.machine,i=claimIndustry(m.claimId),c=sim.state.claims.find(c=>c.id===m.claimId),active=sim.connected&&!c.paused&&i.states[m.id]==='active';animateMachine(g,delta,{power:i.powerFactor,active,camera,progress:m.type==='replicator'&&m.fabrication?m.fabrication.progress/(m.fabrication.seconds*UNIT)*24:undefined});}
-  foundryScene?.animate(delta,camera,sim.connected);
+  foundryScene?.animate(delta,camera,sim.connected,time);
   if(time-lastUI>180){updateUI();lastUI=time;}
   if(time-lastSave>4000){save();lastSave=time;}
   renderer.render(scene,camera);
@@ -297,14 +300,14 @@ async function init(){
     sim.onBuild=m=>{addMachine(m);rebuildMarkers();};sim.message=message=>{toast(message);beep(760);};
     let claimCount=0,lastSnapshotTick=sim.state.tick;sim.onSnapshot=()=>{if(!frame)return;
       // A requested campaign reset also removes the old world's rendered machines.
-      if(sim.state.tick<lastSnapshotTick)setLocation(sim.world.view,locationName(sim.world.view),mode);
+      if(sim.state.tick<lastSnapshotTick){foundryScene.reset({clearTracks:true});setLocation(sim.world.view,locationName(sim.world.view),mode);}
       lastSnapshotTick=sim.state.tick;rebuildJobs();foundryScene.sync(sim.state,data,frame,sim.world.view);if(sim.state.claims.length!==claimCount){rebuildClaims();claimCount=sim.state.claims.length;}if($('colony-dialog').open)renderColony();save();};
     setLocation(sim.world.view,locationName(sim.world.view));resize();bind();$('utilities-toggle').onclick=toggleUtilities;$('crew-hud').onclick=()=>{$('colony-dialog').showModal();renderColony(true);};
     $('loading-detail').textContent='Stitching the first regions';
     while(terrain.pending.length){terrain.process(12);await new Promise(resolve=>setTimeout(resolve,0));}
     updateUI();renderer.setAnimationLoop(animate);$('loading').classList.add('fade');setTimeout(()=>$('loading').hidden=true,750);
     // Read-only diagnostics for verification, never a second path for game mutations.
-    if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power,machineAssets:loadedMachineTypes(),robots:foundryScene.robots.size,constructionSites:foundryScene.sites.size,detailedMachines:[...modelMap.values()].filter(g=>g.userData.asset).length};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
+    if(import.meta.env.DEV)window.__moon={get state(){return JSON.parse(sim.serialize());},get stats(){return {...terrain.stats,mode,frameLocation:{...sim.world.view},drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,power:sim.power,machineAssets:loadedMachineTypes(),robots:foundryScene.robots.size,roverMotion:foundryScene.motionStats,constructionSites:foundryScene.sites.size,detailedMachines:[...modelMap.values()].filter(g=>g.userData.asset).length};},screenLocation(east,north){const p=offsetPosition(sim.world.view.lat,sim.world.view.lon,east,north);const v=localAt(p).project(camera);return {x:(v.x*.5+.5)*innerWidth,y:(-.5*v.y+.5)*innerHeight,location:p};}};
   }catch(error){console.error(error);$('loading-detail').textContent=`Could not open this expedition: ${error.message}`;$('retry').hidden=false;$('retry').onclick=()=>location.reload();}
 }
 init();

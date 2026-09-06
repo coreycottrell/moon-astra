@@ -1,25 +1,18 @@
 import * as THREE from 'three';
-import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {RoverVisual,robotFallback} from './rover-visual.js';
+import {RoverTracks} from './rover-tracks.js';
 import {instantiateMachine} from '../machine-assets.js';
 import {positionMachine,disposeMachine} from '../machines.js';
 import {ROBOTS,BUILDINGS} from './catalog.js';
 import {distanceOnMoon,direction} from '../geography.js';
 
 
-function robotFallback(role){
-  const g=new THREE.Group(),scale=role==='heavy'?1.6:role==='hauler'?1.35:1;
-  const material=(color)=>new THREE.MeshStandardMaterial({color,metalness:.45,roughness:.65});
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.86*scale,.38,1.05*scale),material(0xe0dcd1));body.position.y=.53;g.add(body);
-  const wheels=[];for(const x of [-1,1])for(const z of [-1,0,1])wheels.push(new THREE.BoxGeometry(.15,.38,.32).translate(x*.48*scale,.23,z*.4*scale));
-  const joined=mergeGeometries(wheels);wheels.forEach(p=>p.dispose());g.add(new THREE.Mesh(joined,material(0x26323a)));
-  const tool=new THREE.Mesh(new THREE.BoxGeometry(role==='hauler'?.75:.16,role==='hauler'?.25:.55,.5),material(0xc68951));tool.position.set(.1,.92,.1);g.add(tool);return g;
-}
-
 export class FoundryScene{
-  constructor(scene){this.scene=scene;this.robots=new Map();this.sites=new Map();this.overlays=new THREE.Group();scene.add(this.overlays);this.showUtilities=false;this.showRoutes=false;}
+  constructor(scene){this.scene=scene;this.robots=new Map();this.sites=new Map();this.overlays=new THREE.Group();scene.add(this.overlays);this.showUtilities=false;this.showRoutes=false;this.tracks=new RoverTracks(scene);}
   clearOverlays(){for(const o of [...this.overlays.children]){o.traverse(x=>{x.geometry?.dispose();x.material?.dispose();});o.removeFromParent();}}
-  reset(){for(const g of this.robots.values())disposeMachine(g,true);this.robots.clear();for(const g of this.sites.values())disposeMachine(g,true);this.sites.clear();this.clearOverlays();}
-  sync(state,data,frame,view){
+  setTerrain(terrain){this.terrain=terrain;this.tracks.setTerrain(terrain);}
+  reset({clearTracks=false}={}){if(clearTracks)this.tracks.clear();for(const g of this.robots.values())disposeMachine(g,true);this.robots.clear();for(const g of this.sites.values())disposeMachine(g,true);this.sites.clear();this.clearOverlays();}
+  sync(state,data,frame,view,received=performance.now()){
     this.data=data;this.frame=frame;const nearby=state.robots.filter(r=>distanceOnMoon(r,view)<1500),ids=new Set(nearby.map(r=>r.id));
     for(const [id,g] of this.robots)if(!ids.has(id)){disposeMachine(g,true);this.robots.delete(id);}
     for(const r of nearby){
@@ -27,10 +20,11 @@ export class FoundryScene{
         if(asset){g.add(asset.root);g.userData.asset=asset;}
         const fallback=robotFallback(r.role);fallback.visible=!asset;g.add(fallback);g.userData.fallback=fallback;
         const marker=new THREE.Mesh(new THREE.RingGeometry(.7,.77,24),new THREE.MeshBasicMaterial({color:r.role==='service'?0x8bdcca:r.role==='hauler'?0xf5bc7b:0xb6d8f2,side:THREE.DoubleSide,transparent:true,opacity:.7,depthWrite:false}));marker.rotation.x=-Math.PI/2;marker.position.y=.07;g.add(marker);g.userData.marker=marker;
-        positionMachine(g,r,data,frame);g.userData.drawPosition=g.position.clone();g.userData.drawQuaternion=g.quaternion.clone();this.scene.add(g);this.robots.set(r.id,g);
+        g.userData.visual=new RoverVisual(g,r.role,this.tracks);this.scene.add(g);this.robots.set(r.id,g);
       }
-      const old=g.userData.robot;g.userData.moving=!!old&&distanceOnMoon(old,r)>.05;g.userData.robot=r;
-      positionMachine(g,r,data,frame);g.userData.targetPosition=g.position.clone();g.userData.targetQuaternion=g.quaternion.clone();g.position.copy(g.userData.drawPosition);g.quaternion.copy(g.userData.drawQuaternion);
+      g.userData.robot=r;g.userData.machine=r;
+      const home=state.claims.find(c=>c.id===r.claimId)?.home;
+      g.userData.visual.sync(r,state.tick,received,home);
       const crate=g.userData.asset?.root.getObjectByName('Payload_crate');if(crate)crate.visible=!!r.cargo?.length;
     }
     const jobs=state.jobs.filter(j=>distanceOnMoon(j,view)<1500),jobIds=new Set(jobs.map(j=>j.id));
@@ -57,9 +51,14 @@ export class FoundryScene{
       positionMachine(g,{...p,rotation:0},data,frame);this.overlays.add(g);
     }
   }
-  animate(delta,camera,connected){for(const g of this.robots.values()){
-    const r=g.userData.robot;g.position.lerp(g.userData.targetPosition,1-Math.exp(-7*delta));g.quaternion.slerp(g.userData.targetQuaternion,1-Math.exp(-6*delta));g.userData.drawPosition.copy(g.position);g.userData.drawQuaternion.copy(g.quaternion);
-    const a=g.userData.asset,near=camera.position.distanceTo(g.position)<100;if(a){a.root.visible=near;g.userData.fallback.visible=!near;for(const [name,action] of Object.entries(a.actions)){const active=connected&&r.status!=='paused'&&r.status!=='mind-limited'&&(name==='Idle'||name==='Travel'&&g.userData.moving||name==='Work'&&['building','servicing'].includes(r.status));action.paused=!active;}if(near)a.mixer.update(delta);}
-    g.visible=camera.position.distanceTo(g.position)<2500;g.userData.marker.visible=camera.position.distanceTo(g.position)<450;
-  }}
+  animate(delta,camera,connected,time=performance.now()){
+    this.tracks.update(time/1000);
+    for(const g of this.robots.values()){
+      const a=g.userData.asset,near=camera.position.distanceTo(g.position)<120;
+      if(a){a.root.visible=near;g.userData.fallback.visible=!near;}
+      g.userData.visual.animate(delta,time,connected,this.terrain,this.frame,this.data);
+      const distance=camera.position.distanceTo(g.position);g.visible=distance<2500;g.userData.marker.visible=distance<450;
+    }
+  }
+  get motionStats(){return {trackStrips:this.tracks.count,trackCapacity:this.tracks.capacity,rovers:[...this.robots].map(([id,g])=>({id,position:g.position.toArray(),heading:g.userData.visual.heading,speed:g.userData.visual.speed,travel:g.userData.visual.travel,wheelRoll:{...g.userData.visual.roll},detailed:!!g.userData.asset?.root.visible}))};}
 }

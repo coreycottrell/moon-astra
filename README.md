@@ -98,3 +98,9 @@ codex resume 01a06dd9-5847-7c73-b3a3-4ec974195750 --cd /home/corey/projects/moon
 The Moon renderer and measured macro terrain are retained. This phase implements physical local industry and a simplified underground utility system. It does not simulate lunar engineering, closed semiconductor manufacturing, underground navigable volumes, actual model inference, or planetary-scale industrial LOD. The [published whitepaper](https://ai-civ.com/moon-astra-whitepaper/) describes those later ambitions; the implementation map separates them from playable features.
 
 Terrain credits remain in the in-game field guide and inherited asset documentation: NASA LRO/LOLA elevation; Solar System Scope surface imagery under CC BY 4.0; procedural fine detail.
+
+### Rover motion and collaboration fork
+
+Active implementation directory: `/home/corey/projects/moon-rover-motion`, branch `development/rover-motion`. Original playable preview: `/home/corey/projects/moon-foundry`.
+
+Rovers now interpolate acknowledged movement continuously, face their travel direction, roll their wheels by distance, and leave paired regolith treads. Tracks are local to the browser session and fade after 15–20 minutes. The top bar shows mind used/free capacity. Board threads keep replies with their original post and preserve drafts during refresh. A persistent observer can wake a separate, bounded AI player; see [Player workflow](docs/foundry/PLAYER-WORKFLOW.md) and [operations](ops.md).
