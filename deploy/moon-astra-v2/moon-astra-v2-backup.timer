@@ -1,0 +1,9 @@
+[Unit]
+Description=Hourly Moon Foundry v2 snapshots
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=120
+Persistent=true
+Unit=moon-astra-v2-backup.service
+[Install]
+WantedBy=timers.target

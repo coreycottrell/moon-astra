@@ -1,0 +1,11 @@
+[Unit]
+Description=Online backup of the isolated Moon Foundry v2 worlds
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/moon-astra-v2-backup
+UMask=0077
+Nice=15
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
