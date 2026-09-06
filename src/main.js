@@ -3,7 +3,7 @@ import './ui.css';
 import './colony.css';
 import './foundry/style.css';
 import {FoundryScene} from './foundry/scene.js';
-import {renderFoundryPanel} from './foundry/panel.js';
+import {renderFoundryPanel,openFoundryGuide} from './foundry/panel.js';
 import {machineStatus as describeMachineStatus} from './foundry/machine-status.js';
 import {ROBOTS,DESIGNS} from './foundry/catalog.js';
 import * as THREE from 'three';
@@ -179,6 +179,7 @@ function bind(){
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setMode(b.dataset.view));
   $('cancel-build').onclick=cancelBuild;$('home').onclick=()=>setLocation(sim.actor.home,sim.actor.name+' · home');
   $('close-inspect').onclick=()=>{inspected=null;clearLayoutFocus();$('inspect').hidden=true;};
+  $('inspect-guide').onclick=()=>{openFoundryGuide(sim.actor.id,inspected?{machineId:inspected.id}:inspectedRobotId?{robotId:inspectedRobotId}:{});renderColony(true);$('colony-dialog').showModal();};
   const reflectPause=()=>{document.body.classList.toggle('paused',sim.paused);$('pause').textContent=sim.paused?'▷':'Ⅱ';$('pause').setAttribute('aria-label',sim.paused?'Resume simulation':'Pause simulation');};
   reflectPause();
   $('pause').onclick=async()=>{try{await sim.setPaused(!sim.paused);reflectPause();save();toast(sim.paused?'This settlement is paused. Neighbors continue.':'Settlement production resumed');}catch(e){toast(e.message);}};

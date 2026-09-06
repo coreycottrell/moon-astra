@@ -10,6 +10,7 @@ import {ECONOMY_VERSION,PRODUCTION,MIND} from '../src/industry.js';
 import {TYPES} from '../src/simulation.js';
 import {WORLD_VERSION,ROBOTS,TECH,DESIGNS,PROJECTS,STAGES,LIMITS,ACTIONS} from '../src/foundry/catalog.js';
 import {LunarData,direction} from '../src/geography.js';
+import {createGuide} from './guide.mjs';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const hash=s=>createHash('sha256').update(s).digest('hex');
@@ -25,7 +26,7 @@ function loadTerrain(){
   const data=new LunarData(new Uint16Array(bytes.buffer,bytes.byteOffset,bytes.byteLength/2),5760,2880);
   return loc=>data.height(direction(loc.lat,loc.lon));
 }
-export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),terrain=loadTerrain(),tickMs=1000,serveStatic=false,publicOrigin}={}){
+export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),terrain=loadTerrain(),tickMs=1000,serveStatic=false,publicOrigin,guide:guideOptions={}}={}){
   if(publicOrigin){const u=new URL(publicOrigin);if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.pathname!=='/'||u.search||u.hash)throw Error('MOON_PUBLIC_ORIGIN must be an HTTP(S) origin without a path');publicOrigin=u.origin;}
   if(database!==':memory:')mkdirSync(dirname(database),{recursive:true,mode:0o700});
   if(database!==':memory:'&&existsSync(database)){
@@ -48,6 +49,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
   if(world.version!==WORLD_VERSION||world.ruleset!==RULESET)throw Error('Unsupported saved world. Preserve the database and use its matching ruleset.');
   const save=db.prepare('INSERT INTO world(id,data) VALUES(1,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data');
   if(!saved)save.run(JSON.stringify(world));
+  const guide=createGuide({db,...guideOptions});
   const viewers=new Map(),buckets=new Map(),timings=[],started=performance.now();let failed=false,commandCount=0;
   const cpuStarted=process.cpuUsage();
   function commit(next,extra=()=>{}){const began=performance.now();db.exec('BEGIN IMMEDIATE');try{
@@ -93,6 +95,16 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
       }
       if(path.startsWith('/api/')){
         const access=authenticate(req),actor=access.id;rate(access.delegation?.id||actor);
+        if(path.startsWith('/api/v1/guide/')){
+          if(access.delegation&&!access.scopes.includes('observe'))throw new GameError('SCOPE_DENIED','Guide access needs observation permission',403);
+          if(path==='/api/v1/guide/status'&&req.method==='GET')return json(res,200,guide.status(actor));
+          if(path==='/api/v1/guide/ask'&&req.method==='POST'){
+            if(failed)throw new GameError('WORLD_PAUSED','The world is paused for recovery; guide observations are unavailable.',503);
+            const input=await body(req);const reply=guide.ask(actor,input,req.headers['idempotency-key'],observe(world,actor));return json(res,reply.status==='pending'?202:200,reply);
+          }
+          if(path.startsWith('/api/v1/guide/answers/')&&req.method==='GET')return json(res,200,guide.answer(actor,path.slice('/api/v1/guide/answers/'.length)));
+          throw new GameError('NOT_FOUND','Guide endpoint not found',404);
+        }
         if(path==='/api/v1/metrics'&&req.method==='GET')return json(res,200,metrics());
         if(path==='/api/v1/audit'&&req.method==='GET')return json(res,200,{entries:db.prepare('SELECT tick,delegation,action,command_key FROM audit WHERE actor=? ORDER BY id DESC LIMIT 100').all(actor)});
         if(path==='/api/v1/access'&&req.method==='GET'){if(access.delegation)throw new GameError('SCOPE_DENIED','Use the owner token to manage access',403);return json(res,200,{delegations:db.prepare('SELECT id,name,scopes,expires,remaining,revoked FROM delegations WHERE actor=?').all(actor)});}
@@ -150,11 +162,11 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
     if(failed)return;
     try{const next=structuredClone(world);stepWorld(next,{terrain});commit(next);broadcast();}catch(e){failed=true;console.error('World paused after persistence/simulation failure',e);}
   },tickMs):null;
-  return {server,get state(){return structuredClone(world);},advance(n=1){for(let i=0;i<n;i++){const next=structuredClone(world);stepWorld(next,{terrain});commit(next);}broadcast();},async close(){if(timer)clearInterval(timer);for(const res of viewers.keys())res.end();await new Promise(resolve=>server.close(resolve));db.close();}};
+  return {server,get state(){return structuredClone(world);},advance(n=1){for(let i=0;i<n;i++){const next=structuredClone(world);stepWorld(next,{terrain});commit(next);}broadcast();},async close(){guide.close();if(timer)clearInterval(timer);for(const res of viewers.keys())res.end();await new Promise(resolve=>server.close(resolve));db.close();}};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const production=process.argv.includes('--production'),port=Number(process.env.MOON_PORT||(production?4205:4206));
-  const app=createWorldServer({database:process.env.MOON_DB||resolve(ROOT,'.world/world.sqlite'),serveStatic:production,publicOrigin:process.env.MOON_PUBLIC_ORIGIN});
+  const app=createWorldServer({database:process.env.MOON_DB||resolve(ROOT,'.world/world.sqlite'),serveStatic:production,publicOrigin:process.env.MOON_PUBLIC_ORIGIN,guide:{apiKey:process.env.MOON_MINIMAX_API_KEY,model:process.env.MOON_MINIMAX_MODEL||'MiniMax-M2.7'}});
   app.server.listen(port,process.env.MOON_HOST||'127.0.0.1',()=>console.log(`MOON Foundry ${production?'game':'API'} ready on http://localhost:${port}`));
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();process.exit(0);});
 }

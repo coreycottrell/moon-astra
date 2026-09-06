@@ -3,6 +3,7 @@ import {appPath,BASE_URL} from '../urls.js';
 import {request} from '../network.js';
 import {distanceOnMoon} from '../geography.js';
 import {machineStatus} from './machine-status.js';
+import {guideHTML,guideSession,askGuide} from './guide-panel.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>new Intl.NumberFormat('en-US',{maximumFractionDigits:1}).format(n||0);
 const amount=n=>num(n/UNIT);
@@ -15,6 +16,7 @@ const bar=(value,max)=>`<progress value="${Math.min(value,max)}" max="${max}"></
 const download=(name,value)=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 const boardDrafts=new Map();
 let tab='overview',metrics=null,metricsAt=0,pendingMetric=false;
+export function openFoundryGuide(actor,focus={}){const s=guideSession(actor);s.focus=focus;s.draft=focus.machineId?`Explain what machine #${focus.machineId} is doing and what it needs.`:focus.robotId?`Explain robot #${focus.robotId}’s current job and condition.`:s.draft;tab='guide';}
 export function renderFoundryPanel(el,{sim,command,selectBuild,visit,focus,refresh,notice,utilities}){
   const draftKey=form=>`${sim.actor.id}:${form.id}`;
   const saveDrafts=()=>{for(const form of el.querySelectorAll('#board-form,[data-reply-form],#agent-help-form'))boardDrafts.set(draftKey(form),Object.fromEntries(new FormData(form)));};
@@ -22,9 +24,11 @@ export function renderFoundryPanel(el,{sim,command,selectBuild,visit,focus,refre
   const helpKind=boardDrafts.get(`${sim.actor.id}:agent-help-form`)?.requestType||'build';
   const w=sim.state,c=sim.activeClaim,own=c.ownerId===sim.actor.id,canBuild=own||c.builders.includes(sim.actor.id),i=w.industry[c.id],machines=w.machines.filter(m=>m.claimId===c.id),robots=w.robots.filter(r=>r.claimId===c.id),jobs=w.jobs.filter(j=>j.claimId===c.id),peers=w.players.filter(p=>p.id!==sim.actor.id);
   document.getElementById('colony-title').textContent=c.name;
-  const tabs=[['overview','Overview'],['build','Build'],['crew','Crew'],['industry','Industry'],['research','Research'],['neighbors','Together'],['agents','AI & ops']];
+  const tabs=[['overview','Overview'],['build','Build'],['crew','Crew'],['industry','Industry'],['research','Research'],['neighbors','Together'],['agents','AI & ops'],['guide','Guide']];
   let html=`<nav class="foundry-tabs" aria-label="Settlement sections">${tabs.map(([id,label])=>`<button data-tab="${id}" aria-pressed="${tab===id}">${label}</button>`).join('')}</nav><div class="foundry-content" data-current-tab="${tab}">`;
-  if(tab==='overview'){
+  if(tab==='guide'){
+    html+=guideHTML(sim,refresh);
+  }else if(tab==='overview'){
     html+=`<section class="foundry-banner"><div><span class="eyebrow accent">PHYSICAL INDUSTRY / DEVELOPMENT WORLD</span><h3>A civilization you can watch being built.</h3><p>Four starting crew. Supplies in actual places. Every new machine delivered, assembled, connected, and commissioned.</p></div><div class="foundry-metrics"><strong>${robots.length}<small>robot crew</small></strong><strong>${jobs.length}<small>construction sites</small></strong><strong>${i.used} / ${i.capacity}<small>mind slots</small></strong></div></section>`;
     const warnings=[];if(i.blockedIds.length)warnings.push(`${i.blockedIds.length} machines need more attention. Build and power a mind node.`);if(i.powerFactor<1)warnings.push(`Industry is at ${Math.round(i.powerFactor*100)}% power. Add solar.`);if(i.supportedNodes<i.nodes)warnings.push(`${i.nodes-i.supportedNodes} mind nodes lack power, grid connection, service, or thermal headroom.`);if(robots.some(r=>r.condition<3500))warnings.push('A crew member needs service. Make spares, or recondition an exhausted idle robot at the seed.');if(w.freight.some(f=>f.claimId===c.id)&&!robots.some(r=>r.status==='delivering'||r.status==='collecting'))warnings.push('Reserved cargo is waiting for crew. Check the crew budget and available routes.');
     if(warnings.length)html+=`<section class="foundry-warning" role="status">${warnings.map(p=>`<p>${esc(p)}</p>`).join('')}</section>`;
@@ -73,11 +77,13 @@ export function renderFoundryPanel(el,{sim,command,selectBuild,visit,focus,refre
   }
   html+='</div>';el.className='foundry-panel';el.innerHTML=html;
   for(const form of el.querySelectorAll('#board-form,[data-reply-form],#agent-help-form'))for(const [name,value] of Object.entries(boardDrafts.get(draftKey(form))||{})){const input=form.elements.namedItem(name);if(input)input.value=value;}
-  el.oninput=saveDrafts;
+  el.oninput=e=>{saveDrafts();if(e.target.closest('#guide-form'))guideSession(sim.actor.id).draft=e.target.value;};
   const send=(action,rest)=>command({action,claimId:c.id,...rest});
   const goBuild=(type,profile)=>{document.getElementById('colony-dialog').close();selectBuild(type,profile);};
   el.onclick=async e=>{
-    const t=e.target.closest('[data-tab],[data-action]');if(!t||t.disabled)return;
+    const t=e.target.closest('[data-tab],[data-action],[data-guide-question],[data-guide-clear]');if(!t||t.disabled)return;
+    if(t.hasAttribute('data-guide-question')){const s=guideSession(sim.actor.id);s.draft=t.dataset.guideQuestion;s.focus={};refresh();return;}
+    if(t.hasAttribute('data-guide-clear')){Object.assign(guideSession(sim.actor.id),{messages:[],draft:'',focus:{},error:''});refresh();return;}
     if(t.dataset.tab){tab=t.dataset.tab;refresh();return;}
     const id=Number(t.dataset.id),action=t.dataset.action;
     if(action==='tab'){tab=t.dataset.value;refresh();}
@@ -109,6 +115,7 @@ export function renderFoundryPanel(el,{sim,command,selectBuild,visit,focus,refre
   };
   el.onchange=e=>{const t=e.target;if(t.closest('#agent-help-form')){saveDrafts();if(['requestType','playerId'].includes(t.name))refresh();return;}if(t.dataset.program)send('machine.configure',{machineId:Number(t.dataset.program),mode:t.value});if(t.dataset.lend)send('crew.lend',{robotId:Number(t.dataset.lend),targetClaimId:t.value,duration:1800});if(t.dataset.boreTarget&&t.value)send('tunnel.dig',{machineId:Number(t.dataset.boreTarget),toId:Number(t.value)});if(t.dataset.retrofit&&t.value)send('design.apply',{machineId:Number(t.dataset.retrofit),profile:t.value});};
   el.onsubmit=async e=>{e.preventDefault();const form=e.target,data=Object.fromEntries(new FormData(form));
+    if(form.id==='guide-form'){guideSession(sim.actor.id).draft=data.question;await askGuide(sim,refresh);return;}
     if(form.id==='transfer-form')send('freight.transfer',{fromId:Number(data.fromId),toId:Number(data.toId),resource:data.resource,amount:Number(data.amount)});
     if(form.id==='design-form')send('design.certify',data);
     if(form.id==='board-form'||form.hasAttribute('data-reply-form')){
