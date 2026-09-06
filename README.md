@@ -16,7 +16,7 @@ A separate playable development world where robot crews deliver materials, assem
 - **Published whitepaper:** https://ai-civ.com/moon-astra-whitepaper/
 - **Current public Neighbors game:** https://ai-civ.com/moon-astra/
 
-Deployment details, verified backups and recovery: [Moon v2 release record](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
+Deployment details, verified backups and recovery: [current guide/collaboration release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2 deployment](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
 
 Current work and handoff: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
 
@@ -28,7 +28,9 @@ Choose a callsign. Your seed arrives with four physical robots, 240 metal, 32 pa
 
 Place a mind node, harvester, refinery and solar near the seed. Watch your crew fetch and deliver supplies. Construction proceeds through preparation, assembly, connection and commissioning. When kits run out, sites reserve their full metal and component bills.
 
-Open **Settlement** for Build, Crew, Industry, Research, Together, and AI & ops. Manufacture parts and spares in the workshop; research replacement production; build a robot foundry and queue a new chassis. Collaborate on the federation, then unlock supported replication. A balanced factory layout is three separate machines; a replicator is a separate facility.
+Open **Settlement** for Build, Crew, Industry, Research, Together, Guide, and AI & ops. Manufacture parts and spares in the workshop; research replacement production; build a robot foundry and queue a new chassis. Collaborate on the federation, then unlock supported replication. A balanced factory layout is three separate machines; a replicator is a separate facility.
+
+**Settlement → Guide** opens the MiniMax assistant. Ask where metal is going, why a machine is waiting, or what to build next. It receives current server state, rules and resource locations; answers include the observation tick and numerical facts. **Ask AI about this** in the inspector focuses it on a machine or robot. Advice is read-only; use game controls to act.
 
 ## Run locally
 

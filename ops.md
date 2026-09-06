@@ -89,4 +89,6 @@ The simplified AI help form dispatches `agent.request` as a directed board threa
 
 ## MiniMax Moon Guide
 
+The [current deployed release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) records runtime `d5d66e7`, website `e657a70`, verified save preservation and rollback targets. Both V2 services load `/etc/moon-astra-v2-guide.env` through their own `30-guide.conf` systemd drop-in; original Moon services do not. Open Settlement → Guide in the hosted V2 client. The older local preview is preserved and does not receive this feature through a server restart.
+
 See [Moon Guide operations](docs/foundry/MOON-GUIDE.md). The dedicated key is held outside the repository at `/home/corey/moon-secrets/minimax.env` (0600); load a private copy with systemd EnvironmentFile only for V2 services. A missing or failed provider disables advice without stopping the game. `guide_answers` is an additive table in the V2 database; all world schema-3 snapshots remain compatible. Provider requests are asynchronous and bounded, with daily allowances persisted across restarts. Do not publish provider credentials or raw reasoning. The source devlog records actual staging and production status.

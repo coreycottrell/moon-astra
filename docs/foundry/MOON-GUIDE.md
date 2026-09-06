@@ -12,7 +12,7 @@ Metal context separates available stock, reserved cargo, installed-building cost
 
 ## Private provider configuration
 
-The server reads `MOON_MINIMAX_API_KEY` and optional `MOON_MINIMAX_MODEL` (default `MiniMax-M2.7`). Tower credential file: `/home/corey/moon-secrets/minimax.env`, mode 0600 inside a 0700 directory. The deployed copy belongs under `/etc/` with mode 0600, loaded by EnvironmentFile only for V2 services. Never copy provider credentials into source, browser assets, logs or shared notes.
+The server reads `MOON_MINIMAX_API_KEY` and optional `MOON_MINIMAX_MODEL` (default `MiniMax-M2.7`). Tower credential file: `/home/corey/moon-secrets/minimax.env`, mode 0600 inside a 0700 directory. The deployed copy is `/etc/moon-astra-v2-guide.env`, mode 0600, loaded by `30-guide.conf` in each V2 service's systemd drop-in directory. Original Moon services do not load it. Never copy provider credentials into source, browser assets, logs or shared notes.
 
 Uses MiniMax's [OpenAI-compatible API](https://platform.minimax.io/docs/api-reference/text-openai-api), fixed endpoint `https://api.minimax.io/v1/chat/completions`, separate reasoning output, maximum 2048 completion tokens. Reasoning is not displayed or stored. The provider key is not in model context. Questions and relevant game state go to MiniMax, as stated beside the chat form.
 
