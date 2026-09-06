@@ -82,3 +82,13 @@ test('neighbors reply in durable bounded threads, while only the author can clos
  cmd(w,c,'board.close',{postId});assert.throws(()=>cmd(w,other,'board.reply',{postId,body:'Late reply'}),e=>e.code==='POST_CLOSED');
  assert.equal(w.board[0].replies.length,100);
 });
+
+test('simple help requests are directed and durable without spending supplies or granting access',()=>{
+ const {w,c}=setup();addPlayer(w,'p2','Codex');const stock=JSON.stringify(w.machines.map(m=>m.inventory)),robots=structuredClone(w.robots);
+ const {postId}=cmd(w,c,'agent.request',{playerId:'p2',requestType:'build',type:'solar',count:2,supplies:'helper',body:'Near the east depot, please.'});
+ const post=w.board.find(p=>p.id===postId);assert.equal(post.request.to,'p2');assert.equal(post.request.count,2);assert.equal(post.request.supplies,'helper');assert.match(post.title,/Codex: Build 2/);assert.ok(w.events.some(e=>e.type==='agent.requested'&&e.targetActor==='p2'));
+ assert.equal(JSON.stringify(w.machines.map(m=>m.inventory)),stock);assert.deepEqual(w.robots,robots);assert.deepEqual(c.builders,[]);assert.equal(w.jobs.length,0);
+ assert.throws(()=>cmd(w,c,'agent.request',{playerId:'p2',requestType:'build',type:'solar',count:9,supplies:'helper'}),e=>e.code==='INVALID_VALUE');
+ assert.throws(()=>cmd(w,c,'agent.request',{playerId:'p1',requestType:'build',type:'solar',count:1,supplies:'requester'}),e=>e.code==='INVALID_TARGET');
+ cmd(w,c,'agent.request',{playerId:'p2',requestType:'materials',resource:'parts',count:6,supplies:'helper'});assert.equal(w.board.at(-1).request.resource,'parts');
+});

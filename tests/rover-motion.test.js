@@ -40,7 +40,8 @@ test('surface sampling selects the displayed cube-face triangle and follows LOD 
   // A known point inside the grid triangle (i=9,j=10), weights .5,.2,.3.
   const u=-1+(9+.2)*2/16,v=-1+(10+.3)*2/16,loc=coordinates(cubeDirection(face,u,v)),a=10*17+9;
   const expected=new THREE.Vector3();for(const [i,w] of [[a,.5],[a+1,.2],[a+17,.3]])expected.addScaledVector(new THREE.Vector3().fromBufferAttribute(positions,i),w);
-  assert.ok(terrain.surfacePoint(loc).distanceTo(expected)<1e-6,`face ${face}`);
+  assert.ok(terrain.surfacePoint(loc,new THREE.Vector3(),0).distanceTo(expected)<1e-6,`face ${face}`);
+  assert.ok(terrain.surfacePoint(loc).distanceTo(new THREE.Vector3(...frame.toLocal(data.point(cubeDirection(face,u,v)))))<1e-6,'Coarse tiles must not bury a rover');
   terrain.desired=[terrain.node(face,0,0,0)];terrain.commit();const revision=terrain.revision;terrain.desired=[terrain.node(face,0,0,0)];terrain.commit();assert.equal(terrain.revision,revision);terrain.dispose();
  }
 });
@@ -52,4 +53,12 @@ test('the Blender chassis stays upright on slopes and its +Z front points along 
  visual.sync(robot(0),0,0,home);visual.sync(robot(2),1,1000,home);visual.animate(1/60,1700,true,terrain,frame,null);
  const up=new THREE.Vector3(0,1,0).applyQuaternion(g.quaternion),forward=new THREE.Vector3(0,0,1).applyQuaternion(g.quaternion),expected=new THREE.Vector3(-.2,1,.1).normalize();
  assert.ok(up.dot(expected)>.999);assert.ok(forward.x>.95);assert.ok(g.position.y>.15);
+});
+
+test('a fresh close-up reveals ready local terrain before distant leaves finish loading',()=>{
+ const home={lat:0,lon:0},frame=frameAt(0,0),data={height:()=>0,point:d=>d.map(v=>v*RADIUS)},terrain=new MoonTerrain(new THREE.Scene(),data,frame,null),near=terrain.node(0,18,131072,131072),far=terrain.node(1,1,0,0);
+ terrain.desired=[near,far];terrain.pending=[near,far];const make=terrain.makeTile.bind(terrain);
+ terrain.makeTile=n=>{make(n);const until=performance.now()+2;while(performance.now()<until){}};
+ terrain.process(1);assert.equal(terrain.pending.length,1);assert.ok(terrain.cache.get(near.key).mesh.visible);assert.ok(terrain.meshes.includes(terrain.cache.get(near.key).mesh));
+ terrain.process(10);assert.equal(terrain.warming.size,0);assert.ok(terrain.cache.get(near.key).mesh.visible);assert.ok(!terrain.cache.get('0/0/0/0').mesh.visible);terrain.dispose();
 });

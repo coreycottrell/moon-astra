@@ -35,7 +35,7 @@ function ownedRobot(w,c,id){const r=w.robots.find(r=>r.id===id&&r.claimId===c.id
 function spendLocal(m,cost){if(Object.entries(cost).some(([k,n])=>stock(m.inventory,k)<n))fail('LOCAL_MATERIALS_REQUIRED','Deliver the upgrade materials to this machine first');for(const [k,n] of Object.entries(cost))m.inventory[k]-=n;}
 export function applyCommand(w,actor,cmd,{terrain}={}){
   player(w,actor);if(!cmd||typeof cmd!=='object'||Array.isArray(cmd)||!ACTIONS.includes(cmd.action))fail('UNKNOWN_ACTION','Choose a supported command action',400);
-  const known=['action','claimId','type','lat','lon','rotation','amount','toClaimId','machineId','mode','playerId','paused','maxMetal','jobId','robotId','role','count','maxActive','workers','autoLogistics','targetClaimId','duration','techId','profile','resource','fromId','toId','projectId','title','body','kind','postId','enabled'];
+  const known=['action','claimId','type','lat','lon','rotation','amount','toClaimId','machineId','mode','playerId','paused','maxMetal','jobId','robotId','role','count','maxActive','workers','autoLogistics','targetClaimId','duration','techId','profile','resource','fromId','toId','projectId','title','body','kind','postId','enabled','requestType','supplies'];
   if(Object.keys(cmd).some(k=>!known.includes(k)))fail('INVALID_COMMAND','Unknown command field',400);
   const c=own(w,actor,cmd.claimId,['build.place','blueprint.deploy'].includes(cmd.action));let result={};
   if(cmd.action==='build.place'){
@@ -118,11 +118,35 @@ export function applyCommand(w,actor,cmd,{terrain}={}){
       result={freightIds:makeFreight(w,source,'machine',target.id,resource,amount,{purpose:'manual'})};
     }
     emit(w,'freight.reserved',`${amount/UNIT} ${resource} reserved for robot transport`,{actor,claimId:c.id,...result});
-  }else if(cmd.action==='board.post'){
+  }else if(cmd.action==='agent.request'||cmd.action==='board.post'){
     if(w.board.filter(p=>!p.closed).length>=LIMITS.board)fail('BOARD_FULL','Close completed requests before posting more');
-    if(!['need','offer','note'].includes(cmd.kind))fail('INVALID_KIND','Choose need, offer, or note',400);
-    const post={id:w.nextId++,actor,claimId:c.id,kind:cmd.kind,title:text(cmd.title,80,'Title'),body:text(cmd.body,600,'Message'),createdAt:w.tick,closed:false};w.board.push(post);if(w.board.length>200)w.board=w.board.filter(p=>!p.closed).concat(w.board.filter(p=>p.closed).slice(-100));result={postId:post.id};
+    let fields;
+    if(cmd.action==='agent.request'){
+      const target=player(w,cmd.playerId);if(target.id===actor)fail('INVALID_TARGET','Choose a neighboring helper',400);
+      if(!['build','materials','crew','project'].includes(cmd.requestType))fail('INVALID_REQUEST','Choose a help request',400);
+      if(!['requester','helper'].includes(cmd.supplies))fail('INVALID_SUPPLIES','Choose whose resources to request',400);
+      const count=integer(cmd.count,1,cmd.requestType==='build'?8:cmd.requestType==='crew'?4:1000,'Quantity');
+      const request={to:target.id,kind:cmd.requestType,count,supplies:cmd.supplies};let description;
+      if(cmd.requestType==='build'){
+        if(!Object.hasOwn(BUILDINGS,cmd.type)||cmd.type==='seed')fail('INVALID_MACHINE','Choose a build option',400);
+        request.type=cmd.type;description=`Build ${count} × ${BUILDINGS[cmd.type].name}`;
+      }else if(cmd.requestType==='crew'){
+        if(!Object.hasOwn(ROBOTS,cmd.role))fail('INVALID_ROLE','Choose a crew specialty',400);
+        request.role=cmd.role;description=`Help with ${count} × ${ROBOTS[cmd.role].name} crew`;
+      }else{
+        if(!['metal','rock','parts','spares'].includes(cmd.resource))fail('INVALID_RESOURCE','Choose metal, rock, parts or spares',400);
+        request.resource=cmd.resource;description=`Send ${count} ${cmd.resource}`;
+        if(cmd.requestType==='project'){const project=w.projects.find(p=>p.id===cmd.projectId);if(!project||project.complete)fail('INVALID_PROJECT','Choose an unfinished shared project');request.projectId=project.id;description+=` toward ${project.name}`;}
+      }
+      const note=cmd.body===undefined||cmd.body===''?'':text(cmd.body,300,'Details');
+      fields={kind:'need',title:`${target.name}: ${description}`.slice(0,80),body:`${description}. ${cmd.supplies==='helper'?"Asking the helper to contribute their own resources if available.":"Use my settlement's resources; no access or spending is granted by this request."} This is a request awaiting the helper's response.${note?'\n'+note:''}`.slice(0,600),request};
+    }else{
+      if(!['need','offer','note'].includes(cmd.kind))fail('INVALID_KIND','Choose need, offer, or note',400);
+      fields={kind:cmd.kind,title:text(cmd.title,80,'Title'),body:text(cmd.body,600,'Message')};
+    }
+    const post={id:w.nextId++,actor,claimId:c.id,...fields,createdAt:w.tick,closed:false};w.board.push(post);if(w.board.length>200)w.board=w.board.filter(p=>!p.closed).concat(w.board.filter(p=>p.closed).slice(-100));result={postId:post.id};
     emit(w,'board.posted','A new collaboration thread was posted',{actor,claimId:c.id,postId:post.id});
+    if(post.request)emit(w,'agent.requested','A neighbor requested help',{actor,claimId:c.id,postId:post.id,targetActor:post.request.to});
   }else if(cmd.action==='board.reply'){
     integer(cmd.postId,1,Number.MAX_SAFE_INTEGER,'Post ID');
     const post=w.board.find(p=>p.id===cmd.postId);if(!post)fail('POST_NOT_FOUND','This thread is no longer on the board',404);

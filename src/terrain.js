@@ -4,7 +4,7 @@ const SEGMENTS=16;
 export class MoonTerrain {
   constructor(scene,data,frame,texture) {
     this.data=data;this.frame=frame;this.group=new THREE.Group();scene.add(this.group);
-    this.cache=new Map();this.active=[];this.pending=[];this.desired=[];this.showBorders=false;this.revision=0;
+    this.cache=new Map();this.active=[];this.pending=[];this.desired=[];this.showBorders=false;this.revision=0;this.warming=new Set();
     this.material=new THREE.MeshStandardMaterial({map:texture,roughness:1,metalness:0,color:0xe3e3e3,side:THREE.FrontSide});
     // Fine regolith grain is world anchored; macro albedo comes from the lunar map.
     this.material.onBeforeCompile=shader=>{
@@ -52,17 +52,28 @@ diffuseColor.rgb*=1.0+regional+local+fine;`);
     };
     for(let face=0;face<6;face++)visit(this.node(face,0,0,0));
     this.desired=leaves;
+    const wanted=new Set(leaves.map(n=>n.key));
+    for(const key of this.warming)if(!wanted.has(key)){this.cache.get(key).mesh.visible=false;this.warming.delete(key);this.revision++;}
     this.pending=leaves.filter(n=>!this.cache.has(n.key));
     this.pending.sort((a,b)=>b.level-a.level);
     if(!this.pending.length)this.commit();
   }
   process(budget=10) {
     const start=performance.now();
-    while(this.pending.length&&performance.now()-start<budget)this.makeTile(this.pending.shift());
+    const initial=this.active.every(key=>this.cache.get(key).level===0);let revealed=false;
+    while(this.pending.length&&performance.now()-start<budget){
+      const n=this.pending.shift();this.makeTile(n);
+      // On a fresh close-up, show completed tire-scale tiles immediately rather
+      // than waiting for hundreds of distant leaves to finish behind them.
+      if(initial&&n.level>=16){this.cache.get(n.key).mesh.visible=true;this.warming.add(n.key);revealed=true;}
+    }
+    if(revealed)this.revision++;
     if(!this.pending.length&&this.desired.length)this.commit();
   }
   commit() {
     const desired=new Set(this.desired.map(n=>n.key));
+    for(const key of this.warming)if(!desired.has(key))this.cache.get(key).mesh.visible=false;
+    this.warming.clear();
     if(desired.size!==this.active.length||this.active.some(key=>!desired.has(key)))this.revision++;
     for(const key of this.active)if(!desired.has(key)){const tile=this.cache.get(key);if(tile){tile.mesh.visible=false;tile.border.visible=false;}}
     this.active=[...desired];
@@ -125,15 +136,16 @@ diffuseColor.rgb*=1.0+regional+local+fine;`);
   }
   setBorders(show) {this.showBorders=show;for(const key of this.active)this.cache.get(key).border.visible=show;}
   // Sample the triangle actually being drawn, so tires and decals share the
-  // visible surface even while the lunar quadtree changes detail levels.
-  surfacePoint(location,target=new THREE.Vector3()) {
+  // visible surface at tire-scale detail. Coarse planetary chords can be
+  // kilometers below the Moon: retain the physical height until local tiles load.
+  surfacePoint(location,target=new THREE.Vector3(),minimumLevel=16) {
     const lat=location.lat*Math.PI/180,lon=location.lon*Math.PI/180;
     const x=Math.cos(lat)*Math.cos(lon),y=Math.sin(lat),z=Math.cos(lat)*Math.sin(lon);
     const ax=Math.abs(x),ay=Math.abs(y),az=Math.abs(z);let face,u,v;
     if(ax>=ay&&ax>=az){face=x>=0?0:1;u=(x>=0?-z:z)/ax;v=y/ax;}
     else if(ay>=az){face=y>=0?2:3;u=x/ay;v=(y>=0?-z:z)/ay;}
     else{face=z>=0?4:5;u=(z>=0?x:-x)/az;v=y/az;}
-    for(let level=18;level>=0;level--){
+    for(let level=18;level>=minimumLevel;level--){
       const n=2**level,tx=clamp((u+1)*.5*n,0,n-1e-10),ty=clamp((v+1)*.5*n,0,n-1e-10);
       const ix=Math.floor(tx),iy=Math.floor(ty),tile=this.cache.get(`${face}/${level}/${ix}/${iy}`);
       if(!tile?.mesh.visible)continue;
@@ -146,7 +158,7 @@ diffuseColor.rgb*=1.0+regional+local+fine;`);
     }
     return target.fromArray(this.frame.toLocal(this.data.point([x,y,z])));
   }
-  get meshes(){return this.active.map(key=>this.cache.get(key).mesh);}
-  get stats(){return {tiles:this.active.length,pending:this.pending.length,maxLevel:Math.max(0,...this.active.map(k=>this.cache.get(k).level)),cached:this.cache.size};}
+  get meshes(){return [...new Set([...this.active,...this.warming])].map(key=>this.cache.get(key).mesh);}
+  get stats(){const visible=[...this.active,...this.warming];return {tiles:visible.length,pending:this.pending.length,maxLevel:Math.max(0,...visible.map(k=>this.cache.get(k).level)),cached:this.cache.size};}
   dispose(){for(const t of this.cache.values()){t.mesh.geometry.dispose();t.border.geometry.dispose();}this.material.dispose();this.borderMaterial.dispose();this.group.removeFromParent();}
 }

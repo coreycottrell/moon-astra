@@ -1,4 +1,4 @@
-export const DEFAULT_SIGNALS=['construction.completed','robot.manufactured','robot.reconditioned','research.unlocked','project.completed','corridor.completed','board.posted','board.replied','player.joined'];
+export const DEFAULT_SIGNALS=['construction.completed','robot.manufactured','robot.reconditioned','research.unlocked','project.completed','corridor.completed','board.posted','board.replied','agent.requested','player.joined'];
 export function collectSignals(world,state,config={},now=Date.now()){
  const player=world.players.find(p=>p.id===world.actorId);if(!player)throw Error('Player is absent from this world');
  const claim=world.claims.find(c=>c.id===player.homeClaimId),events=world.events||[],latest=world.sequence??events.at(-1)?.sequence??0;
@@ -11,8 +11,9 @@ export function collectSignals(world,state,config={},now=Date.now()){
   if(e.type.startsWith('board.')){
    if(e.actor===world.actorId)continue;
    const thread=world.board.find(p=>p.id===e.postId);
+   if(thread?.request?.to&&thread.request.to!==world.actorId)continue;
    if(e.type==='board.replied'&&config.board!=='all'&&thread?.actor!==world.actorId&&!thread?.replies?.some(r=>r.actor===world.actorId)&&!config.threadIds?.includes(e.postId))continue;
-  }else if(!global&&e.claimId!==claim.id)continue;
+  }else if(e.type==='agent.requested'){if(e.targetActor!==world.actorId)continue;}else if(!global&&e.claimId!==claim.id)continue;
   signals.push({key:'event:'+e.sequence,type:e.type,tick:e.tick,sequence:e.sequence,...(e.postId?{postId:e.postId}:{}),...(e.machineId?{machineId:e.machineId}:{}),...(e.projectId?{projectId:e.projectId}:{})});
  }
  state.sequence=latest;state.crossings??={};

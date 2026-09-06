@@ -78,3 +78,14 @@ test('mind HUD and threaded board preserve drafts through polling and accept a n
  const boxes=await page.locator('.resource').evaluateAll(els=>els.map(e=>{const b=e.getBoundingClientRect();return {left:b.left,right:b.right};}));for(const b of boxes){expect(b.left).toBeGreaterThanOrEqual(0);expect(b.right).toBeLessThanOrEqual(390);}
  await page.screenshot({path:'artifacts/foundry/mobile-mind-hud.png'});
 });
+
+test('asking an agent for help uses ordinary choices and leaves permissions and resources untouched',async({page,request})=>{
+ const a=await(await request.post('/api/v1/join',{data:{name:'Help requester '+Date.now()}})).json(),b=await(await request.post('/api/v1/join',{data:{name:'Help agent '+Date.now()}})).json();await page.addInitScript(token=>localStorage.setItem('moon-foundry-access-v1',JSON.stringify({token})),a.token);
+ await page.goto('/');await expect(page.locator('#loading')).toBeHidden({timeout:180000});await page.locator('#colony').click();await page.locator('[data-tab="agents"]').click();
+ await expect(page.getByRole('heading',{name:'Ask an AI for help'})).toBeVisible();await expect(page.locator('#delegation-form')).toBeHidden();
+ const form=page.locator('#agent-help-form');await form.locator('[name="playerId"]').selectOption(b.player.id);await form.locator('[name="requestType"]').selectOption('materials');await expect(form.locator('[name="resource"]')).toBeVisible();await form.locator('[name="requestType"]').selectOption('build');
+ await form.locator('[name="type"]').selectOption('solar');await form.locator('[name="count"]').fill('2');await form.locator('[name="supplies"]').selectOption('helper');await form.locator('[name="body"]').fill('A pair by the depot.');await page.screenshot({path:'artifacts/foundry/simple-agent-request.png'});
+ await form.getByRole('button',{name:'Send help request'}).click();await expect(page.locator('.board-thread').filter({hasText:'A pair by the depot.'})).toBeVisible();
+ const w=await(await request.get('/api/v1/observe',{headers:{Authorization:'Bearer '+a.token}})).json(),c=w.claims.find(c=>c.ownerId===a.player.id),post=w.board.find(p=>p.actor===a.player.id&&p.request);
+ expect(post.request).toMatchObject({to:b.player.id,kind:'build',count:2,type:'solar',supplies:'helper'});expect(c.builders).toEqual([]);expect(w.jobs.filter(j=>j.claimId===c.id)).toHaveLength(0);expect(c.metal).toBe(240000);
+});

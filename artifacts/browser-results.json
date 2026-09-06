@@ -3,7 +3,10 @@
     "argv": [
       "/home/corey/.nvm/versions/node/v24.13.1/bin/node",
       "/home/corey/projects/moon-rover-motion/node_modules/.bin/playwright",
-      "test"
+      "test",
+      "tests/browser/foundry.spec.js",
+      "--grep",
+      "asking an agent"
     ],
     "configFile": "/home/corey/projects/moon-rover-motion/playwright.config.js",
     "rootDir": "/home/corey/projects/moon-rover-motion/tests/browser",
@@ -78,7 +81,7 @@
       "line": 0,
       "specs": [
         {
-          "title": "a real terrain colony has animated crew, staged construction and usable management panels",
+          "title": "asking an agent for help uses ordinary choices and leaves permissions and resources untouched",
           "ok": true,
           "tags": [],
           "tests": [
@@ -93,12 +96,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 40688,
+                  "duration": 18277,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-09-06T13:17:42.145Z",
+                  "startTime": "2026-09-06T13:39:58.132Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -106,187 +109,9 @@
               "status": "expected"
             }
           ],
-          "id": "625210ce57cafbc2d2c8-fb8bdd827a0abd5ae302",
+          "id": "625210ce57cafbc2d2c8-55ea396aeeae7442c5ae",
           "file": "foundry.spec.js",
-          "line": 4,
-          "column": 1
-        },
-        {
-          "title": "foundry gallery shows the four crew and new physical industry without errors",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 240000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 14970,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-09-06T13:18:23.009Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "625210ce57cafbc2d2c8-416b652a834176eb100a",
-          "file": "foundry.spec.js",
-          "line": 41,
-          "column": 1
-        },
-        {
-          "title": "mobile management is readable without horizontal overflow",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 240000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 5917,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-09-06T13:18:38.004Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "625210ce57cafbc2d2c8-d03844915f208044d7d9",
-          "file": "foundry.spec.js",
-          "line": 47,
-          "column": 1
-        },
-        {
-          "title": "a foreign backend is rejected before opening an account or sending saved credentials",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 240000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 721,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-09-06T13:18:43.935Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "625210ce57cafbc2d2c8-11b3754a8c6b5eac6f89",
-          "file": "foundry.spec.js",
-          "line": 53,
-          "column": 1
-        },
-        {
-          "title": "mind HUD and threaded board preserve drafts through polling and accept a neighbor reply",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 240000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 14061,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-09-06T13:18:44.663Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "625210ce57cafbc2d2c8-4385d0fb0cfb32989571",
-          "file": "foundry.spec.js",
-          "line": 65,
-          "column": 1
-        }
-      ]
-    },
-    {
-      "title": "rover.spec.js",
-      "file": "rover.spec.js",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "one Hz driving rolls the Blender wheels, lays paired tracks and stops safely",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 240000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "",
-              "projectName": "",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 18605,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-09-06T13:18:58.750Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "54563b08e49a4a1b2104-8726f3cb13253a6fc8e0",
-          "file": "rover.spec.js",
-          "line": 2,
+          "line": 82,
           "column": 1
         }
       ]
@@ -294,9 +119,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-09-06T13:17:40.931Z",
-    "duration": 97042.379,
-    "expected": 6,
+    "startTime": "2026-09-06T13:39:55.426Z",
+    "duration": 21939.889,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

@@ -60,5 +60,5 @@ export class FoundryScene{
       const distance=camera.position.distanceTo(g.position);g.visible=distance<2500;g.userData.marker.visible=distance<450;
     }
   }
-  get motionStats(){return {trackStrips:this.tracks.count,trackCapacity:this.tracks.capacity,rovers:[...this.robots].map(([id,g])=>({id,position:g.position.toArray(),heading:g.userData.visual.heading,speed:g.userData.visual.speed,travel:g.userData.visual.travel,wheelRoll:{...g.userData.visual.roll},detailed:!!g.userData.asset?.root.visible}))};}
+  get motionStats(){return {trackStrips:this.tracks.count,trackCapacity:this.tracks.capacity,rovers:[...this.robots].map(([id,g])=>({id,position:g.position.toArray(),up:new THREE.Vector3(0,1,0).applyQuaternion(g.quaternion).toArray(),heading:g.userData.visual.heading,speed:g.userData.visual.speed,travel:g.userData.visual.travel,wheelRoll:{...g.userData.visual.roll},detailed:!!g.userData.asset?.root.visible}))};}
 }

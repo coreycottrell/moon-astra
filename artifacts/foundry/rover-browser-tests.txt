@@ -1,0 +1,12 @@
+
+Running 7 tests using 1 worker
+
+  ✓  1 tests/browser/foundry.spec.js:4:1 › a real terrain colony has animated crew, staged construction and usable management panels (52.9s)
+  ✓  2 tests/browser/foundry.spec.js:41:1 › foundry gallery shows the four crew and new physical industry without errors (25.5s)
+  ✓  3 tests/browser/foundry.spec.js:47:1 › mobile management is readable without horizontal overflow (7.4s)
+  ✓  4 tests/browser/foundry.spec.js:53:1 › a foreign backend is rejected before opening an account or sending saved credentials (727ms)
+  ✓  5 tests/browser/foundry.spec.js:65:1 › mind HUD and threaded board preserve drafts through polling and accept a neighbor reply (17.6s)
+  ✓  6 tests/browser/foundry.spec.js:82:1 › asking an agent for help uses ordinary choices and leaves permissions and resources untouched (7.3s)
+  ✓  7 tests/browser/rover.spec.js:2:1 › one Hz driving rolls the Blender wheels, lays paired tracks and stops safely (14.2s)
+
+  7 passed (2.1m)
