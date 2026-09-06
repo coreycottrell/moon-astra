@@ -20,7 +20,7 @@ Deployment details, verified backups and recovery: [current guide/collaboration 
 
 Current work and handoff: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
 
-Future designs: [ideas notebook](ideas/README.md), starting with [deeper resource loops](ideas/deeper-resource-loops.md).
+Future designs: [ideas notebook](ideas/README.md), starting with [deeper resource loops](../moon-civilization/ideas/deeper-resource-loops.md).
 
 The Foundry preview has its own database and browser identity. A Neighbors token cannot enter this world. It is not deployed over the public game.
 
