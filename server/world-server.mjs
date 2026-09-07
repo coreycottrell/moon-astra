@@ -169,7 +169,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const production=process.argv.includes('--production'),port=Number(process.env.MOON_PORT||(production?4205:4206));
-  const app=createWorldServer({database:process.env.MOON_DB||resolve(ROOT,'.world/world.sqlite'),serveStatic:production,publicOrigin:process.env.MOON_PUBLIC_ORIGIN,guide:{apiKey:process.env.MOON_MINIMAX_API_KEY,model:process.env.MOON_MINIMAX_MODEL||'MiniMax-M2.7'}});
+  const app=createWorldServer({database:process.env.MOON_DB||resolve(ROOT,'.world/world.sqlite'),serveStatic:production,publicOrigin:process.env.MOON_PUBLIC_ORIGIN,guide:{apiKey:process.env.MOON_MINIMAX_API_KEY,model:process.env.MOON_MINIMAX_MODEL||'MiniMax-M3'}});
   app.server.listen(port,process.env.MOON_HOST||'127.0.0.1',()=>console.log(`MOON Foundry ${production?'game':'API'} ready on http://localhost:${port}`));
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,async()=>{await app.close();process.exit(0);});
 }

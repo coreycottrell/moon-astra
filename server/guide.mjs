@@ -8,7 +8,7 @@ const failure=(code,message,status=400)=>{throw new GameError(code,message,statu
 const digest=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
 const cleanText=s=>String(s||'').replace(/<think>[\s\S]*?(?:<\/think>|$)/gi,'').trim();
 
-export function createGuide({db,apiKey,model='MiniMax-M2.7',fetchImpl=fetch,timeoutMs=75000,perPlayerDay=30,worldDay=100}={}){
+export function createGuide({db,apiKey,model='MiniMax-M3',fetchImpl=fetch,timeoutMs=75000,perPlayerDay=30,worldDay=100}={}){
   db.exec(`CREATE TABLE IF NOT EXISTS guide_answers (id TEXT PRIMARY KEY, actor TEXT NOT NULL, request_key TEXT NOT NULL, digest TEXT NOT NULL, created INTEGER NOT NULL, day TEXT NOT NULL, tick INTEGER NOT NULL, status TEXT NOT NULL, result TEXT, UNIQUE(actor,request_key));`);
   db.prepare("UPDATE guide_answers SET status='failed', result=? WHERE status='pending'").run(JSON.stringify({error:'GUIDE_INTERRUPTED',message:'The guide restarted before finishing. Please ask again.'}));
   const pending=new Map();let closed=false;

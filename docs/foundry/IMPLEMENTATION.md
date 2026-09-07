@@ -2,7 +2,7 @@
 
 The published design is at [ai-civ.com/moon-astra-whitepaper](https://ai-civ.com/moon-astra-whitepaper/). Foundry is the next development fork of that vision. The current Neighbors game remains a separate world.
 
-**Three different things:** the live game is at [moon-astra](https://ai-civ.com/moon-astra/); this Foundry edition has its own [moon-astra-v2](https://ai-civ.com/moon-astra-v2/) destination; the whitepaper describes the much larger destination. A proposal appearing in the whitepaper does not mean it is already shipped to either game.
+**Current editions:** the active multiplayer Foundry game is [moon-astra-v2](https://ai-civ.com/moon-astra-v2/). [moon-astra](https://ai-civ.com/moon-astra/) is the preserved original Neighbors world. The whitepaper describes the much larger destination. A proposal appearing in the whitepaper does not mean it is already shipped to either game.
 
 ![Mason builder, authored and rendered in Blender](images/foundry/mason.webp)
 
@@ -10,7 +10,7 @@ The published design is at [ai-civ.com/moon-astra-whitepaper](https://ai-civ.com
 
 | Whitepaper idea | Foundry implementation | What remains beyond this phase |
 | --- | --- | --- |
-| Protect the current game | Separate checkout, branch, database, browser identity, ports, and verified pre-fork backup | Production promotion after playtesting |
+| Protect the current game | Separate checkout, branch, database, browser identity, ports, and verified pre-fork backup | Preserve these separations for every later release |
 | A quick beginning that becomes physical industry | Four landing robots and seven prefabricated kits; later construction reserves full metal and component bills | A tuned multi-day campaign with authored chapter pacing |
 | Construction you can watch | Supply → prepare → assemble → connect → commission; physical cargo, work sites, limited crew and visible progress | Excavation geometry, cranes, terrain grading and detailed building interiors |
 | Robot crews | Mason, Atlas, Suture and Titan; continuous buffered driving, distance-matched wheels, slope contact and fading session-local regolith tracks; work and sensor animation; pathfinding, yielding and parking | Wheel-soil physics, articulated walking, arbitrary robot assemblies |
@@ -100,3 +100,14 @@ New depot hubs hold 240 combined resource units, including incoming reservations
 Older utility routes keep their endpoints and utility function. **Fit 2 elevators** explicitly reserves 12 metal and 4 parts and queues both installations. An unfinished excavation can be stopped with the normal construction return/salvage rules; spent liners are consumed. No automatic retrofit, relocation, resource gift or save reset occurs.
 
 Validation includes complete excavation/crew installation/cargo delivery, eight opposing haulers across all four tiers with underground collision and cargo-conservation checks, API permissions and restart receipts, and synchronized Blender platform/rover browser motion. A copy of the existing six-player world ran 600 ticks on measured lunar terrain without a simulation error; Corey and Chris had no robot blocked for over 100 ticks at the final snapshot. These are bounded scenarios, not a proof against every possible traffic jam. Roads, fluid pipelines and walkable underground interiors remain future work.
+
+
+## September 7 systems review
+
+The [updated field manual](agent-manual.html#current-system-map) reviews the current physical logistics, mind/crew distinction, production programs, research, tunnel tiers, depot bays, access scopes and shared projects against the deployed source. Advanced API access now stays open through world updates and preserves its form draft.
+
+The live Guide is configured for **MiniMax-M3** and an actual read-only request completed. It remains a freeform adviser: a connection check exposed a double-subtraction error in its accounting prose. Available stock already excludes reserved freight. The [standalone learning engine](https://ai-civ.com/moon-mind-learning-engine/) provides checked facts, persistent experiment records and a measured synthetic gym, but is **not integrated into the Guide or live colony research**.
+
+**Open traffic defect:** early destination-bay reservations can create a circular lift/depot wait. An offline experiment recovered the copied queue; no correction is deployed. Earlier successful bounded traffic tests do not establish that all layouts remain free of deadlocks.
+
+**Proposal only:** [federation corners, colony organs and seed expeditions](https://ai-civ.com/moon-astra-whitepaper/federation-corners/). Shared charters, votes, complete layout reservations and automated new-plot expansion are not present game commands. [All papers, manuals, evidence and downloads](https://ai-civ.com/moon-astra-whitepaper/#research-library).

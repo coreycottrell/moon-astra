@@ -11,7 +11,7 @@ const waitFor=async read=>{for(let i=0;i<100;i++){const r=await read();if(r.data
 
 test('guide authenticates, owns answers, grounds in server state, and never changes the world',async()=>{
  let calls=0,release;const delayed=new Promise(r=>release=r);
- const {app,call}=await start({guide:{apiKey:'provider-test-secret',fetchImpl:async(url,options)=>{calls++;assert.equal(url,'https://api.minimax.io/v1/chat/completions');assert.equal(options.headers.Authorization,'Bearer provider-test-secret');assert.ok(!options.body.includes('provider-test-secret'));const p=JSON.parse(options.body);assert.ok(p.messages.at(-1).content.includes('metalFlow'));assert.ok(p.messages.at(-1).content.includes('gridConnected'));await delayed;return modelReply();}}});
+ const {app,call}=await start({guide:{apiKey:'provider-test-secret',fetchImpl:async(url,options)=>{calls++;assert.equal(url,'https://api.minimax.io/v1/chat/completions');assert.equal(options.headers.Authorization,'Bearer provider-test-secret');assert.ok(!options.body.includes('provider-test-secret'));const p=JSON.parse(options.body);assert.equal(p.model,'MiniMax-M3');assert.ok(p.messages.at(-1).content.includes('metalFlow'));assert.ok(p.messages.at(-1).content.includes('gridConnected'));await delayed;return modelReply();}}});
  try{
   const a=(await call('join',{body:{name:'Guide Ada'}})).data,b=(await call('join',{body:{name:'Guide Babbage'}})).data,before=app.state;
   assert.equal((await call('guide/status')).status,401);

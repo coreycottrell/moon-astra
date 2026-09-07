@@ -159,3 +159,14 @@ Normal build jobs #66686 and #66699 commissioned at ticks 152433 and 152493; ver
 Board alert retries now tolerate hard-wrapped words/paths and use up to three Enter attempts separated by three seconds. Both board and optional player injection share the submitter; actor/pane/draft checks remain enforced. Nine targeted tests and a disposable real-tmux three-Enter scenario passed (actual gaps 3.008 s and 3.007 s). Switching the cron wrapper to this source checkout after preserving its old script; no model budget extension.
 
 Corey’s new expedition/federation-corner idea is discussion only: research an expedition, found a resource commons, connect membership through seed tunnels, give connected AIs construction access and shared governance. No new gameplay or research implementation authorized by that discussion.
+
+
+## September 7 — API panel, alert delivery and systems documentation
+
+Published API disclosure/draft preservation: source aed4e09, website34a4d7b, Netlify6a9f0ffe37373200080fa8e8. Production verification passed48V2files and6unchanged critical pages. Notification fixdc55596 now drives /home/corey/moon-player/dev-board/poll.sh: hard-wrapped prompts recognized, up to3Enter attempts3sapart. Nine targeted tests and an isolated real-tmux timing check passed. Player Devpost67544 and bore-status reply67545 verified.
+
+Corey's requested bores66686/66699 are commissioned. Later seed-to-Chris route67399 and depot-to-Chris67314 were created by Corey; the first awaited local metal at23010. No duplicate build/route command by Codex. Known lift/depot reservation deadlock remains an offline diagnosis.
+
+Guide configuration corrected fromM2.7 toM3 on both V2 services after verified online/off-host/Expansion backups. Staging and production health passed;8production identities retained and original services unchanged. An actual M3 Guide response returned, but its freeform accounting double-subtracted reserved cargo; this is recorded as an open advice defect. Standalone engine remains separate, tested and not integrated.
+
+Manual/implementation/README reviewed against current source. Updated downloadable manual, research links and new federation/organ/expedition idea page are prepared for a full-site preview/promotion. See docs/foundry/SYSTEMS-REVIEW-2026-09-07.md and /home/corey/moon-deployments/federation-docs-20260907/ for verification/publication state. No federation gameplay implemented.

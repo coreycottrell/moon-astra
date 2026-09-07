@@ -1,7 +1,13 @@
 # MOON — Foundry
 
-- **Current development directory:** `/home/corey/projects/moon-depot-lifts`
-- **Branch:** `development/depot-lifts`
+**Current systems reviewed September 7.** Start with the [AI field manual](docs/foundry/AGENT-MANUAL.md#current-system-map), [implementation status](docs/foundry/IMPLEMENTATION.md), and [public research library](https://ai-civ.com/moon-astra-whitepaper/#research-library). The deployed backend remains aa91824; this branch contains the published API-panel fix, active notification repair and updated documentation.
+
+The live Guide now uses MiniMax-M3, with a verified read-only response. The separate [learning engine](https://ai-civ.com/moon-mind-learning-engine/) is implemented and tested but not connected to the Guide or game research. [Federation corners and colony organs](https://ai-civ.com/moon-astra-whitepaper/federation-corners/) remain a design discussion.
+
+Known issues: early depot-bay reservations can deadlock a lift exit; an offline correction is not deployed. Freeform Guide prose can misinterpret accounting, so available stock and reserved freight must remain separate. See the manual for diagnosis, tunnel startup and the exact meaning of Update logistics.
+
+- **Current development directory:** `/home/corey/projects/moon-access-panel`
+- **Branch:** `fix/access-panel-persistence`
 - **Preserved local preview:** `/home/corey/projects/moon-foundry`, branch `development/physical-industry`
 - **Fork base:** `development/traffic-tunnels` commit `37e0489`
 - **Ruleset:** `moon-foundry-1` · world schema 3 · economy 3
@@ -110,7 +116,7 @@ Terrain credits remain in the in-game field guide and inherited asset documentat
 
 ### Rover motion and collaboration fork
 
-Active implementation directory: `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`. Original playable preview: `/home/corey/projects/moon-foundry`.
+Active implementation directory: `/home/corey/projects/moon-access-panel`, branch `development/depot-lifts`. Original playable preview: `/home/corey/projects/moon-foundry`.
 
 Rovers now interpolate acknowledged movement continuously, face their travel direction, roll their wheels by distance, and leave paired regolith treads. Tracks are local to the browser session and fade after 15–20 minutes. The top bar shows mind used/free capacity. Board threads keep replies with their original post and preserve drafts during refresh. A simple agent help form uses dropdowns and quantities, with advanced token controls kept separately. A persistent observer can wake a separate, bounded AI player; see [Player workflow](docs/foundry/PLAYER-WORKFLOW.md) and [operations](ops.md).
 
@@ -118,4 +124,4 @@ Build-order development: Settlement → Industry → Replicator → Create build
 
 ### Traffic and tunnels live — 2026-09-07
 
-Current fork: `/home/corey/projects/moon-depot-lifts` (`development/depot-lifts`). Adds traffic recovery, buffered freight, useful nearby depots, independent Bore / Start / End tunnel planning, timed underground robot travel, distinct crew-cap status, Guide scroll preservation and Dev note posts. Prior local previews remain running in their original worktrees. See `ops.md` for deployment state and `docs/foundry/DEV-BOARD-WORKFLOW.md` for the active tmux prompt monitor. Road/federation-junction design stays in the canonical shared folder: `/home/corey/projects/moon-civilization/ideas/roads-tunnels-federation-junctions.md`.
+Current fork: `/home/corey/projects/moon-access-panel` (`development/depot-lifts`). Adds traffic recovery, buffered freight, useful nearby depots, independent Bore / Start / End tunnel planning, timed underground robot travel, distinct crew-cap status, Guide scroll preservation and Dev note posts. Prior local previews remain running in their original worktrees. See `ops.md` for deployment state and `docs/foundry/DEV-BOARD-WORKFLOW.md` for the active tmux prompt monitor. Road/federation-junction design stays in the canonical shared folder: `/home/corey/projects/moon-civilization/ideas/roads-tunnels-federation-junctions.md`.
