@@ -1,0 +1,8 @@
+const stages=[
+ ['Land with a way to recover.','The seed provides unloading and emergency recovery. Its crew starts work using the manifest that physically arrived.','Delivered power equipment, clear access and spare reserves.'],
+ ['Keep the lifeline open.','Power and mind support the first jobs. A completed freight connection supplies the outpost while local industry is still being assembled.','Delivered refinery and maintenance materials; crew at the right sites.'],
+ ['Prove that it can sustain itself.','The metal and maintenance organs run locally. Measure replacement of consumed stock and successful repairs; a large inherited stockpile is not proof of independence.','A maintenance cycle, reliable deliveries and a protected operating reserve.'],
+ ['Manufacture the next beginning.','A supported fabrication organ assembles another expedition. The daughter receives a real material manifest, a tested plan and the evidence explaining its limits.','A surveyed destination, receiving rights, complete launch stock and actual transport.']
+];
+function select(n){const s=stages[n];document.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.stage)===n)));document.querySelectorAll('[data-built-at]').forEach(p=>p.classList.toggle('built',Number(p.dataset.builtAt)<=n));document.getElementById('phase-label').textContent='PHASE 0'+(n+1);document.getElementById('phase-title').textContent=s[0];document.getElementById('phase-copy').textContent=s[1];document.getElementById('phase-wait').textContent=s[2];}
+document.querySelectorAll('[data-stage]').forEach(b=>b.addEventListener('click',()=>select(Number(b.dataset.stage))));select(0);
