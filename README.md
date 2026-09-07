@@ -22,7 +22,7 @@ Current deployment, verification and recovery: [depot elevator release](deploy/m
 
 Developer messages: [board-monitor workflow](docs/foundry/DEV-BOARD-WORKFLOW.md) · private inbox `/home/corey/moon-player/dev-board/inbox.md` · board thread **#23009**.
 
-Current work and handoff: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
+Current work: [active learning-engine handoff — read after compaction](ACTIVE-HANDOFF.md). Historical releases: [development log](DEVLOG.md). Rover/collaboration rollout evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`.
 
 Future designs: [ideas notebook](ideas/README.md), starting with [deeper resource loops](../moon-civilization/ideas/deeper-resource-loops.md).
 

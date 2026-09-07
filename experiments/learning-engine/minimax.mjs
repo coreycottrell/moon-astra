@@ -3,11 +3,12 @@ export const SYSTEM=`You are an evidence-grounded analyst inside a reusable skil
 export async function credentials(){
   const s=await readFile('/home/corey/moon-secrets/minimax.env','utf8');
   const get=name=>{const line=s.split(/\r?\n/).find(l=>new RegExp(`^(?:export\\s+)?${name}=`).test(l.trim()));return line?.slice(line.indexOf('=')+1).trim().replace(/^(['"])(.*)\1$/,'$2');};
-  const apiKey=get('MOON_MINIMAX_API_KEY'),model=get('MOON_MINIMAX_MODEL')||'MiniMax-M2.7';
+  const apiKey=get('MOON_MINIMAX_API_KEY'),model='MiniMax-M3';
   if(!apiKey)throw Error('Private provider key unavailable');
   return {apiKey,model};
 }
 export async function analyze(request,{apiKey,model}){
+  if(model!=='MiniMax-M3')throw Error('This experiment uses MiniMax-M3 only');
   const started=Date.now();
   try{
     const response=await fetch('https://api.minimax.io/v1/chat/completions',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},signal:AbortSignal.timeout(90000),body:JSON.stringify({model,stream:false,reasoning_split:true,max_completion_tokens:3072,messages:[{role:'system',content:SYSTEM},{role:'user',content:JSON.stringify(request)}]})});

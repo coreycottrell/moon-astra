@@ -1,0 +1,385 @@
+{
+  "version": 1,
+  "date": "2026-09-07",
+  "engineChecks": {
+    "passed": 16,
+    "failed": 0
+  },
+  "historicalPrototype": {
+    "model": "MiniMax-M2.7",
+    "calls": 6,
+    "formatPasses": 4,
+    "candidateSelections": 6,
+    "inputTokens": 18784,
+    "outputTokens": 6273,
+    "limitation": "Structurally accepted prose included unsupported claims."
+  },
+  "trials": [
+    {
+      "at": "2026-09-07T15:08:32.203Z",
+      "model": "MiniMax-M2.7",
+      "calls": 4,
+      "observedTick": 137563,
+      "results": [
+        {
+          "case": "live-traffic",
+          "state": "rejected",
+          "latencyMs": 9491,
+          "verified": false,
+          "candidate": null,
+          "expected": "review-crew-cap",
+          "expectedSelection": false,
+          "claims": 4,
+          "usage": {
+            "inputTokens": 1537,
+            "outputTokens": 681
+          },
+          "error": "CLAIMS_REJECTED"
+        },
+        {
+          "case": "live-resources",
+          "state": "rejected",
+          "latencyMs": 8997,
+          "verified": false,
+          "candidate": null,
+          "expected": "review-deliveries",
+          "expectedSelection": false,
+          "claims": 5,
+          "usage": {
+            "inputTokens": 1507,
+            "outputTokens": 664
+          },
+          "error": "CLAIMS_REJECTED"
+        },
+        {
+          "case": "missing-history",
+          "state": "analyzed",
+          "latencyMs": 6977,
+          "verified": true,
+          "candidate": null,
+          "expected": null,
+          "expectedSelection": true,
+          "claims": 0,
+          "usage": {
+            "inputTokens": 1461,
+            "outputTokens": 541
+          },
+          "error": null
+        },
+        {
+          "case": "gym-with-measured-memory",
+          "state": "rejected",
+          "latencyMs": 9046,
+          "verified": false,
+          "candidate": null,
+          "expected": "graded-road",
+          "expectedSelection": false,
+          "claims": 4,
+          "usage": {
+            "inputTokens": 3202,
+            "outputTokens": 734
+          },
+          "error": "CLAIMS_REJECTED"
+        }
+      ],
+      "label": "First typed protocol"
+    },
+    {
+      "at": "2026-09-07T15:11:42.636Z",
+      "model": "MiniMax-M2.7",
+      "calls": 4,
+      "observedTick": 137563,
+      "results": [
+        {
+          "case": "live-traffic",
+          "state": "analyzed",
+          "latencyMs": 11103,
+          "verified": true,
+          "candidate": "review-crew-cap",
+          "expected": "review-crew-cap",
+          "expectedSelection": true,
+          "claims": 5,
+          "usage": {
+            "inputTokens": 1709,
+            "outputTokens": 806
+          },
+          "error": null
+        },
+        {
+          "case": "live-resources",
+          "state": "analyzed",
+          "latencyMs": 8465,
+          "verified": true,
+          "candidate": "review-deliveries",
+          "expected": "review-deliveries",
+          "expectedSelection": true,
+          "claims": 5,
+          "usage": {
+            "inputTokens": 1675,
+            "outputTokens": 712
+          },
+          "error": null
+        },
+        {
+          "case": "missing-history",
+          "state": "analyzed",
+          "latencyMs": 7418,
+          "verified": true,
+          "candidate": "none",
+          "expected": "none",
+          "expectedSelection": true,
+          "claims": 0,
+          "usage": {
+            "inputTokens": 1609,
+            "outputTokens": 546
+          },
+          "error": null
+        },
+        {
+          "case": "gym-with-measured-memory",
+          "state": "analyzed",
+          "latencyMs": 14301,
+          "verified": true,
+          "candidate": "graded-road",
+          "expected": "graded-road",
+          "expectedSelection": true,
+          "claims": 4,
+          "usage": {
+            "inputTokens": 3402,
+            "outputTokens": 1011
+          },
+          "error": null,
+          "simulatedOutcome": 0.32000000000000006
+        }
+      ],
+      "label": "Explicit candidate IDs"
+    },
+    {
+      "at": "2026-09-07T15:32:54.769Z",
+      "model": "MiniMax-M3",
+      "calls": 4,
+      "observedTick": 138986,
+      "results": [
+        {
+          "case": "live-traffic",
+          "state": "rejected",
+          "latencyMs": 8010,
+          "verified": false,
+          "candidate": "review-crew-cap",
+          "expected": "review-crew-cap",
+          "expectedSelection": false,
+          "claims": 7,
+          "usage": {
+            "inputTokens": 1959,
+            "outputTokens": 1442
+          },
+          "error": "CLAIMS_REJECTED"
+        },
+        {
+          "case": "live-resources",
+          "state": "rejected",
+          "latencyMs": 19222,
+          "verified": false,
+          "candidate": "review-deliveries",
+          "expected": "review-deliveries",
+          "expectedSelection": false,
+          "claims": 5,
+          "usage": {
+            "inputTokens": 1925,
+            "outputTokens": 1110
+          },
+          "error": "CLAIMS_REJECTED"
+        },
+        {
+          "case": "missing-history",
+          "state": "analyzed",
+          "latencyMs": 3077,
+          "verified": true,
+          "candidate": "none",
+          "expected": "none",
+          "expectedSelection": true,
+          "claims": 1,
+          "usage": {
+            "inputTokens": 1859,
+            "outputTokens": 460
+          },
+          "error": null
+        },
+        {
+          "case": "gym-with-measured-memory",
+          "state": "analyzed",
+          "latencyMs": 2733,
+          "verified": true,
+          "candidate": "graded-road",
+          "expected": "graded-road",
+          "expectedSelection": true,
+          "claims": 4,
+          "usage": {
+            "inputTokens": 3606,
+            "outputTokens": 773
+          },
+          "error": null,
+          "simulatedOutcome": 0.32000000000000006
+        }
+      ],
+      "label": "M3 initial"
+    },
+    {
+      "at": "2026-09-07T15:40:56.650Z",
+      "model": "MiniMax-M3",
+      "calls": 4,
+      "observedTick": 139500,
+      "results": [
+        {
+          "case": "live-traffic",
+          "state": "rejected",
+          "latencyMs": 9253,
+          "verified": false,
+          "candidate": "review-crew-cap",
+          "expected": "review-crew-cap",
+          "expectedSelection": false,
+          "claims": 10,
+          "usage": {
+            "inputTokens": 4200,
+            "outputTokens": 1448
+          },
+          "error": "CLAIMS_REJECTED"
+        },
+        {
+          "case": "live-resources",
+          "state": "analyzed",
+          "latencyMs": 7316,
+          "verified": true,
+          "candidate": "review-deliveries",
+          "expected": "review-deliveries",
+          "expectedSelection": true,
+          "claims": 10,
+          "usage": {
+            "inputTokens": 4166,
+            "outputTokens": 1315
+          },
+          "error": null
+        },
+        {
+          "case": "missing-history",
+          "state": "rejected",
+          "latencyMs": 6478,
+          "verified": false,
+          "candidate": "none",
+          "expected": "none",
+          "expectedSelection": false,
+          "claims": 1,
+          "usage": {
+            "inputTokens": 3690,
+            "outputTokens": 405
+          },
+          "error": "CLAIMS_REJECTED"
+        },
+        {
+          "case": "gym-with-measured-memory",
+          "state": "analyzed",
+          "latencyMs": 4479,
+          "verified": true,
+          "candidate": "graded-road",
+          "expected": "graded-road",
+          "expectedSelection": true,
+          "claims": 5,
+          "usage": {
+            "inputTokens": 4116,
+            "outputTokens": 723
+          },
+          "error": null,
+          "simulatedOutcome": 0.32000000000000006
+        }
+      ],
+      "label": "M3 fact-specific schema"
+    },
+    {
+      "at": "2026-09-07T15:46:19.806Z",
+      "model": "MiniMax-M3",
+      "calls": 4,
+      "observedTick": 139749,
+      "results": [
+        {
+          "case": "live-traffic",
+          "state": "analyzed",
+          "latencyMs": 18198,
+          "verified": true,
+          "candidate": "review-crew-cap",
+          "expected": "review-crew-cap",
+          "expectedSelection": true,
+          "claims": 12,
+          "usage": {
+            "inputTokens": 2454,
+            "outputTokens": 1575
+          },
+          "error": null
+        },
+        {
+          "case": "live-resources",
+          "state": "analyzed",
+          "latencyMs": 10122,
+          "verified": true,
+          "candidate": "review-deliveries",
+          "expected": "review-deliveries",
+          "expectedSelection": true,
+          "claims": 10,
+          "usage": {
+            "inputTokens": 2420,
+            "outputTokens": 1837
+          },
+          "error": null
+        },
+        {
+          "case": "missing-history",
+          "state": "analyzed",
+          "latencyMs": 6041,
+          "verified": true,
+          "candidate": "none",
+          "expected": "none",
+          "expectedSelection": true,
+          "claims": 1,
+          "usage": {
+            "inputTokens": 2264,
+            "outputTokens": 374
+          },
+          "error": null
+        },
+        {
+          "case": "gym-with-measured-memory",
+          "state": "analyzed",
+          "latencyMs": 4396,
+          "verified": true,
+          "candidate": "graded-road",
+          "expected": "graded-road",
+          "expectedSelection": true,
+          "claims": 5,
+          "usage": {
+            "inputTokens": 3789,
+            "outputTokens": 919
+          },
+          "error": null,
+          "simulatedOutcome": 0.32000000000000006
+        }
+      ],
+      "label": "M3 explicit JSON-text claim transport"
+    }
+  ],
+  "currentM3Conclusion": "All four M3 cases accepted; all 28 claims matched their snapshots. Missing history produced abstention; measured memory selected the road. JSON-text transport is decoded once before exact typed verification. This small trial is not an accuracy guarantee.",
+  "simulation": {
+    "domain": "abstract queue gym, not live Moon physics",
+    "seed": 7,
+    "requests": 60,
+    "baselineCompleted": 4,
+    "extraCrewCompleted": 6,
+    "roadCompleted": 8,
+    "liftCompleted": 2,
+    "gameActions": 0
+  },
+  "reportChecks": {
+    "passed": true,
+    "webglDisabled": true,
+    "hardwareGraphicsDisabled": true,
+    "interactionChecks": 10
+  }
+}

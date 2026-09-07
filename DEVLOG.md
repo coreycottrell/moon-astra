@@ -1,5 +1,9 @@
 # Moon development log
 
+## Active handoff — 2026-09-07
+
+Read [ACTIVE-HANDOFF.md](ACTIVE-HANDOFF.md) first after compaction. Current work: finish the standalone learning engine and publish `/moon-mind-learning-engine/`, preserving the live game. MiniMax-M3 only. Use the in-game Dev board for meaningful player-facing changes and testing milestones; do not describe planned game integrations as deployed. ACG leads GPU forensics; avoid hardware rendering tests while the workstation is unstable.
+
 ## 2026-09-06 — rover driving and collaborative play release
 
 Active source: `/home/corey/projects/moon-rover-motion`, branch `development/rover-motion`. Preserve the old local Foundry preview at `/home/corey/projects/moon-foundry` and the original Neighbors game. User authorized isolated V2 deployment with backups and no save reset.
@@ -152,3 +156,7 @@ Research fork /home/corey/projects/moon-learning-engine, branch research/learnin
 experiments/learning-engine contains a domain-neutral read-only prototype, two Moon diagnostic skills, MiniMax adapter, six-case paid trial and seven passing offline checks. Actual MiniMax-M2.7 trial: six expected selections, only four strict contract passes; manual review found material invented/unsupported details even in accepted JSON. Schema validation is insufficient for autonomous execution. Usage 18,784 input / 6,273 output tokens; 15.2–24.4 seconds/call. Private requests/results and ticks 135300/135903 at /home/corey/moon-deployments/learning-engine-20260907. No retries or game commands. Next: explicit coverage, typed claims checked against full per-resource freight and rules, durable outcome telemetry. Preserve initial failures as baseline.
 
 Corey's GPU request temporarily took priority. Confirmed Chrome-associated AMD faults at 09:47:50 and 10:18:28 Eastern leading to full GPU resets and GNOME/Xwayland crashes; kernel stayed up. Evidence/report /home/corey/system-diagnostics/gpu-20260907/REPORT.md. Two-hour read-only user collector started 10:37:37. ACG independently investigates hardware and fixes; detailed cross-check/corrections posted in canonical SHARED-NOTEPAD.md. No GPU stress, driver changes, browser restart or reboot by Codex. Continue CPU/remote-provider work until graphics testing is coordinated.
+
+## 2026-09-07 — Moon Mind standalone v1 ready for publication
+
+M3-only engine, SQLite jobs/leases/capacity, exact typed evidence, deterministic gym and persisted measured memory are implemented.16 engine checks and CPU-only report interaction/mobile QA pass. Final M3 trial4/4 accepted,28 exact claims; prior failures retained. Extracted standalone ZIP passes tests and CLI demonstration. Public report source docs/moon-mind-learning-engine; new site route isolated in aiciv-site-mind-engine. Board testing post61260 verified. No live game integration/economy changes. Publishing after a verified Expansion backup; final receipts follow in ACTIVE-HANDOFF.md.

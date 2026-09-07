@@ -1,5 +1,7 @@
 # Foundry operations
 
+Active work and compaction recovery: [ACTIVE-HANDOFF.md](ACTIVE-HANDOFF.md). The learning engine is isolated in `/home/corey/projects/moon-learning-engine`; its report publication must preserve the deployed game listed below. Use the in-game board for meaningful player-facing dev logs, with LIVE / TESTING / PLANNED status. All new learning-engine provider calls use MiniMax-M3 only.
+
 Current development is `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`, ruleset `moon-foundry-1`, schema/economy 3. Runtime `aa91824cc6c2` is live on both V2 services; website `e41a99327011` published 2026-09-07 13:40 UTC. See [the current deployment record](deploy/moon-astra-v2/DEPOT-LIFTS-DEPLOYED-2026-09-07.md). The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
 
 | Service | Location |
