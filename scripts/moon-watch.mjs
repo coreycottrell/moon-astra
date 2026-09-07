@@ -6,6 +6,7 @@ import {spawnSync} from 'node:child_process';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {collectSignals,enqueueSignals,wakeAllowed,safeWakeText} from './lib/player-signals.mjs';
 import {runPlayer} from './lib/bounded-player.mjs';
+import {submitTmuxPrompt} from './lib/tmux-board-alert.mjs';
 const {values}=parseArgs({options:{config:{type:'string'},once:{type:'boolean'},help:{type:'boolean'}}});
 if(values.help||!values.config){console.log('node scripts/moon-watch.mjs --config /private/player-watch.json [--once]\nSee docs/foundry/PLAYER-WORKFLOW.md for signals, cooldowns, tmux and bounded play.');process.exit(values.help?0:1);}
 const config=JSON.parse(readFileSync(resolve(values.config),'utf8')),folder=resolve(config.directory);
@@ -38,7 +39,7 @@ try{
      if(pane.status!==0)delivered=false;
      else if(config.tmuxInject){
       const ready=resolve(folder,'READY');if(pane.stdout.trim()!=='codex|on'||!existsSync(ready))delivered=false;
-      else{unlinkSync(ready);const message=safeWakeText(wakeFile);delivered=spawnSync('tmux',['send-keys','-t',config.tmuxPane,'-l','--',message]).status===0;if(delivered)delivered=spawnSync('tmux',['send-keys','-t',config.tmuxPane,'Enter']).status===0;}
+      else{unlinkSync(ready);const message=safeWakeText(wakeFile);delivered=submitTmuxPrompt(config.tmuxPane,message).sent;}
      }else delivered=spawnSync('tmux',['display-message','-t',config.tmuxPane,'Moon player: '+state.pending.length+' events; '+wakeFile]).status===0;
     }
     if(config.player?.enabled){

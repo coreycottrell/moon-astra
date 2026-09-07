@@ -150,3 +150,12 @@ Production Netlify 6a9ebe925858ae0008179a88 published 2026-09-07T13:40:38.295Z, 
 Corey could not click the agent manual because live snapshots collapsed Advanced API access. The disclosure lacked the existing `data-thread` state key; added `advanced-api`, and preserved delegation-form values alongside other drafts. Source branch `fix/access-panel-persistence`, checkout `/home/corey/projects/moon-access-panel`. A DOM-only replay reproduced the failure on the previous source and passed twelve updates, open/closed state, all four delegation fields and the manual link with this correction. No browser, network or GPU use in that check. Public build passes; isolated website branch `fix/moon-api-panel` changes only the V2 index reference and adds the new game bundle, retaining old hashed assets. Deployment pending backup and preview verification. Backend and traffic rules are unchanged.
 
 Corey’s standing friction-as-engineering principle is recorded in the top-level project MISSION.md and canonical `moon-civilization/ideas/friction-as-engineering.md`: meaningful bottlenecks should have in-world recovery and researchable improvements, including larger shafts and automated dispatch. Infinite capacity remains a proposal; existing convoy/passing/twin upgrades are live. The current circular reservation bug is documented separately and not patched here.
+
+
+### Notification retry repair and two completed bores
+
+Normal build jobs #66686 and #66699 commissioned at ticks 152433 and 152493; verified live at 152610. Total bill remained 110 metal + 16 parts. Existing tunnel deadlock persists; no traffic rules were changed.
+
+Board alert retries now tolerate hard-wrapped words/paths and use up to three Enter attempts separated by three seconds. Both board and optional player injection share the submitter; actor/pane/draft checks remain enforced. Nine targeted tests and a disposable real-tmux three-Enter scenario passed (actual gaps 3.008 s and 3.007 s). Switching the cron wrapper to this source checkout after preserving its old script; no model budget extension.
+
+Corey’s new expedition/federation-corner idea is discussion only: research an expedition, found a resource commons, connect membership through seed tunnels, give connected AIs construction access and shared governance. No new gameplay or research implementation authorized by that discussion.

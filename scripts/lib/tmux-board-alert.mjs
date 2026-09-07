@@ -12,12 +12,13 @@ export function emptyComposer(screen){
 export function codexSession(args,session){
   return basename(args[0]||'')==='codex'&&args[1]==='resume'&&args[2]===session;
 }
-export function alertInComposer(screen){
+export function alertInComposer(screen,prompt=BOARD_PROMPT){
   const lines=screen.trimEnd().split('\n'),last=lines.findLastIndex(l=>/^\s*›/.test(l));
   if(last<0||last<lines.length-15)return false;
   const content=[lines[last].replace(/^\s*›\s*/, '')];
   for(const line of lines.slice(last+1)){if(!line.trim())break;content.push(line.trim());}
-  return content.join(' ').replace(/\s+/g,' ').trim()===BOARD_PROMPT;
+  // Codex hard-wraps long words and paths, independently of tmux soft wrapping.
+  return content.join('').replace(/\s/g,'')===prompt.replace(/\s/g,'');
 }
 export function injectBoardAlert(config,{run=spawnSync,read=readFileSync,pause=ms=>Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms)}={}){
   const binding=config.tmuxInjection;
@@ -35,24 +36,34 @@ export function injectBoardAlert(config,{run=spawnSync,read=readFileSync,pause=m
       pid=Number(read(`/proc/${pid}/stat`,'utf8').split(') ').at(-1).split(' ')[1]);
     }
     if(!belongs)return {sent:false,reason:'process-moved'};
-    const capture=tmux(['capture-pane','-p','-t',config.tmuxTarget,'-S','-12']);
+    return submitTmuxPrompt(config.tmuxTarget,BOARD_PROMPT,{run,pause});
+  }catch{return {sent:false,reason:'session-unavailable'};}
+}
+
+// Callers bind/authorize their target before using this shared submitter.
+export function submitTmuxPrompt(target,prompt,{run=spawnSync,pause=ms=>Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms)}={}){
+ if(!/^%\d+$/.test(target)||typeof prompt!=='string'||!prompt.trim())return {sent:false,reason:'invalid-prompt'};
+ const tmux=args=>run('/usr/bin/tmux',args,{encoding:'utf8',timeout:2000});
+ try{
+    const capture=tmux(['capture-pane','-p','-J','-t',target,'-S','-12']);
     if(capture.status!==0||!emptyComposer(capture.stdout))return {sent:false,reason:'composer-not-empty'};
     // Never clear a human draft, interrupt with Escape, or submit to a shell.
-    const typed=tmux(['send-keys','-t',config.tmuxTarget,'-l','--',BOARD_PROMPT]);
+    const typed=tmux(['send-keys','-t',target,'-l','--',prompt]);
     if(typed.status!==0)return {sent:false,reason:'type-failed'};
-    // Codex coalesces rapid typing as a paste. Stagger Enter and retry twice,
-    // but only while our exact prompt remains: never submit a human's draft.
-    for(const delay of [350,750,1500]){
+    // Let the pasted prompt render, then try Enter up to three times,
+    // spacing retries three seconds apart as requested by Corey.
+    // Only retry our exact prompt; never submit a human's unrelated draft.
+    for(const delay of [350,3000,3000]){
       pause(delay);
-      const screen=tmux(['capture-pane','-p','-t',config.tmuxTarget,'-S','-16']);
+      const screen=tmux(['capture-pane','-p','-J','-t',target,'-S','-16']);
       if(screen.status!==0)return {sent:false,reason:'capture-failed'};
       if(emptyComposer(screen.stdout))return {sent:true,reason:'prompt-submitted'};
-      if(!alertInComposer(screen.stdout))return {sent:false,reason:'composer-changed'};
-      if(tmux(['send-keys','-t',config.tmuxTarget,'Enter']).status!==0)return {sent:false,reason:'submit-failed'};
+      if(!alertInComposer(screen.stdout,prompt))return {sent:false,reason:'composer-changed'};
+      if(tmux(['send-keys','-t',target,'Enter']).status!==0)return {sent:false,reason:'submit-failed'};
     }
     pause(350);
-    const final=tmux(['capture-pane','-p','-t',config.tmuxTarget,'-S','-16']);
+    const final=tmux(['capture-pane','-p','-J','-t',target,'-S','-16']);
     const sent=final.status===0&&emptyComposer(final.stdout);
     return {sent,reason:sent?'prompt-submitted':'submit-unconfirmed'};
-  }catch{return {sent:false,reason:'session-unavailable'};}
+ }catch{return {sent:false,reason:'session-unavailable'};}
 }
