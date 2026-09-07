@@ -46,7 +46,7 @@ for i in range(1, len(parts), 3):
     if number == '8':
         content = '<figure class="process-image"><img src="../images/refinery.png" alt="Existing MOON refinery model" loading="lazy" width="1400" height="900"><figcaption>Existing refinery art. Survey tools, separation attachments and precision lines described here are proposed additions.</figcaption></figure>' + content
     chapters.append(f'<section class="chapter" id="{ident}"><header class="chapter-header"><span class="chapter-number">{int(number):02d}</span><h2 class="chapter-title">{title}</h2></header>{content}</section>')
-assert len(chapters) == 16
+assert len(chapters) == 19
 
 assets = {}
 for name in ['style.css', 'app.js']:
@@ -63,7 +63,8 @@ for key, value in {'STYLE': '../'+style, 'CSS': assets['style.css'], 'JS': asset
 assert '{{' not in template
 (out / 'index.html').write_text(template)
 (out / 'deeper-resource-loops.md').write_text(public)
-(out / 'publication.json').write_text(json.dumps({'title': 'MOON — Deeper resource loops', 'edition': 'Whitepaper addendum 01', 'date': '2026-09-06', 'status': 'design proposal', 'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'manuscriptSha256': hashlib.sha256(public.encode()).hexdigest(), 'chapters': 16, 'usesLiveGameAPI': False, 'images': 'Existing parent whitepaper assets; see ../provenance.json and ../THIRD-PARTY-NOTICES.txt'}, indent=2)+'\n')
+(out / 'server-mechanics-scale-review.md').write_text((ROOT / 'ideas/server-mechanics-scale-review.md').read_text())
+(out / 'publication.json').write_text(json.dumps({'title': 'MOON — Deeper resource loops', 'edition': 'Whitepaper addendum 01', 'date': '2026-09-06', 'reviewed': '2026-09-07', 'status': 'design proposal', 'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(), 'manuscriptSha256': hashlib.sha256(public.encode()).hexdigest(), 'chapters': 19, 'usesLiveGameAPI': False, 'images': 'Existing parent whitepaper assets; see ../provenance.json and ../THIRD-PARTY-NOTICES.txt'}, indent=2)+'\n')
 
 # Match the source template edit without rebuilding the parent publication.
 card = '<aside class="edition-note resource-addendum"><span class="edition-label">ADDENDUM / 01</span><p><a href="./deeper-resource-loops/"><strong>Deeper resource loops ↗</strong></a><br>Survey the ground, connect specialized industries, and discover how new intelligence changes the value of places. A detailed next-iteration proposal.</p></aside>'
@@ -75,4 +76,4 @@ if nav not in parent_html:
     assert parent_html.count('<div class="sidebar-footer">') == 1
     parent_html = parent_html.replace('<div class="sidebar-footer">', '<div class="sidebar-footer">'+nav)
 (parent / 'index.html').write_text(parent_html)
-print(f'Built {out}: 16 chapters, local comparison widget, public manuscript and provenance.')
+print(f'Built {out}: 19 chapters, local comparison widget, public manuscript and provenance.')

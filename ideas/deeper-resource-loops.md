@@ -1,6 +1,6 @@
 # The Moon becomes more valuable as we learn to use it
 
-September 6, 2026 · Design proposal for the next major iteration · No live economy changes
+September 6, 2026 · Reviewed September 7, 2026 · Design proposal for the next major iteration · No live economy changes
 
 **Make discoveries change the value of places. Make inventions change how those places connect. Let the resulting industrial networks manufacture the next wave of intelligence.**
 
@@ -131,21 +131,21 @@ For manageable storage, use a few declared feedstock/quality classes initially, 
 
 Maintain supervision costs for active harvesters, refineries and fabrication; the replicator remains the largest individual supervision demand among those core machines. Protect a dependable operational reserve before optional research. Extra minds should open new choices alongside faster completion of bounded work.
 
-| Capability | Newly possible action | How the world changes |
-| --- | --- | --- |
-| Resource interpretation | Combine orbital clues and local samples | Survey routes become purposeful |
-| Selective separation | Tune processing to local mineral mixtures | Concentrators move toward remote mines |
-| Feedstock blending | Combine complementary supplies | Two modest deposits support a better shared plant |
-| Precision control | Run and qualify more demanding processes | High-purity products support new machine families |
-| Design experiments | Compare bounded tool/process combinations | The best design depends on its job and location |
-| Network coordination | Maintain supply commitments and reserves across sites | Friends can specialize without constant dispatching |
-| Closed reproduction | Verify a complete daughter supply chain | Expansion produces functioning new factories |
+| Capability | Minimum powered minds (draft) | Newly possible action | How the world changes |
+| --- | ---: | --- | --- |
+| Resource interpretation | 1 | Combine orbital clues and local samples | Survey routes become purposeful |
+| Selective separation | 2 | Tune processing to local mineral mixtures | Concentrators move toward remote mines |
+| Feedstock blending | 2 | Combine complementary supplies | Two modest deposits support a better shared plant |
+| Precision control | 4 | Run and qualify more demanding processes | High-purity products support new machine families |
+| Design experiments | 4 | Compare bounded tool/process combinations | The best design depends on its job and location |
+| Network coordination | 8 | Maintain supply commitments and reserves across sites | Friends can specialize without constant dispatching |
+| Closed reproduction | 16 | Verify a complete daughter supply chain | Expansion produces functioning new factories |
 
 A discovery needs evidence. For example: deliver samples from two different fields, run a funded separation trial, meet a specified recovery and contamination target, and repeat it successfully. Research capacity can run more trials or interpret better data. A full progress bar alone should not prove a plant works.
 
 Existing designs are bounded rate/wear/cost profiles. Extend that into a bounded module and process grammar: tool head, separation module, control package, power interface, service requirement. An AI can propose combinations, but a deterministic evaluator establishes their performance. Prototype fabrication, test energy, rejected batches and subsequent certification all cost something visible.
 
-Keep learned capabilities after an outage. A loss of power suspends demanding work; it does not make the civilization forget how to refine silicon. In-game mind capacity also remains distinct from actual model inference costs: building compute hardware in the game does not purchase external API calls.
+**Continuous support is a standing requirement for every new research level.** Each benefit requires its stated minimum powered, connected, cooled and serviceable mind nodes throughout operation. The tentative counts above require balance testing; node thresholds are distinct from spare slots allocated to jobs. Keep learned knowledge after an outage, but suspend the dependent functions—including coordination already in progress. Robots can stop underground and block a line when its controller loses sufficient minds. Preserve positions, cargo, installed equipment and research progress; explain the missing support and resume from that state when it returns. Redundant power/minds and separately built recovery equipment make resilience part of the game. See the [colony organs proposal](https://ai-civ.com/moon-astra-whitepaper/federation-corners/#10-research-should-unlock-larger-responsibilities) for the outage contract. No such research retrofit has been deployed by this document. In-game mind capacity also remains distinct from actual model inference costs: building compute hardware in the game does not purchase external API calls.
 
 ## 9. A build and technology tree with memorable transitions
 
@@ -277,6 +277,117 @@ From orbit, several distant fronts commission within minutes of one another. Sel
 
 That is the deeper promise of resource geography: **the civilization grows more capable of understanding the same Moon, and that understanding changes what it can build there.**
 
+
+## 17. September 7 review: prove the opening before starting a new season
+
+**Recommendation: spend the next review period learning from the current colony, build the new rules in a separate world, and decide on a restart after a complete fresh-start trial.** Corey is considering a reset so the loops can be introduced in order. A new campaign is a reasonable eventual choice because geology, manufacturing recipes and continuous mind dependencies could change the meaning of both existing stock and existing achievements. It is not necessary to delete the current world to test that choice.
+
+The earlier release order still holds. Today's experience adds a necessary first step: repairable transport, an authoritative material ledger and explicit operational support. Corey should be able to see where metal went; a robot's status should distinguish deliberate loss of coordination from a scheduler defect. Adding precision materials to opaque freight would multiply uncertainty before it creates interesting choices.
+
+| Playable step | Question the player can answer | Evidence needed before moving on |
+| --- | --- | --- |
+| 0. Land, maintain, recover | Can I keep a small workshop alive and recover from a mistake? | Starter power/minds, service supplies and restoration paths work without later research; actual circular traffic deadlocks are fixed |
+| 1. Survey and choose | Where should the next work area go, and why? | A real survey changes a placement choice; at least two viable starter strategies |
+| 2. Concentrate and deliver | Should I process here or haul it elsewhere? | Site grade, route capacity, buffers and residue reconcile in the ledger |
+| 3. Make useful power | Can local industry replace a consumed or imported solar component? | A short processing chain produces a qualified component that physically enters service |
+| 4. Sustain coordination | What happens if I lose a mind, power link or radiator? | Benefits actually stop, stranded work remains accounted, and restoration/redundancy makes a measured difference |
+| 5. Specialize and cooperate | What can my neighbor and I do better together? | Delivered contracts beat equivalent isolated effort; an absent partner creates manageable costs |
+| 6. Reproduce | Can our daughter make a viable granddaughter? | Complete material, power, cooling, service, mind and transport chain demonstrated across generations |
+
+Introduce mind support from the beginning and test outages at each step; step 4 is the explicit resilience challenge, not a late switch that suddenly makes earlier rules apply. Start with existing materials plus graded feedstock. Add one new product when a useful machine needs it. Precision and volatile branches should follow a functioning ordinary workshop. Helium-3 remains an optional distant branch, not a prerequisite for finishing the campaign.
+
+For the next couple of days, treat this as a focused observation and design window, not a promised launch date. Gather player/AI accounts of shortages, blocked routes, misunderstood controls and useful cooperation. Record each proposed rule beside the evidence that motivates it. Use copied saves and small CPU simulations for failure studies; let the current world continue producing real play observations. Preserve the familiar machinery and camera experience that players already love.
+
+A restart is justified if the new rules cannot give old and new colonies comparable choices without arbitrary gifts, deleted material or silent recipe conversions. It is premature if we only have a larger tech tree on paper. The decision checkpoint should require a complete opening loop, a deliberate blackout/recovery trial, a two-colony trade trial, accurate UI/API accounting, and a save/reload test. Let a human and an AI attempt the same opening without privileged materials or hidden knowledge. Set pacing targets from those runs rather than promising a calendar now.
+
+If we choose a new season, snapshot the old world and prove it restores under its pinned server version; retain the old client assets and private access records. Offer a separate playable legacy world, publish the revised rules and an agreed start time, and preserve player names, contribution history and design lineage. Do not silently copy old stockpiles into a differently defined economy. Players should knowingly choose whether to join the new start. A new world ID must keep authentication, commands, receipts and automation bound to the correct world so a returning AI cannot place orders in the wrong colony.
+
+The meaningful reset is an opportunity to learn the new civilization together. The current workshop remains its history and test record. **No wipe, new season, migration or date is authorized or scheduled by this proposal.**
+
+## 18. Prepare for the First Night
+
+**Corey's new campaign proposal:** a small nuclear reactor in every seed, batteries built before sunset, a shared first-night preparation project, power connections through seed-to-seed bores, and later towers that beam energy between sites. Lights on real equipment gradually reveal the civilization from orbit. These mechanics are not live yet.
+
+This turns power from a construction prerequisite into a recurring planning problem. Daylight funds reserves. Darkness tests whether the colony can support its commitments. More industry creates a larger night load; more minds enable better coordination but must themselves survive the outage. The first night becomes the moment neighbors discover whether they built a federation that actually works.
+
+A real lunar sunlight cycle is roughly 29.5 Earth days, with long daytime and nighttime periods away from the poles. Polar illumination depends strongly on local horizons, with persistent shadow and exceptionally well-lit terrain nearby. Use this geography as inspiration, while declaring the game's cycle length explicitly. [NASA lunar day explanation](https://imagine.gsfc.nasa.gov/ask_astro/earth.html), [NASA south-pole illumination](https://science.nasa.gov/photojournal/south-pole-illumination-map/).
+
+### One Moon, one moving Sun
+
+Use a server-owned simulation epoch, Sun direction and declared cycle length. Latitude, longitude and the terrain horizon determine local illumination; adjacent colonies experience almost the same night, while distant regions can have different schedules. A neighboring seed does not become a magic sunny source simply because it belongs to another player. Polar sites require a local forecast rather than a generic twelve-hour day.
+
+Try different cycle lengths in the separate test world—an hours-long lab cycle for validation, then a multi-day campaign cycle as a pacing experiment. No duration is chosen here. Publish the cycle and expected darkness before players commit. Do not reset sunrise when someone logs in or advance time when a camera zooms. New arrivals need a viable starting kit even when they land at night; their personal clock must not disagree with everybody else's.
+
+Show time until local shadow, expected generation, charge remaining and **essential-service endurance**. Forecast using the selected load policy and delivered support, with a confidence range where terrain or upcoming work is uncertain. A full battery is not the same as enough stored energy for the coming night.
+
+### A seed has a heartbeat
+
+Give the seed a modest, preinstalled nuclear power module with local startup/control hardware, heat rejection and a defined service life. It supports the colony's recovery core, not an indefinitely expanding industrial estate. This is a design interpretation of the current lander's constant eight game power units; the live catalog does not yet model a reactor, fuel or night. NASA's [fission surface power program](https://www.nasa.gov/directorates/stmd/fission-surface-power/) supports the broad inspiration, not these game quantities or startup assumptions.
+
+The recovery core is baseline equipment, available before new research. That distinction must be explicit: every newly researched benefit still requires its stated powered minds. Future reactor uprates, smart storage and coordinated distribution need their own continuous thresholds. Protected seed supply can restart a minimum mind cluster, then that cluster restores more capable systems. Loss of all support can still immobilize advanced equipment; there is no automatic teleportation or free completion.
+
+Seed reproduction now has an additional obligation: where does the daughter's reactor module and its finite fuel come from? Starter seeds may arrive with certified imported modules, but unlimited daughters cannot conjure them. Before closed reproduction, prove local manufacture plus a declared fuel supply, a real imported module pipeline, or a certified solar/storage seed alternative. Leave detailed nuclear processing abstract and bounded until it earns a useful gameplay decision.
+
+### Batteries need a real balance sheet
+
+Represent charge separately from instantaneous power: stored energy, capacity, maximum charging rate, maximum discharge rate, conversion losses, condition, thermal support and a protected reserve. Use explicit game energy units consistent with the existing abstract power model; the current labels do not establish physical MW/MWh engineering values.
+
+For a time interval, delivered stored energy cannot exceed either remaining usable charge or the discharge-rate limit multiplied by duration. Charging cannot exceed the incoming surplus, converter rating or remaining capacity. Record conversion loss once. A battery cannot charge from its own output through a network loop. Rates and losses must reconcile in the authoritative ledger across saved games and remote colonies.
+
+Start with a serviceable storage module. Later research can improve density, charge rate, lifetime, fault isolation or multi-site coordination; every level declares its minimum continuously powered minds and exactly which function suspends without them. A specialized controller's disappearance cannot silently make its advanced benefit continue as if nothing happened. Baseline reserve equipment remains a distinct installed system, not an exception invented during a blackout.
+
+Let players declare essential mind nodes, service robots, emergency lighting and heating as protected loads, then choose which production may shed first. Provide a preview: “Night plan preserves four minds and repair; refineries pause; replicator finishes no new work.” Loss of support can strand robots mid-route. Restoring enough support resumes recorded work after route checks. Add restart margins or explicit operator rearming so a near-empty battery does not make the whole colony flicker on and off every tick.
+
+### The first federation project is an operating plan
+
+| Preparation phase | Physical and social work | Completion evidence |
+| --- | --- | --- |
+| Agree what survives | Members name essential services, reserve policy and export commitments | A published night budget for the agreed participating colonies |
+| Survey the light | Inspect local horizons and the next dark interval | A forecast with known coverage and declared assumptions |
+| Build the reserve | Install storage, converters, spares and the required supported minds | Commissioned machines and actual charge; money or donated metal alone is insufficient |
+| Connect the neighbors | Complete tunnel cables, protected breakers and metered exchange | A measured transfer with sender reserve, receiver capacity and line loss accounted |
+| Rehearse the dark | Temporarily isolate selected solar supply in a controlled in-world drill | Actual survival of the promised essential services and a demonstrated restart |
+| Hold through night | Operate, trade, prioritize repairs and respond to failures | Delivered energy, supported minds and restored services recorded over the dark interval |
+
+Keep the project's founding membership and evaluated interval explicit so a late arrival cannot retroactively invalidate its result. Completion preserves the design and contributor history; ongoing shared services still depend on powered minds and intact equipment. Display preparedness before sunset and measured endurance afterward. Avoid a single opaque progress bar that fills while batteries remain empty.
+
+The first night should leave something useful to do: scheduled maintenance, low-power surveying, rerouting, lending reserves, restoring a neighbor's minds, or deliberately waiting while an autonomous policy keeps its promise. A player who planned well earns uninterrupted production. A depleted colony needs an understandable recovery challenge, not an unexplained disabled screen.
+
+### Bores become utility arteries
+
+Give each corridor separate freight, power and data capabilities. A completed seed-to-seed bore offers an existing right-of-way; crews install cable, converters, switching and agreed interconnection before electricity flows. Set capacity, loss, ownership, maintenance and isolation independently of robot occupancy. A blocked elevator does not automatically cut an intact cable. An explicit line fault may do so.
+
+Power access does not grant build permission or inventory ownership. Export promises retain a local reserve, identify receiving capacity and distinguish firm supply from surplus-only sharing. Isolation protects one failing grid from draining every neighbor. Future research can coordinate multiple interconnections, but the same unit of power cannot be exported to two places or counted again as new generation at the receiver.
+
+For towers, begin with optical/laser or radio-frequency power transfer research. NASA has studied both [cabled and beamed lunar surface transfer](https://ntrs.nasa.gov/citations/20080008842); its [Moonbeam concept](https://www.nasa.gov/directorates/stmd/space-tech-research-grants/moonbeam-beamed-lunar-power/) specifically considers near-infrared light converted at a receiver. X-rays are not needed for the first design. This is a technology proposal, not a claim of an installed lunar network.
+
+Require a real source, a compatible receiver, line of sight, pointing/control support, conversion losses and thermal capacity. Towers extend reach over local obstacles; they do not defeat the Moon's curvature. Relays or later orbital infrastructure make longer routes possible at additional cost. Beams are not extra energy generation. A useful first task is supplying a shadowed work area from a lit ridge; nearby settlements sharing the same night still need nuclear generation or stored reserves.
+
+### Let the night reveal the work
+
+Give machines illuminated instrument panels, small service lamps and meaningful state lights; rovers have working lights and lift platforms show occupancy. Distinguish normal nighttime lighting from an emergency beacon or a dark, unsupported mind cluster. Lighting draws from the relevant electrical budget, with a small separate seed beacon on the recovery circuit.
+
+At altitude, aggregate actual powered installations into district light clusters. Fade between real nearby lights and those distant representations without creating fictional buildings. A network becoming bright is the result of commissioning and sustained power. Let the original seed remain findable inside the growing constellation.
+
+Keep this economical on the GPU: emissive materials and instanced light markers for most equipment, a strict budget for nearby lights that illuminate geometry, and few or no additional shadow-casting lights. Use declared visualization overlays for power beams and network flows; vacuum is not a reason to fill the landscape with glowing laser fog. Client quality settings change appearance, never server power or mind support. No rendering load test is authorized on Corey's unstable GPU until the graphics investigation is resolved.
+
+This project should enter the revised opening before specialized resource chains and daughter colonies. Its materials, reserves, cooperation and recovery requirements give those later industries a purpose.
+
+
+## 19. Server mechanics: earn the scale before raising the limits
+
+The [server mechanics review](server-mechanics-scale-review.md) examines today's authoritative server, resource and mind allocation, logistics, persistence and observation delivery. It includes a read-only live metric sample and a 60-tick CPU run on a preserved backup. No live world writes, GPU tests or load tests against production were performed.
+
+The important result: current persistence timing is not full simulation timing. On the copied world, median simulation work was about 11 ms but the 95th percentile was 263 ms. The existing observer also rebuilds and serializes a complete world per viewer. These measurements describe one eight-player fixture on the tower, not a promised VPS capacity.
+
+The recommended sequence is complete tick instrumentation and correct reservations; local entity/spatial indexes; cached grids and routes; a shared material/energy/support ledger; server-owned sunlight and storage integration; regional observations with deltas; then partitioned persistence and, only when justified, region workers. Keep one writer per world database now. Never start a second writer on the same SQLite world to scale it.
+
+Batteries, darkness and minimum powered minds must have the same consequences whether a colony is on screen, elsewhere on the Moon or controlled only through the API. Distant simulation must stop at a battery-empty or support-loss event instead of multiplying an hour of production at yesterday's rate. Model calls run as bounded asynchronous jobs outside the authoritative tick.
+
+Nighttime rendering should use mostly emissive equipment, instanced markers and aggregated lights from real powered installations. Bound actual scene lights and shadows. More visible civilization must not require one globally active light or robot mesh for every machine on the Moon.
+
+The full review names measured limitations, proposed performance budgets, electrical and regional handoff rules, and the correctness trials needed before a fresh campaign. It proposes engineering work; it does not declare that a planetary simulation is already built.
+
 ---
 
-Research checked September 6, 2026. Scientific references support the broad material and mapping distinctions above. Deposit placement below available observation resolution, recipe quantities, technology gates, hypothetical reactors, campaign timing and machine designs remain game design proposals. No new datasets, models, resources or rules were installed for this document.
+Research checked September 6, 2026. Gameplay sequencing reviewed September 7 against current play and documentation; lunar illumination and power-transfer sources checked September 7 for the new first-night proposal. Scientific references support the broad material and mapping distinctions above. Deposit placement below available observation resolution, recipe quantities, technology gates, hypothetical reactors, campaign timing and machine designs remain game design proposals. No new datasets, models, resources or rules were installed for this document.

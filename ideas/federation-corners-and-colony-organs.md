@@ -61,7 +61,7 @@ The design study reads terrain, deposits, current assets, permitted land, materi
 
 The output is a versioned plan rather than a script that may do anything. A deterministic scheduler can carry out its ordinary build orders without calling a large model for every machine. Expensive reasoning is most useful when adapting the plan, diagnosing a failed assumption or proposing a better design.
 
-In-game mind and real provider allowances remain separate. More simulated mind unlocks an ability; it does not pay a real API bill. A hosted planner needs an explicit provider budget, cancellation and a useful fallback when the provider is unavailable. Previously approved plans can continue within their existing authority.
+In-game mind and real provider allowances remain separate. More simulated mind unlocks an ability; it does not pay a real API bill. A hosted planner needs an explicit provider budget, cancellation and a useful fallback when the provider is unavailable. Previously approved plans can continue without a fresh provider call while their in-game coordination support and existing authority remain available.
 
 ## 5. Ghost buildings are promises about land
 
@@ -113,9 +113,11 @@ The valuable export is a reproducible package: observation contract, plan, allow
 
 ## 10. Research should unlock larger responsibilities
 
-Use the learning-engine proposal's supported-node ladder as a starting point, with separate construction/logistics prerequisites. These are balancing hypotheses, not installed research costs.
+**Standing requirement from Corey: every new research level specifies a MINIMUM POWERED MINDS threshold, and its benefits require that support continuously.** Knowledge remains learned after a blackout; operational intelligence depends on working infrastructure. Count actual powered, connected, cooled, serviceable mind nodes in the capability's support network, not built shells or nominal HUD slots.
 
-| Proposed capability | Initial supported-node gate | What changes |
+Use the learning-engine proposal's node ladder as a starting point, with separate construction/logistics prerequisites. The numbers below are balancing hypotheses, not installed research costs.
+
+| Proposed capability | Minimum powered minds while operating | What changes |
 | --- | ---: | --- |
 | Observatory | 1 | Record flows, waiting and evidence coverage |
 | Applied analysis | 2 | Ask a specialist for checked evidence and next tests |
@@ -123,7 +125,15 @@ Use the learning-engine proposal's supported-node ladder as a starting point, wi
 | Expedition engineering | 8 | Manufacture and execute a tested seed manifest |
 | Cooperative intelligence | 16 committed across members | Compare shared designs, manage regional experiments and verify lineage |
 
-Require active spare mind for expensive planning, while ordinary execution uses the actual machines' and robots' supervision costs. Avoid charging for both an imaginary planner crew and the same real robots. A support outage interrupts new analysis; it does not erase learned plans. Basic diagnosis and recovery remain accessible early.
+A node threshold and a workload allocation are different requirements. Four qualifying nodes may support colony planning, but an analysis job still needs its declared spare mind slots; machines and robots keep their actual supervision costs. Specify both in the catalog and HUD. Shared federation support must name the committed nodes and reachable network; a disconnected neighbor's minds cannot silently count. A node can satisfy nested capability thresholds, while allocated workload slots cannot be spent twice.
+
+**Mind goes dark; coordination stops.** Losing the required support suspends every dependent benefit, including work already underway. Robots may stop underground, elevators may remain occupied and an advanced convoy may block a line. Do not silently finish a trip or fall back to basic tunnel dispatch when that would bypass the lost coordination. Preserve exact positions, cargo, occupants, claims on space, built geometry and learned plans. Restoring support resumes from the recorded state after validating route clearance. An outage never deletes robots or makes a physically wider tunnel shrink.
+
+Show the causal chain: `Coordination offline — convoy control needs 4 powered minds; 3 available. Two robots stopped underground; line occupied.` Every new level needs an explicit list of benefits that stop, the affected service area, and its restart behavior. Store this support state in authoritative simulation data and expose it to the API and Guide. An unsupported state should be reproducible from the ledger, not guessed from an animation.
+
+This creates a real resilience game: independent power circuits, reserve cooling, spare mind capacity, fault isolation and prioritized restoration. An emergency extraction or local controller can become a separately researched, physically installed recovery capability with its own power, crew and mind costs; it is not a free automatic escape. Keep the information needed to diagnose the outage visible even when the advanced observatory is offline. Choose startup and rescue provisions so recovery can be earned, while treating actual circular scheduler bugs as defects.
+
+These continuous research dependencies are proposed for the next systems. Existing live upgrades have not acquired them through this document.
 
 ## 11. Let the finale be visible causality
 
