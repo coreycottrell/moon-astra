@@ -1,9 +1,11 @@
 # MOON — Foundry
 
-- **Current development directory:** `/home/corey/projects/moon-depot-lifts`
-- **Branch:** `development/depot-lifts`
+- **This research directory:** `/home/corey/projects/moon-learning-engine`
+- **Branch:** `research/learning-engine`
+- **Experiment:** [learning engine and MiniMax trial](experiments/learning-engine/README.md), read-only and not deployed. [Canonical design proposal](../moon-civilization/ideas/learning-engine.md).
+- **Current completed game source:** `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`
 - **Preserved local preview:** `/home/corey/projects/moon-foundry`, branch `development/physical-industry`
-- **Fork base:** `development/traffic-tunnels` commit `37e0489`
+- **Research fork base:** `development/depot-lifts` operator commit `fd1b370` (deployed runtime `aa91824`)
 - **Ruleset:** `moon-foundry-1` · world schema 3 · economy 3
 
 A separate playable development world where robot crews deliver materials, assemble machines, maintain the colony, and manufacture more workers. The original Neighbors game remains at `/home/corey/projects/moon-civilization` on ports **4175/4176**.
