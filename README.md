@@ -1,8 +1,10 @@
 # MOON — Foundry
 
-- **This research directory:** `/home/corey/projects/moon-learning-engine`
-- **Branch:** `research/learning-engine`
-- **Experiment:** [learning engine and MiniMax trial](experiments/learning-engine/README.md), read-only and not deployed. [Canonical design proposal](../moon-civilization/ideas/learning-engine.md).
+- **Active learning-engine directory:** `/home/corey/projects/moon-learning-engine`
+- **Branch:** `development/mind-learning-engine`
+- **Completed engine:** [implementation and usage](docs/MIND-ENGINE.md); [live report, lab and download](https://ai-civ.com/moon-mind-learning-engine/). Standalone v1 is complete; live colony research/action integration remains proposed.
+- **Project cold start:** `/home/corey/projects/moon-astra/README.md`, `ops.md`, `MISSION.md`, and `DEVLOG.md`.
+- **Historical prototype trial:** [initial learning experiment](experiments/learning-engine/README.md). [Canonical design proposal](../moon-civilization/ideas/learning-engine.md).
 - **Current completed game source:** `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`
 - **Preserved local preview:** `/home/corey/projects/moon-foundry`, branch `development/physical-industry`
 - **Research fork base:** `development/depot-lifts` operator commit `fd1b370` (deployed runtime `aa91824`)

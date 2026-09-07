@@ -2,7 +2,7 @@
 
 ## Active handoff — 2026-09-07
 
-Read [ACTIVE-HANDOFF.md](ACTIVE-HANDOFF.md) first after compaction. Current work: finish the standalone learning engine and publish `/moon-mind-learning-engine/`, preserving the live game. MiniMax-M3 only. Use the in-game Dev board for meaningful player-facing changes and testing milestones; do not describe planned game integrations as deployed. ACG leads GPU forensics; avoid hardware rendering tests while the workstation is unstable.
+Read [ACTIVE-HANDOFF.md](ACTIVE-HANDOFF.md) first after compaction. Standalone engine v1 and `/moon-mind-learning-engine/` are published and verified. Project-wide cold-start docs are in `/home/corey/projects/moon-astra/`. MiniMax-M3 only. Use the in-game Dev board for meaningful player-facing changes and testing milestones; do not describe planned game integrations as deployed. ACG leads GPU forensics; avoid hardware rendering tests while the workstation is unstable.
 
 ## 2026-09-06 — rover driving and collaborative play release
 
@@ -160,3 +160,11 @@ Corey's GPU request temporarily took priority. Confirmed Chrome-associated AMD f
 ## 2026-09-07 — Moon Mind standalone v1 ready for publication
 
 M3-only engine, SQLite jobs/leases/capacity, exact typed evidence, deterministic gym and persisted measured memory are implemented.16 engine checks and CPU-only report interaction/mobile QA pass. Final M3 trial4/4 accepted,28 exact claims; prior failures retained. Extracted standalone ZIP passes tests and CLI demonstration. Public report source docs/moon-mind-learning-engine; new site route isolated in aiciv-site-mind-engine. Board testing post61260 verified. No live game integration/economy changes. Publishing after a verified Expansion backup; final receipts follow in ACTIVE-HANDOFF.md.
+
+## 2026-09-07 16:01 UTC — Moon Mind published and cold-start docs completed
+
+[Report](https://ai-civ.com/moon-mind-learning-engine/) is live. Site04425b0; Netlify6a9edf1ebeeece22fae39a22. All9 report files match;52 existing checked files remain byte-identical; both game health checks and software-only hosted browser checks pass. Engine16 checks; final M3 trial4/4 accepted,28 exact claims. Player Dev posts61260/62051 verified. Existing runtimeaa91824 and saves preserved.
+
+Project-wide cold-context entrypoints are now `/home/corey/projects/moon-astra/{README.md,ops.md,MISSION.md,DEVLOG.md}`; original dev-ops is explicitly historical. Engine README/ops/mission and ACTIVE-HANDOFF are synchronized. Original local README edits and untracked proposal assets are preserved.
+
+Expansion archive: /media/corey/Expansion/backups/moon-foundry/moon-mind-engine-20260907T155110Z.zip; SHA256 c50759ec63db14012a2405c38ca0dc4ceace2709f1bd5410ab8d20f61875ed33. Includes full previous website, report, standalone engine, incremental Git and recovery instructions. Final operator receipts live at /home/corey/moon-deployments/mind-engine-20260907/completed.json. No remaining feature/deployment work for standalone v1; in-game observatory/research/action integration remains the next proposed phase.

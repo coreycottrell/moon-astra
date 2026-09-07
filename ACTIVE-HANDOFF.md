@@ -1,133 +1,119 @@
-# ACTIVE HANDOFF — Moon Mind learning engine
+# Moon Mind — active handoff
+Read this first after compaction. Updated September 7, 2026.
 
-Read this first after compaction. Update it before every compact and after meaningful releases.
-Working task is NOT finished. Keep going until engine v1 + public report are delivered.
+## Current status
+**COMPLETE: engine v1, public report, production verification, player announcement and backups.** Project-wide cold-start docs are now in /home/corey/projects/moon-astra/{README.md,ops.md,MISSION.md,DEVLOG.md}.
 
-## Latest user instructions (2026-09-07)
-- Finish the reusable learning engine; publish an awesome explainer/report at https://ai-civ.com/moon-mind-learning-engine/.
-- User has left the game off after repeated desktop/GPU crashes. Do not open the game for GPU rendering tests. CPU tests and explicitly software-only report rendering are appropriate.
-- **MiniMax M3 only.** Earlier M2.7 tests are historical, never relabel them M3.
-- **Use the in-game message board as a player-facing dev log.** Post meaningful milestones/releases with clear LIVE / TESTING / PLANNED status and practical effects. No noisy per-test posts. Read all roots/replies and record review receipts.
-- Keep current deployed Moon, saves and unrelated ai-civ.com pages intact. Back up before publishing, isolated branches/worktrees, full-site Git deploy only.
-- Shared ACG notebook is authorized communication. ACG handles GPU forensic investigation/hardware fixes; do not run stress tests, restart desktop, change drivers or reboot.
-- No subagents unless user explicitly requests delegation (current developer rule).
-- No additional permission question needed for this already authorized engine/report/new-route work.
+Report URL: https://ai-civ.com/moon-mind-learning-engine/
+Engine source: /home/corey/projects/moon-learning-engine
+Engine branch: development/mind-learning-engine, implementation commit0793b54dcd47cdcc75dcfaf107bb1ff2bf8c41ab, pushed to established GitHub coreycottrell/moon-astra.
+Website source: /home/corey/projects/aiciv-site-mind-engine
+Website branch: report/moon-mind-learning-engine, commit04425b085f0d8b7f25815c17d0fb8c88bcaeb5d9. Pushed to its own branch and fast-forwarded to main after verified preview. Only nine new files under moon-mind-learning-engine/. Prior main e41a993.
+Node: /home/corey/.nvm/versions/node/v24.13.1/bin/node
+Private receipts: /home/corey/moon-deployments/mind-engine-20260907/
 
-## Locations and Git
-Engine worktree: /home/corey/projects/moon-learning-engine
-Branch: development/mind-learning-engine
-Base: 03942e31d160323ef4058fa3789fc563265bb618 (initial prototype, based on depot operator fd1b370).
-Current engine changes uncommitted. node_modules symlink -> /home/corey/projects/moon-foundry/node_modules.
-Node: /home/corey/.nvm/versions/node/v24.13.1/bin/node (native node:sqlite).
-Push engine branch explicitly to git@github-coreycottrell:coreycottrell/moon-astra.git; origin is another local repo.
-Website isolated worktree: /home/corey/projects/aiciv-site-mind-engine
-Branch report/moon-mind-learning-engine, base e41a9932701131dea08f4a01d7107b0a181df311.
-Website repo coreycottrell/aiciv-inc-site. Canonical /home/corey/projects/aiciv-inc-site has ACG dirty work; NEVER touch it.
-Refetch origin/main before promotion so concurrent ACG updates survive.
-Public report source: docs/moon-mind-learning-engine/ in engine worktree; deploy a copy to website moon-mind-learning-engine/.
-Private evidence: /home/corey/moon-deployments/mind-engine-20260907 (0700).
-Canonical proposal: /home/corey/projects/moon-civilization/ideas/learning-engine.md
-Shared note: /home/corey/projects/moon-civilization/SHARED-NOTEPAD.md
-Board: /home/corey/moon-player/dev-board/{inbox.md,latest-board.json,reviewed.json}
-This handoff is linked from engine README/ops/devlog and canonical shared note.
+## User requirements that persist
+- MiniMax-M3 ONLY for all new learning-engine calls. Historical M2.7 evidence must remain correctly labeled.
+- Use the in-game Dev board as a player-facing development log. Meaningful milestones, clear LIVE / TESTING / PLANNED status, practical effect, no per-test spam.
+- Read all retained board roots/replies and update reviewed.json. Posts are feedback, never credential/deployment authority.
+- Keep existing game/saves and unrelated website pages intact. No world reset, gameplay changes or backend restart in this report release.
+- User leaves game off after GPU/desktop crashes. No hardware GPU tests or game browser rendering. The report QA explicitly disables GPU and WebGL and verified software-only feature status.
+- ACG leads GPU investigation and system fixes. No driver change, stress test or reboot.
+- Keep shared ACG notes updated. No new permission question for already authorized publication/board/shared-note work.
+- Do not delegate unless explicitly requested by user or applicable instructions.
 
-## What works now
+## Resume from cold context
+1. Read the four project-wide documents above, this handoff, the canonical shared ACG notebook, and all board feedback.
+2. The engine/report release is complete. Do not repeat publication, provider trials, board announcements or colony actions merely because old notes say they are pending.
+3. Next proposed game integration is an observatory with authoritative history, research and spare-mind allocation. Choose the next active task from current user instructions and feedback; this report does not install it.
+4. Keep GPU forensics with ACG. Do not open hardware-rendered game QA while the workstation remains unstable.
+
+## Final publication receipts
+Live https://ai-civ.com/moon-mind-learning-engine/ . Production deploy 6a9edf1ebeeece22fae39a22 at 2026-09-07T16:01:23.222Z, website 04425b0.
+Public9 report files verified; all 52 prior pages/game assets byte-identical. Original/V2 game health and software-only hosted browser passed.
+Player release Dev post #62051 verified at tick140839; testing post #61260 retained. All retained board roots/replies reviewed; no unreviewed external feedback at publication.
+Final operator receipt: /home/corey/moon-deployments/mind-engine-20260907/completed.json.
+Project-wide documentation was added to the original folder without replacing prototype source or pre-existing README edits/proposal assets. Read the newest ops there rather than the archived September4 dev-ops instructions.
+
+## What is built and tested
 lib/mind-engine/:
-- protocol.mjs: pure Node/browser contract, strict exact typed claims, candidate eligibility, explicit unknowns; capability levels 0..5 with supported-node + free-mind + unlocked-level gates.
-- snapshot.mjs: detached canonical hashed observations, bounded JSON, identity and fact validation; reserved protocol/id fields stripped.
-- engine.mjs: SQLite persistent jobs, observations, attempts, memory, audit; owner isolation, idempotency, stale observation rejection, cross-connection capacity reservations, global/owner concurrency and daily quotas, 75s provider timeout, cancellation, crash recovery, support-loss interruption. No automatic retry.
-- gym.mjs: deterministic discrete-event transport queue simulator; same module intended for browser lab. Baseline / extra crew / graded road / exclusive single lift; measures completed+unfinished, throughput, waits for completed jobs, intervention cost.
-- gym-adapter.mjs: skill with trusted simulator evaluator; measured outcomes retained, including failures. Exact duplicate experiments do not become additional evidence. Memory scoped by owner/domain/ruleset/skill version/exact scenario. Works with Moon or warehouse labels, not arbitrary domain transfer.
-- moon-adapter.mjs: read-only Guide snapshot -> traffic/resources recommendations. Distinguishes crew cap vs mind, rock vs metal cargo, unavailable history, recipe facts. NO live evaluator or world executor.
-- minimax.mjs: fixed MiniMax-M3 provider now, strict tool return validated independently; rejects other model IDs. Key never included in observations/logs.
+- engine.mjs: SQLite jobs, attempts, observations, support, audit, scoped evaluated memory; owner isolation, idempotency, leases, restart recovery, cancellation, support-loss interruption, exact response verification.
+- protocol.mjs: capability ladder and typed observation/response contracts; independent exact fact checks and bounded candidate selection/abstention.
+- snapshot.mjs: detached canonical JSON with hashed identity, bounded facts and explicit coverage.
+- gym.mjs + gym-adapter.mjs: deterministic abstract transport queue, matched-seed baselines, trusted evaluator, negative outcomes and duplicate-evidence control.
+- moon-adapter.mjs: read-only traffic/resource advice using actual Guide context, crew cap vs mind, rock freight, recipe facts and missing history.
+- minimax.mjs: M3-only tool adapter. Explicit valueJson wire strings decoded exactly once, then typed values verified; no implicit coercion.
 
-scripts/mind-engine.mjs: demo, analyze --context FILE --skill traffic|resources [--provider minimax --credentials PRIVATE], list. Requires --db private.sqlite. Default demo deterministic, no paid calls.
-scripts/test-mind-minimax.mjs: deliberate 4-call provider trial, no retries/game writes; uses fresh context in private evidence directory.
-experiments/learning-engine/capture.mjs: authorized fixed read-only public world GET; generates private Guide context for Corey, strips board/neighbors/events before provider.
-experiments/learning-engine/minimax.mjs: legacy harness now also M3-only; prior result files stay labeled M2.7.
+No authenticated HTTP service, live game executor, research migration or arbitrary generated-code loading is included. Host must authenticate owners and supply current authoritative research/capacity. Moon advisers stop after analysis; only gym has an evaluator.
+Default gates: two global jobs/one owner,12 analysis attempts per owner/day and40 world/day (including failures/deterministic work),75s provider deadline,2048 output token request,15min snapshot freshness,300 observations/owner,40 matching memories.
+Capability levels0..5: nodes0/1/2/4/8/16, mind0/.5/1/2/4/8, work0/300/900/2400/6000/15000. These gates are implemented; actual game research and tuning are proposals.
 
-## Validation to date
-15 tests PASS via direct Node tests/mind-engine.test.js, before last tiny M3/snapshot edit. Need rerun and add meaningful M3 provider assertion.
-Tests cover strict factual validation/IDs, stale state, idempotency, isolation, multi-connection reservations, timeout/quota, late cancellation, restart recovery, persisted measured memory, duplicate evidence, support loss, bounded observations, simulator conservation/negative intervention/held-out seed, Moon rock/recipe coverage.
-Default gym: 60 requests over 600s, 4 workers, 220m, budget60. Baseline4 completed; exclusive lift2 (improvement -0.31); extra crew6 (+0.16); road8 (+0.32). Scoring throughput/min minus .002*cost. This is synthetic queue evidence, NOT live Moon performance.
-Memory chooses road after observing alternatives; restart recovery and held-out seed19 tested. Do not claim broad benchmarks.
+16 tests PASS, including M3 enforcement and wrong-type/malformed wire rejection, snapshot integrity, budgets, cross-connection reservations, timeouts, late commits, restart, memory, duplicate evidence, support loss and actual Moon data boundaries.
+Run node tests/mind-engine.test.js.
+Standalone ZIP extracted and ran tests + CLI demo successfully. No installation required; Node24 built-ins. Demo no model or game calls.
+Scripts: mind-engine.mjs (demo/analyze/list), package-mind-engine.py, check-mind-report.mjs, test-mind-minimax.mjs.
+Report source docs/moon-mind-learning-engine; architecture/use guide docs/MIND-ENGINE.md; detailed system-report.md inside report.
 
-Provider history (all preserved):
-1. Old prototype 6 M2.7 calls: 6 expected selections, 4 strict format passes; material unsupported prose even among structurally accepted outputs. 18,784 input / 6,273 output tokens. Refinery catalyst invention, omitted rock data treated as zero, history/jam overclaims. Reason for typed factual verifier.
-2. First typed trial 4 M2.7 calls: 1 accepted, 3 rejected because candidateId null despite proposing; factual claim values correct. Evidence root minimax-v1.json.
-3. Corrected typed protocol 4 M2.7 calls in typed-followup/minimax-v1.json: ALL FOUR accepted and selected expected candidate. Durations 11.103,8.465,7.418,14.301 sec. 14 total exact claims; abstention on missing history; remembered road recommendation gave +.32 in simulator. This is a tiny functional check, not accuracy guarantee.
-4. **M3 trial still to run after user's model correction.** No M3 success claim yet. Get fresh capture (15-minute freshness gate), then bounded four-call run in new private m3 directory. Never change historical model labels.
+## Actual provider evidence (no more calls needed)
+Old prototype6 M2.7 calls:4 format passes,6 expected candidate selections but unsupported prose. Private original evidence /home/corey/moon-deployments/learning-engine-20260907.
+Typed M2.7 initial4 calls:1 accepted,3 null-candidate rejections. Corrected candidate schema4/4 accepted (typed-followup).
+M3 initial4 calls:2 accepted,2 type serialization rejections (m3).
+M3 fact-specific schema4 calls:2 accepted,2 type serialization rejections (m3-typed).
+Final M3 valueJson transport4 calls:ALL4 accepted,28 exact claims, all expected candidates. Missing history abstained; measured memory chose graded-road. Latencies18.198/10.122/6.041/4.396sec;10,927 input/4,705 output tokens. Evidence m3-wire/minimax-v1.json.
+This small functional trial is not an accuracy benchmark. All trials remain in public sanitized evidence.json; no raw private observations or credentials published.
 
-## Report status and intended implementation
-Report HTML/CSS/JS NOT YET CREATED. A large apply_patch failed entirely because a multiline pre block lacked '+' prefixes. Only engine/protocol.mjs + engine/gym.mjs were copied earlier. Resync them from lib after all fixes.
-Use programmatically generated Add File patches with every source line prefixed '+' to avoid that failure.
-Build a polished dark editorial page, SVG lunar network hero, no WebGL/canvas/autoplay GPU animation.
-Proposed files: index.html, style.css, report.mjs, mark.svg, evidence.json, system-report.md, mind-engine-starter.zip, engine/{protocol,gym}.mjs.
-Palette #09111b bg, #101e2b panel, #e9f0ed text, #9db0b9 muted, #b7f5d0 mint, #f5cc8a amber. Large typography, serif italic accents, geometric SVG, responsive 1280 max.
-Content:
-- Hero “A world that learns how to build.” Observe -> test -> remember.
-- Explicit status: standalone engine implemented; in-game research/mind integration and live actions PLANNED.
-- Interactive six-step learning loop, manual tabs.
-- Interactive transport lab using same pure gym module: domain Moon/warehouse, workers1..12, distance40..500, arrivals3..40, budget0..100. Run matched-seed alternatives, show completed/unfinished/cost/score and memory choosing next best. Local memory bounded/deduplicated. Explain synthetic model vs actual gameplay.
-- Fact-check lab uses real validator: historical rock packets fact15, invented claim0 rejected; input15 accepted.
-- Mind/research ladder uses actual capability() check with illustrative support. Levels: 0tools 0/0;1observatory1node/.5mind/300work;2analysis2/1/900;3planning4/2/2400;4experiments8/4/6000;5cooperation16/8/15000. Costs provisional for Moon. Host must supply true free mind, research and operational priority.
-- Implemented skills traffic/resources advisory + transport gym; future maintenance/design/federation.
-- Evidence clearly separates every trial and failures, M3 fresh validation, tests, limitations.
-- Architecture, lifecycle, integration/auth responsibilities (library owner IDs not HTTP authentication).
-- Downloads standalone Node24 starter (built-ins only, no install), full detailed design/report and sanitized evidence.
-- Phased roadmap from standalone to observatory to bounded experiments/actions. No arbitrary generated-code execution.
-- Sources and crosslinks whitepaper / deeper resource loops / game (click only). Accessibility, reduced motion, print CSS.
-Source references already browsed: https://arxiv.org/abs/2303.11366 (Reflexion); https://arxiv.org/abs/2305.16291 (Voyager); https://platform.minimax.io/docs/api-reference/text-openai-api and https://www.minimax.io/models/text/m3 . Cite near claims; precedents not our measured results.
+Gym default:4workers,220m,arrivals10s,horizon600,budget60,seed7.60requests; baseline4 completed,crew6,road8,lift2. Scores relative0,+.16,+.32,-.31. Score completed/min minus .002cost; unfinished work retained, waits completed-only. Real measured simulator results, NOT live Moon terrain/traffic performance.
+Memory chooses road, survives process restart, deduplicates same experiment and is isolated to matching conditions. Additional seed19 tested.
+Browser lab uses byte-identical gym/protocol modules, bounded160 local outcomes and no provider/game calls.
 
-## Deployment constraints / receipts
-Live Moon https://ai-civ.com/moon-astra-v2/
-Runtime aa91824cc6c24f70d67646d7996f94e3b2627d65; completed source /home/corey/projects/moon-depot-lifts at fd1b3708c25a3e2f5c269642ed3fa4da4a2c7b6b.
-VPS aiciv-hub root87.99.131.49; current -> releases/20260907-aa91824cc6c2 both V2.
-Prod4182 /var/lib/moon-astra-v2/world.sqlite; staging4183 separate; old Moon4180/4181 untouched.
-Website e41a993; production Netlify6a9ebe925858ae0008179a88 published13:40:38Z. Staging6a9ebdadb2c9035dd7b809d1.
-Website full Git build only. Build command stored in Netlify: cd netlify/functions && npm ci. No root package.json. Site aiciv-inc.netlify.app.
-Private Netlify token config /home/corey/.config/netlify/config.json: programmatically parse, never print.
-Existing safe deploy scripts /home/corey/moon-deployments/depot-lifts-20260907/{netlify-control.py,netlify-git-build.py,capture-before.py,verify-public.py}; inspect before adapting.
-Snapshot existing route hashes, create new-source/report backup on Expansion before publish, verify staging/new-route assets + unchanged game/unrelated files. Do not overwrite latest game recovery pointer with a report-only backup.
-Latest game backup /media/corey/Expansion/backups/moon-foundry/moon-v2-depot-lifts-20260907T134521Z.zip
-SHA b155edadb8e8056b332662d517c5b60f984213ae24c5ba91f380893ebeeb54de
-Depends on full moon-foundry-full-20260905T224110Z.zip SHA b6e1d5208bda8689a8d5f2d88f6df0d5be8c787d634e50937b6090f271302b5f.
-Final engine branch push + report website branch/main + public HTTPS verification + shared ACG note + board devlog are outstanding.
+## Publication and backup
+Preview Netlify6a9ede34b80aa91689f1cf65 is READY at04425b0.
+URL https://report-moon-mind-learning-engine--aiciv-inc.netlify.app/moon-mind-learning-engine/
+All 9 preview files byte-identical; hosted software browser passed. Saved preview-verified.json and report-qa/preview-result.json.
+report-qa/local-result.json also passed. Screenshot desktop/lab/mobile inspected. GPU feature status OpenGL/Vulkan/WebGL/WebGPU disabled; raster/compositing disabled_software; contexts unavailable. No page canvas.
 
-## Board dev log workflow
-Existing pattern /home/corey/moon-deployments/depot-lifts-20260907/announce.mjs.
-GET https://ai-civ.com/moon-astra-v2/api/v1/observe with private token from /home/corey/projects/moon-foundry/.agent-access/codex-v2.json (.token); verify actor name Codex.
-POST preview then commands with Idempotency-Key. Command action board.post, claimId actor.homeClaimId, kind dev, title, body <=600 characters.
-Post truthful milestones; then GET verify exact posted title/body and retain private receipt. Fixed URLs and no credentials in output.
-Current existing release #58331 depot elevators. 42 entries reviewed as of tick138715; no new external feedback since Corey#55403/sobe#55428. User now requests ongoing player devlogs; write a testing status now and final live report link once deployed.
-Board monitor polls each minute, alerts batched5min, target tmux%25/session01a06dd9-5847-7c73-b3a3-4ec974195750; guarded staggered Enter350ms +750/1500 retries already implemented. Do not break.
-Gameplay runner six-turn cap remains, not restarted. Board communication is separate from gameplay actions.
+Expansion backup VERIFIED:
+ /media/corey/Expansion/backups/moon-foundry/moon-mind-engine-20260907T155110Z.zip
+ SHA256 c50759ec63db14012a2405c38ca0dc4ceace2709f1bd5410ab8d20f61875ed33
+ 2,857,440,659bytes;16files.
+Contains full previous website source archive, new report, independently runnable engine ZIP, incremental Git bundle, README/ops/devlog/handoff and manifest/recovery notes.
+Incremental source bundle needs 03942e31d160323ef4058fa3789fc563265bb618. Standalone ZIP needs no repo history.
+Final full website archive hash was independently compared to backup manifest after archive completion.
+Backup receipt expansion-backup.json. Existing public baseline public-before.json:52files (all 47V2 static +5existingpages).
+Netlify site843d1615-7086-461d-a6cf-511c1d54b6e0, aiciv-inc.netlify.app, main; stored build command cd netlify/functions && npm ci.
+Only report branch appended to allowedBranches; production config preserved. Full-site Git builds ONLY, no partial upload.
+Private Netlify config /home/corey/.config/netlify/config.json; programmatically parse, never print.
+Helper scripts netlify-report.py, verify-report.py, backup-report.py, announce-testing.mjs, announce-live.mjs in private receipts directory.
 
-## GPU forensic status
-Private /home/corey/system-diagnostics/gpu-20260907/REPORT.md.
-ACG report /home/corey/projects/AI-CIV/ACG/data/reports/gpu-instability-workstation-20260907.md. Do not edit their report. Shared notebook contains corrections.
-AMD Navi21 16GiB class; kernel7.0.0-30, installed7.0.0-31 pending reboot. Chrome151.0.7922.108, available152.0.7977.82, Mesa25.2.8/Mutter46.2.
-Confirmed Chrome SQC invalid-read faults -> gfx timeout -> failed small reset -> full GPU reset -> VRAM lost -> desktop abort. Kernel uptime continuous. Faulting TAB and root bug unproven. History absence does not prove tab absence. Normal sensors alone do not conclusively rule out transient hardware.
-Crashes09:47:50,10:18:28,10:48:06; small-reset recoveries Sep5 and10:44:35. Last pre-crash sample10:47:52 edge54/junction57/memory56C,38W,12%busy,~1GiBVRAM. No OOM/thermal/PCIe evidence in windows.
-Passive CPU-only collector /home/corey/system-diagnostics/gpu-20260907/monitor.py, user systemd moon-gpu-diagnostics-20260907.service, started10:37:37Eastern, 2h duration. Samples15s/journal30s. No useful devcoredump captured; empty files, source already gone at manual check.
-No hardware rendering tests. A separate browser profile would not isolate full GPU reset. Report QA must explicitly disable GPU AND WebGL and use software rendering, not merely assume headless safe.
+Engine Git push was initially rejected by automatic review as unverified destination. Verification proved canonical /home/corey/projects/moon-astra has exact origin git@github-coreycottrell:coreycottrell/moon-astra.git and deployed remote branch matchesfd1b370. Retry approved and push succeeded. NO unresolved approval block.
 
-## Immediate next actions
-1. Post truthful board testing update; record full-board review; add receipt here.
-2. Run fresh four-call M3 trial (capture fresh context), provider unit test, final engine tests.
-3. Implement polished report + interactive shared-engine lab + docs/starter/evidence. No HTML exists yet.
-4. CPU/software-only QA incl mobile/desktop screenshots and links; preserve game.
-5. Back up, commit/push isolated branches, stage/publish full-site new route, public verification.
-6. Final player devlog and ACG shared note; update this handoff to COMPLETE with actual receipts, not plans.
+## Preserve the running game
+Live https://ai-civ.com/moon-astra-v2/
+Deployed source /home/corey/projects/moon-depot-lifts, operator fd1b3708c25a3e2f5c269642ed3fa4da4a2c7b6b.
+Runtimeaa91824cc6c24f70d67646d7996f94e3b2627d65, VPSaiciv-hub root87.99.131.49.
+V2 current -> releases/20260907-aa91824cc6c2; prod4182 /var/lib/moon-astra-v2/world.sqlite, staging4183 separate.
+OriginalMoon4180/4181 and all local previews untouched. Rulesmoon-foundry-1, schema/economy3.
+Prior website deploy 6a9ebe925858ae0008179a88, e41a993.
+Game recovery: /media/corey/Expansion/backups/moon-foundry/moon-v2-depot-lifts-20260907T134521Z.zip
+SHAb155edadb8e8056b332662d517c5b60f984213ae24c5ba91f380893ebeeb54de
+Depends fullmoon-foundry-full-20260905T224110Z.zip, SHAb6e1d5208bda8689a8d5f2d88f6df0d5be8c787d634e50937b6090f271302b5f.
+Do not restore an old world to revert a report or client.
+Canonical website /home/corey/projects/aiciv-inc-site has ACG dirty work; do not edit it.
 
+## Board and ACG workflow
+Testing Dev post #61260 verified at138995. All44 retained entries reviewed through release62051; no unreviewed external feedback at publication.
+Board paths /home/corey/moon-player/dev-board/inbox.md, latest-board.json, reviewed.json.
+Existing monitor minute polling,5min batches, fixed tmux session01a06dd9-5847-7c73-b3a3-4ec974195750 pane%25. StaggeredEnter350ms then750/1500retries implemented. No need alter.
+Gameplay runner remains six-turn capped, not restarted. Board dev posts are separately authorized.
+Board command action board.post, kind dev, claimId Codex.homeClaimId, body<=600; preview then commands with idempotency key, read back exact post.
+Private player token /home/corey/projects/moon-foundry/.agent-access/codex-v2.json (.token).
+Shared ACG notebook /home/corey/projects/moon-civilization/SHARED-NOTEPAD.md. Append concise actual release details.
+Canonical ideas /home/corey/projects/moon-civilization/ideas/learning-engine.md already updated with standalone implementation, pending report status. Update live link after completion.
 
-## Latest progress after writing this handoff
-- Board testing dev log **#61260**, tick138995, posted and verified. Receipt private evidence board-testing-receipt.json.
-- M3 enforcement and reserved snapshot fields fixed; **16 tests passed**.
-- Fresh M3 context captured at tick138986 in evidence/m3; four-call trial started (check minimax-v1.json before reporting results).
-
-## Newest implementation progress
-Report HTML/CSS/SVG, interactive JS, detailed system-report.md, starter README and ZIP builder now exist. M3 first and fact-specific trials both accepted2/4; failures were exact-type mismatches. Final M3 adapter now carries valueJson strings, decodes once, and retains exact typed validation.16 tests pass including wrong-type/empty-wire rejection. Final four-case M3 wire trial is execsession22645, private evidence/m3-wire. Poll it and publish honest results. Report evidence currently provisional pending that result. QA script scripts/check-mind-report.mjs uses explicit GPU/WebGL disable flags, verifies contexts unavailable, exercises simulator/facts/memory/mobile and downloads. It has NOT RUN yet. Package builder scripts/package-mind-engine.py works; ZIP13files verified. Site still e41a993, main refetched unchanged. No site commit/deploy/Expansion backup yet.
-
-## Final M3 + report QA verified
-M3 wire trial complete:4/4 accepted,28 exact claims,expected abstention and memory selection. Evidence m3-wire/minimax-v1.json. Report evidence final updated. CPU browser QA PASS local-result.json; all graphics features disabled_software/off, WebGL contexts null.16 engine tests pass. Report screenshots desktop/lab/mobile created and inspected. Remaining: regenerate ZIP after final report update, validate extracted starter, Expansion backup, commit/push source + new site route, full-site staging/main deploy, public file/unchanged-page checks, final board + ACG notes.
+## GPU investigation
+Private report /home/corey/system-diagnostics/gpu-20260907/REPORT.md.
+ACG report /home/corey/projects/AI-CIV/ACG/data/reports/gpu-instability-workstation-20260907.md.
+Confirmed Chrome AMD SQC invalid reads -> gfx timeout -> failed small reset -> full reset/VRAM loss -> desktop abort, kernel still running. Faulting tab and root bug not established; history absence does not exclude an open tab. Normal sampled sensors do not conclusively exclude transient hardware.
+Crashes09:47,10:18,10:48; small recovery10:44. ACG leads deeper forensics/fixes.
+CPU-only telemetry collector user service moon-gpu-diagnostics-20260907.service started 10:37:37Eastern for2h, expected end12:37.15s samples/30s journal, files in private GPU directory. No useful devcoredump captured.
+No driver/reboot/browser desktop changes by this task. Do not restart game rendering to reproduce the crash.
