@@ -16,7 +16,7 @@ A separate playable development world where robot crews deliver materials, assem
 - **Published whitepaper:** https://ai-civ.com/moon-astra-whitepaper/
 - **Current public Neighbors game:** https://ai-civ.com/moon-astra/
 
-Current deployment, verification and recovery: [traffic and tunnel release](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md). Earlier releases: [build orders](deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md), [guide/collaboration](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
+Current deployment, verification and recovery: [depot elevator release](deploy/moon-astra-v2/DEPOT-LIFTS-DEPLOYED-2026-09-07.md). Earlier releases: [traffic and tunnels](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md), [build orders](deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md), [guide/collaboration](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
 
 Developer messages: [board-monitor workflow](docs/foundry/DEV-BOARD-WORKFLOW.md) · private inbox `/home/corey/moon-player/dev-board/inbox.md` · board thread **#23009**.
 

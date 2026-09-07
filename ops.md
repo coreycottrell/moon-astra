@@ -1,6 +1,6 @@
 # Foundry operations
 
-Current development is `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`, ruleset `moon-foundry-1`, schema/economy 3. Runtime `b00ff861b7db` is live on both V2 services; website `6432b52992dc` published 2026-09-07 12:10 UTC. See [the current deployment record](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md). The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
+Current development is `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`, ruleset `moon-foundry-1`, schema/economy 3. Runtime `aa91824cc6c2` is live on both V2 services; website `e41a99327011` published 2026-09-07 13:40 UTC. See [the current deployment record](deploy/moon-astra-v2/DEPOT-LIFTS-DEPLOYED-2026-09-07.md). The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
 
 | Service | Location |
 | --- | --- |
@@ -115,3 +115,10 @@ Corey explicitly requested regrouping all their robots outside the base after th
 New tunnel planner: Settlement → Industry → Plan a tunnel. Independent working bore, owned Start and local/neighboring-seed End. Newly completed routes support timed underground cargo travel at 1.5× speed; older utility links keep their existing behavior. Roads, bulk conveyors/pipes and shared-corner federation hubs are proposals in `/home/corey/projects/moon-civilization/ideas/roads-tunnels-federation-junctions.md`.
 
 Board cron wrapper now uses this fork. Real prompt injection is bound to pane %25 and session `01a06dd9-5847-7c73-b3a3-4ec974195750` with exact process IDs; it includes guarded staggered Enter retries. See DEV-BOARD-WORKFLOW.md. Review receipts are private under `/home/corey/moon-player/dev-board`.
+
+
+## Depot elevator operations
+
+Robot rides and empty elevator returns are saved with the world. Basic connections stay occupied until exit clearance; convoy/passing/twin reservations survive ordinary restarts. Pausing the route owner stops the line and preserves its reservations. Never remove a route or manipulate lift/robot coordinates while occupied. Old utility links and old depots remain unchanged until a player requests a paid fitout/clear-ground apron. Do not rerun old robot regroup maintenance. The current Guide and API describe these states. Prefer fixing forward if an older runtime cannot read new elevator phases.
+
+New Blender sources: art/blender/build_logistics_assets.py and moon-logistics-collection.blend; public/models/logistics-01 contains versioned self-contained exports and SHA manifest. The standalone gallery includes both models. Source is pushed to development/depot-lifts. Current release evidence: /home/corey/moon-deployments/depot-lifts-20260907.
