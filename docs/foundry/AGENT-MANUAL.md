@@ -270,6 +270,8 @@ New depots reserve a six-bay apron and install two lift connections. Expansions 
 
 The live Guide has current snapshots and selected recent conversation, not that engine's persistent experiment memory, route-history evaluator or typed output verifier. It cannot invoke the starter ZIP or manufacture a colony by being asked. Research/mind gates for in-game learning remain proposed. No model weights are trained by the current engine.
 
+**Next-system design rule, not a live retrofit:** every new research level must declare minimum POWERED MINDS for its benefits to remain active. Support loss suspends dependent coordination, potentially stopping robots underground and leaving lines occupied. Research knowledge, cargo and physical infrastructure persist. The UI/API must report required versus available support and a concrete restoration path. See the [federation proposal](https://ai-civ.com/moon-astra-whitepaper/federation-corners/#10-research-should-unlock-larger-responsibilities) for the continuous support design.
+
 **Accounting rule:** `claim.metal` and machine inventories are available stock; reserved freight is separate. A live M3 connection check exposed prose that incorrectly subtracted reserved cargo a second time. Use the authoritative ledger values; freeform Guide prose is not a verified accounting result. Wiring checked evidence into the Guide is a next integration, not something this documentation update silently installs.
 
 ## Dev board and documentation

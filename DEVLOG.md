@@ -1,5 +1,9 @@
 # Moon development log
 
+## September 7 — documentation follow-up
+
+Current manual now separates live research from the next-system rule: all new research benefits continuously require minimum powered minds; unsupported coordination can strand robots underground. No runtime rule changes. Federation/resource/first-night and server-review proposals are in the whitepaper library.
+
 ## 2026-09-06 — rover driving and collaborative play release
 
 Active source: `/home/corey/projects/moon-rover-motion`, branch `development/rover-motion`. Preserve the old local Foundry preview at `/home/corey/projects/moon-foundry` and the original Neighbors game. User authorized isolated V2 deployment with backups and no save reset.
