@@ -59,8 +59,9 @@ export class RoverVisual{
     // Blender rover fronts export along +Z. Build the full slope-aware basis.
     this.matrix.makeBasis(this.right,this.up,this.forward);this.rotation.setFromRotationMatrix(this.matrix);
     this.group.quaternion.copy(this.rotation);this.group.position.copy(front).add(rear).add(left).add(right).multiplyScalar(.25).addScaledVector(this.up,.008);
+    if(pose.undergroundDepth)this.group.position.addScaledVector(this.up,pose.undergroundDepth);
     const draw={x:pose.x,y:pose.y,heading:this.heading,travel:this.travel};
-    if(gap||distance>2||distance===0)this.trackPose=null;
+    if(gap||distance>2||distance===0||pose.tunnelRide?.stage!=='approach'&&pose.tunnelRide)this.trackPose=null;
     else if(this.trackPose&&Math.hypot(draw.x-this.trackPose.x,draw.y-this.trackPose.y)>=.16){this.tracks.add(this.home,this.trackPose,draw,this.halfTrack,time/1000);this.trackPose=draw;}
     else if(!this.trackPose)this.trackPose=draw;
     this.previous=draw;
@@ -68,7 +69,7 @@ export class RoverVisual{
     if(asset){
       for(const [name,action] of Object.entries(asset.actions)){
         if(name==='Travel')continue;
-        action.paused=['paused','mind-limited'].includes(pose.status)||!(name==='Idle'||name==='Work'&&['building','servicing'].includes(pose.status)&&distance<.001);
+        action.paused=['paused','mind-limited','crew-limited'].includes(pose.status)||!(name==='Idle'||name==='Work'&&['building','servicing'].includes(pose.status)&&distance<.001);
       }
       if(asset.root.visible)asset.mixer.update(delta);
       for(const {node,rest,side} of this.wheels)node.quaternion.copy(rest).multiply(this.rotation.setFromAxisAngle(AXIS,side<0?this.roll.left:this.roll.right));

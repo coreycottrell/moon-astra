@@ -1,6 +1,8 @@
 import {BUILDINGS,ROBOTS,LIMITS,UNIT,machineCost} from './catalog.js';
 import {stock,addStock,countStock,claim,machine,emit,fail} from './state.js';
 import {localXY,lunarPosition,distance,moveRobot} from './navigation.js';
+import {distanceOnMoon} from '../geography.js';
+import {belowSurface,stepTunnel} from './corridors.js';
 
 export function endpoint(w,kind,id){if(kind==='machine')return machine(w,id);if(kind==='job')return w.jobs.find(j=>j.id===id);if(kind==='project')return w.projects.find(p=>p.id===id);return null;}
 export function incoming(w,kind,id,item){return w.freight.filter(f=>f.toKind===kind&&f.toId===id&&f.item===item).reduce((n,f)=>n+f.amount,0);}
@@ -28,15 +30,25 @@ export function port(w,r,target,slot=0){
   const key=(target.id??target.lat+':'+target.lon)+':'+slot;
   const obstacles=[...w.machines,...w.jobs,...w.projects].map(m=>({...localXY(home,m),radius:m.radius??BUILDINGS[m.type]?.radius??7}));
   const clear=point=>obstacles.every(o=>distance(o,point)>=o.radius+(r.radius||.8)+.12);
-  if(r.berth?.key===key&&clear(r.berth.position))return r.berth.position;
-  for(let n=0;n<16;n++){
-    const angle=(slot*2+n)*Math.PI/8,point={x:p.x+Math.cos(angle)*(radius+2.5),y:p.y+Math.sin(angle)*(radius+2.5)};
-    if(!clear(point))continue;
-    const reserved=w.robots.some(o=>o.id!==r.id&&o.berth&&distance(localXY(home,lunarPosition(claim(w,o.claimId).home,o.berth.position)),point)<(r.radius||.8)+(o.radius||.8)+.15);
-    if(reserved)continue;r.berth={key,position:point};return point;
-  }
-  // Keep a visible blocked assignment if the site has no accessible service face.
-  return {x:p.x+Math.cos(slot*Math.PI/4)*(radius+2.5),y:p.y+Math.sin(slot*Math.PI/4)*(radius+2.5)};
+  const others=w.robots.filter(o=>o.id!==r.id&&!belowSurface(o)).map(o=>({...o,...localXY(home,lunarPosition(claim(w,o.claimId).home,o)),reserved:o.berth?localXY(home,lunarPosition(claim(w,o.claimId).home,o.berth.position)):null}));
+  const free=point=>clear(point)&&others.every(o=>distance(o,point)>=(r.radius||.8)+(o.radius||.8)+.2&&(!o.reserved||distance(o.reserved,point)>=(r.radius||.8)+(o.radius||.8)+.2));
+  if(r.berth?.key===key&&free(r.berth.position)&&(r.blockedTicks||0)<6)return r.berth.position;
+  // Choose the nearest free service face, rather than assigning robots to
+  // opposite sides of an already occupied ring. Reevaluate stale reservations.
+  const candidates=Array.from({length:24},(_,n)=>{const a=(n+slot/8)*Math.PI/12;return {x:p.x+Math.cos(a)*(radius+2.5),y:p.y+Math.sin(a)*(radius+2.5)};}).filter(free).sort((a,b)=>distance(r,a)-distance(r,b));
+  if(candidates.length){r.berth={key,position:candidates[0]};r.holding=null;return candidates[0];}
+  r.berth=null;
+  // A full loading ring gets a physical waiting area, never a remote pickup.
+  const wait=parkingPoint(r,others,obstacles,{center:p,startRadius:radius+9,index:slot});
+  return {...(wait||r),waiting:true};
+}
+export function parkingPoint(r,others,obstacles,{center={x:0,y:0},startRadius=26,index=0}={}){
+  const clear=p=>obstacles.every(o=>distance(o,p)>o.radius+(r.radius||.8)+.5)&&others.every(o=>distance(o,p)>(o.radius||.8)+(r.radius||.8)+.5);
+  if(r.holding&&distance(r.holding,center)>=startRadius-1&&distance(r.holding,center)<startRadius+25&&clear(r.holding))return r.holding;
+  for(let ring=0;ring<4;ring++)for(let slot=0;slot<32;slot++){
+    const a=((index+slot)%32)*Math.PI/16,rad=startRadius+ring*6,p={x:center.x+Math.cos(a)*rad,y:center.y+Math.sin(a)*rad};
+    if(clear(p)){r.holding=p;return p;}
+  }return null;
 }
 function cancelTask(r){r.task=null;r.path=[];r.destination=null;r.berth=null;r.status='idle';}
 export function cancelJob(w,j){
@@ -55,26 +67,35 @@ export function cancelJob(w,j){
   w.jobs=w.jobs.filter(x=>x.id!==j.id);emit(w,'construction.cancelled','Construction cancelled; uncollected supplies released and site salvage awaits transport',{claimId:j.claimId,jobId:j.id});
 }
 
-function requestInputs(w,m,wanted){
+function requestInputs(w,m,wanted,{buffered=false}={}){
   for(const [item,target] of Object.entries(wanted)){
     let needed=target-stock(m.inventory,item)-incoming(w,'machine',m.id,item);if(needed<=0)continue;
-    const sources=w.machines.filter(s=>s.claimId===m.claimId&&s.id!==m.id&&stock(s.inventory,item)>0&&!(s.type==='refinery'&&item==='rock')&&!(s.type==='workshop'&&item==='metal')).sort((a,b)=>a.id-b.id);
-    for(const s of sources){const amount=Math.min(needed,stock(s.inventory,item),12000);if(amount>0){makeFreight(w,s,'machine',m.id,item,amount,{purpose:'industry'});needed-=amount;}if(needed<=0)break;}
+    // Refill buffers in batches rather than sending another rover every time
+    // a recipe consumes a fraction. Exact construction/fabrication bills remain
+    // exact. Tiny leftovers still get delivered after a bounded wait.
+    if(buffered&&needed<target/2)continue;
+    const sources=w.machines.filter(s=>s.claimId===m.claimId&&s.id!==m.id&&stock(s.inventory,item)>0&&!(s.type==='refinery'&&item==='rock')&&!(s.type==='workshop'&&item==='metal')).sort((a,b)=>distanceOnMoon(a,m)-distanceOnMoon(b,m)||a.id-b.id);
+    m.supplyWait??={};
+    for(const s of sources){const amount=Math.min(needed,stock(s.inventory,item),12000);if(amount<=0)continue;
+      if(buffered&&amount<1000){m.supplyWait[item]??=w.tick;if(w.tick-m.supplyWait[item]<30)continue;}
+      makeFreight(w,s,'machine',m.id,item,amount,{purpose:'industry'});needed-=amount;delete m.supplyWait[item];if(needed<=0)break;
+    }
   }
 }
 export function autoLogistics(w){
   if(w.freight.length>LIMITS.freight-100)return;
   try{
   for(const c of w.claims){if(c.paused||!c.autoLogistics)continue;
-    const machines=w.machines.filter(m=>m.claimId===c.id),depot=machines.find(m=>m.type==='seed');
+    const machines=w.machines.filter(m=>m.claimId===c.id),depots=machines.filter(m=>m.type==='seed'||m.type==='depot'&&m.enabled&&m.condition>0);
     for(const m of machines){
       if(!m.enabled||m.condition<=0)continue;
-      if(m.type==='refinery')requestInputs(w,m,{rock:16000});
-      if(m.type==='workshop')requestInputs(w,m,m.mode==='spares'?{metal:6000,parts:4000}:{metal:8000});
+      if(m.type==='refinery')requestInputs(w,m,{rock:16000},{buffered:true});
+      if(m.type==='workshop'&&m.mode!=='off')requestInputs(w,m,m.mode==='spares'?{metal:6000,parts:4000}:{metal:8000},{buffered:true});
       if(m.queue?.length)requestInputs(w,m,m.queue[0].cost);
       if(m.type==='replicator'&&m.planCost)requestInputs(w,m,m.planCost);
-      const corridor=w.corridors.find(t=>t.fromId===m.id&&!t.complete);if(corridor)requestInputs(w,m,{metal:8000,parts:2000});
+      const corridor=w.corridors.find(t=>(t.boreId??t.fromId)===m.id&&!t.complete);if(corridor)requestInputs(w,m,{metal:8000,parts:2000},{buffered:true});
       const outputs=m.type==='refinery'?['metal']:m.type==='workshop'?['parts','spares']:[];
+      const depot=[...depots].sort((a,b)=>distanceOnMoon(a,m)-distanceOnMoon(b,m)||a.id-b.id)[0];
       for(const item of outputs)if(stock(m.inventory,item)>=6000&&!m.fabrication?.cost?.[item])makeFreight(w,m,'machine',depot.id,item,stock(m.inventory,item)-2000,{purpose:'warehouse'});
     }
   }
@@ -92,7 +113,7 @@ function assignHaul(w,r){
 }
 function assignService(w,r){
   const c=claim(w,r.workClaimId),threshold=c.unlocks.includes('service-loop')?7000:3500;
-  const others=w.robots.filter(x=>x.workClaimId===c.id&&!x.reconditioning&&!x.serviceBy&&x.task?.kind!=='service'),machines=w.machines.filter(m=>m.claimId===c.id&&m.type!=='seed'&&!m.serviceBy);
+  const others=w.robots.filter(x=>x.workClaimId===c.id&&!x.tunnelRide&&!x.reconditioning&&!x.serviceBy&&x.task?.kind!=='service'),machines=w.machines.filter(m=>m.claimId===c.id&&m.type!=='seed'&&!m.serviceBy);
   const targets=[...others.map(o=>({kind:'robot',o})),...machines.map(o=>({kind:'machine',o}))].filter(t=>t.o.condition<threshold||t.o.upgrade).sort((a,b)=>a.o.condition-b.o.condition||a.o.id-b.o.id);
   if(!targets.length)return false;
   const source=w.machines.find(m=>m.claimId===r.claimId&&stock(m.inventory,'spares')>=1000);if(!source)return false;
@@ -131,16 +152,18 @@ export function stepRobots(w,industries,{terrain}={}){
     if(r.lentUntil&&r.lentUntil<=w.tick&&r.task?.kind!=='haul'&&r.task?.kind!=='service'){cancelTask(r);r.workClaimId=r.claimId;r.lentUntil=null;}
     if(c.paused||workClaim.paused){r.status='paused';continue;}
     const inUse=perClaim.get(r.workClaimId)||0,slots=industries[r.workClaimId].crewSlots;
-    if(inUse>=slots&&!r.reconditioning){r.status='mind-limited';continue;}perClaim.set(r.workClaimId,inUse+1);
-    const others=w.robots.filter(o=>o.id!==r.id).map(o=>{const p=lunarPosition(claim(w,o.claimId).home,o);return {...o,...localXY(home,p)};});
+    if(inUse>=slots&&!r.reconditioning){r.status=slots>=workClaim.maxActive?'crew-limited':'mind-limited';continue;}perClaim.set(r.workClaimId,inUse+1);
+    const others=w.robots.filter(o=>o.id!==r.id&&!belowSurface(o)).map(o=>{const p=lunarPosition(claim(w,o.claimId).home,o);return {...o,...localXY(home,p)};});
     const ownAccepted=accepted.map(s=>({...s,a:localXY(home,s.a),b:localXY(home,s.b)}));
     const moves=[],obstacles=obstaclesFor(r.claimId);
     const walkable=terrain?(a,b)=>{const d=distance(a,b),steps=Math.max(1,Math.ceil(d/8));let h=terrain(lunarPosition(home,a));for(let i=1;i<=steps;i++){const p={x:a.x+(b.x-a.x)*i/steps,y:a.y+(b.y-a.y)*i/steps},next=terrain(lunarPosition(home,p));if(Math.abs(next-h)>Math.max(1,d/steps*.6))return false;h=next;}return true;}:undefined;
     const go=target=>{
       const old={x:r.x,y:r.y},condition=Math.max(.2,r.condition/10000),speed=ROBOTS[r.role].speed*(.5+.5*condition);
-      const arrived=moveRobot(r,target,obstacles,others,ownAccepted,{speed,walkable});
-      if(distance(old,r)>.001){r.rotation=Math.atan2(r.x-old.x,r.y-old.y);r.condition=Math.max(0,r.condition-1);moves.push({a:lunarPosition(home,old),b:lunarPosition(home,r),radius:r.radius||.8});}
-      return arrived;
+      const wasBelow=belowSurface(r),surfaceMove=p=>moveRobot(r,p,obstacles,others,ownAccepted,{speed,walkable});
+      const transit=stepTunnel(w,r,target,{home,speed,surfaceMove,obstacles,others,accepted:ownAccepted}),arrived=transit===null?surfaceMove(target):transit;
+      if(distance(old,r)>.001){r.rotation=Math.atan2(r.x-old.x,r.y-old.y);r.condition=Math.max(0,r.condition-1);if(!wasBelow&&!belowSurface(r))moves.push({a:lunarPosition(home,old),b:lunarPosition(home,r),radius:r.radius||.8});}
+      if(target.waiting&&arrived)r.status='waiting-for-berth';
+      return arrived&&!target.waiting;
     };
     if(r.reconditioning){
       const lander=w.machines.find(m=>m.claimId===c.id&&m.type==='seed');r.status='reconditioning';
@@ -151,11 +174,7 @@ export function stepRobots(w,industries,{terrain}={}){
       const task=r.task;
       if(!task&&r.condition>0){
         // Idle robots vacate work and freight berths. Parking is physical too.
-        let parking;
-        for(let slot=0;slot<32;slot++){
-          const a=((r.id+slot)%32)*Math.PI/16,rad=23+Math.floor(r.id/32)*3,p={x:Math.cos(a)*rad,y:Math.sin(a)*rad};
-          if(obstacles.every(o=>distance(o,p)>o.radius+r.radius+.5)&&others.every(o=>distance(o,p)>o.radius+r.radius+.3)){parking=p;break;}
-        }
+        const index=w.robots.filter(o=>o.claimId===c.id).findIndex(o=>o.id===r.id),parking=parkingPoint(r,others,obstacles,{index});
         if(parking){r.status='parking';if(go(parking))r.status='idle';}
       }
       if(task?.kind==='haul'){
@@ -192,8 +211,8 @@ export function stepRobots(w,industries,{terrain}={}){
         else if(task.stage==='supply'){r.status='collecting-service-kit';if(go(port(w,r,source,r.id%8))){task.stage='service';r.path=[];}}
         else{
           const dest=task.targetKind==='robot'?{...lunarPosition(claim(w,target.claimId).home,target),radius:target.radius||.8}:target;
-          const atTarget=target.id===r.id||go(port(w,r,dest,0));r.status='servicing';
-          if(atTarget){task.work+=Math.floor(ROBOTS[r.role].service*Math.max(.2,r.condition/10000));if(task.work>=(target.upgrade?60000:30000)){
+          r.status='approaching-service';const atTarget=target.id===r.id||go(port(w,r,dest,0));
+          if(atTarget){r.status='servicing';task.work+=Math.floor(ROBOTS[r.role].service*Math.max(.2,r.condition/10000));if(task.work>=(target.upgrade?60000:30000)){
             target.condition=10000;target.serviceBy=null;if(target.upgrade){target.design=target.upgrade.profile;target.upgrade=null;}
             w.totals.repairs++;emit(w,'service.completed',`Crew restored ${task.targetKind} ${target.id}`,{claimId:c.id,targetId:target.id});cancelTask(r);
           }}

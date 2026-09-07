@@ -40,7 +40,19 @@ export class FoundryScene{
     const local=p=>new THREE.Vector3(...frame.toLocal(data.point(direction(p.lat,p.lon))));
     const line=(a,b,color,height=.3,opacity=.65)=>{const points=[];for(let i=0;i<=12;i++){const p={lat:a.lat+(b.lat-a.lat)*i/12,lon:a.lon+(b.lon-a.lon)*i/12};points.push(local(p).add(new THREE.Vector3(...frame.vectorToLocal(direction(p.lat,p.lon))).multiplyScalar(height)));}const o=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false,depthTest:height>=0}));this.overlays.add(o);};
     if(this.showUtilities)for(const industry of Object.values(state.industry))for(const edge of industry.grid.edges){const a=state.machines.find(m=>m.id===edge.from),b=state.machines.find(m=>m.id===edge.to);if(a&&b&&distanceOnMoon(a,view)<1500)line(a,b,edge.underground?0x87ddc9:0xc59158,edge.underground?-3:.4);}
-    for(const t of state.corridors){const a=state.machines.find(m=>m.id===t.fromId),b=state.machines.find(m=>m.id===t.toId);if(!a||!b||distanceOnMoon(a,view)>1500)continue;const ratio=t.excavated/t.length,end={lat:a.lat+(b.lat-a.lat)*ratio,lon:a.lon+(b.lon-a.lon)*ratio};line(a,end,0x78debf,this.showUtilities?-3:.5,.9);}
+    for(const t of state.corridors){
+      const a=state.machines.find(m=>m.id===t.fromId),b=state.machines.find(m=>m.id===t.toId);if(!a||!b)continue;
+      const ratio=t.excavated/t.length,end={lat:a.lat+(b.lat-a.lat)*ratio,lon:a.lon+(b.lon-a.lon)*ratio};
+      // Keep links visible near either end and along the middle of long routes.
+      const center={lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2};if(distanceOnMoon(center,view)>t.length/2+1500)continue;
+      if(!t.complete&&this.showUtilities)line(a,b,0x425f64,-3,.3);
+      line(a,end,t.transport?0x78debf:0xc59158,this.showUtilities?-3:.5,.9);
+      if(t.portals)for(const loc of Object.values(t.portals).flat()){
+        if(distanceOnMoon(loc,view)>1500)continue;
+        const g=new THREE.Group(),ring=new THREE.Mesh(new THREE.TorusGeometry(2.1,.22,8,32),new THREE.MeshStandardMaterial({color:t.complete?0x78debf:0xc59158,metalness:.5,roughness:.5}));ring.rotation.x=-Math.PI/2;ring.position.y=.12;g.add(ring);
+        const shaft=new THREE.Mesh(new THREE.CircleGeometry(1.85,24),new THREE.MeshStandardMaterial({color:0x0b1318,roughness:1}));shaft.rotation.x=-Math.PI/2;shaft.position.y=.06;g.add(shaft);positionMachine(g,{...loc,rotation:0},data,frame);this.overlays.add(g);
+      }
+    }
     const waiting=state.freight.filter(f=>f.status==='waiting'&&distanceOnMoon(f.fromLocation,view)<1500);
     if(waiting.length){const crates=new THREE.InstancedMesh(new THREE.BoxGeometry(.65,.5,.65),new THREE.MeshStandardMaterial({metalness:.45,roughness:.6}),waiting.length),dummy=new THREE.Object3D(),color=new THREE.Color();
       for(const [index,f] of waiting.entries()){dummy.position.copy(local(f.fromLocation)).add(new THREE.Vector3((f.id%5-2)*.8,.7,(f.fromLocation.radius||0)+1.2));dummy.updateMatrix();crates.setMatrixAt(index,dummy.matrix);crates.setColorAt(index,color.set(f.item.startsWith('kit')?0xe9bd78:f.item==='rock'?0x727b83:0xafc4c2));}this.overlays.add(crates);

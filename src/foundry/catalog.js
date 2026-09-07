@@ -16,7 +16,7 @@ export const BUILDINGS={
   robotfactory:{name:'Robot foundry',cost:65,parts:8,power:-5,radius:7,mind:2,work:420,tech:'crew-production',description:'Builds replacement and additional robot chassis from local metal, parts, and spares. Every new worker is manufactured.'},
   replicator:{name:'Replicator',cost:65,parts:8,power:-5,radius:7,mind:4,work:480,tech:'factory-plans',description:'Fabricates machine kits, then commissions a physical construction site. Highest individual supervision cost: 4 slots.'},
   relay:{name:'Utility relay',cost:18,parts:3,power:-1,radius:4,mind:0,work:210,tech:'freight-network',description:'Extends connected power and data coverage by 160 m. Lines follow the actual connected network.'},
-  tunnel:{name:'Utility bore',cost:55,parts:8,power:-5,radius:7,mind:3,work:480,tech:'tunneling',description:'A powered bore accepts a target and excavates a supported utility corridor, consuming liners and producing spoil.'},
+  tunnel:{name:'Utility bore',cost:55,parts:8,power:-5,radius:7,mind:3,work:480,tech:'tunneling',description:'Excavates utility and robot freight links to local facilities or neighboring seeds, consuming liners and producing spoil.'},
   radiator:{name:'Radiator field',cost:35,parts:5,power:-1,radius:6,mind:0,work:300,tech:'thermal-design',description:'Rejects enough game heat to support four additional mind nodes. Thermal headroom bounds dense intelligence.'},
 };
 export const ROBOTS={
@@ -31,7 +31,7 @@ export const TECH={
   'service-loop':{name:'A repairable colony',cost:180,requires:['factory-plans'],building:'workshop',description:'Preventive service at 70% condition; unlock replacement production research.'},
   'crew-production':{name:'Builders that build builders',cost:360,requires:['service-loop'],description:'Unlock the robot foundry and physically manufactured crew.'},
   'freight-network':{name:'Connected districts',cost:480,requires:['crew-production'],description:'Unlock relays, four-worker sites, and extended utility coverage.'},
-  tunneling:{name:'Below the surface',cost:900,requires:['freight-network'],description:'Unlock utility bores and visible underground power/data corridors.'},
+  tunneling:{name:'Below the surface',cost:900,requires:['freight-network'],description:'Unlock bores for local utility and freight links, and tunnels to neighboring seed landers.'},
   'modular-design':{name:'Design laboratories',cost:1000,requires:['crew-production'],description:'Certify bounded speed, endurance, or frugal machine designs. Unlock Titan.'},
   'thermal-design':{name:'Heat is infrastructure',cost:800,requires:['freight-network'],description:'Unlock radiator fields for dense mind networks.'},
   reproduction:{name:'Supported reproduction',cost:1800,requires:['modular-design','thermal-design'],project:'first-federation',description:'Allow replicators to reproduce; daughters inherit the program but still need freight, crews, maintenance, power and minds.'},

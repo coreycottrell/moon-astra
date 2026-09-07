@@ -74,8 +74,8 @@ function production(w,industries,{terrain}={}){
         }
       }
       if(m.type==='tunnel'){
-        const t=w.corridors.find(t=>t.fromId===m.id&&!t.complete);
-        if(t){t.progress+=Math.floor(f*UNIT);if(t.progress>=10*UNIT&&stock(m.inventory,'metal')>=500&&stock(m.inventory,'parts')>=100){m.inventory.metal-=500;m.inventory.parts-=100;t.progress-=10*UNIT;t.excavated++;addStock(m.inventory,'rock',1500);if(t.excavated>=t.length){t.complete=true;t.completedAt=w.tick;emit(w,'corridor.completed','An underground utility corridor connected two facilities',{claimId:c.id,corridorId:t.id});}}}
+        const t=w.corridors.find(t=>(t.boreId??t.fromId)===m.id&&!t.complete);
+        if(t){t.progress=Math.min(10*UNIT,t.progress+Math.floor(f*UNIT));if(t.progress>=10*UNIT&&stock(m.inventory,'metal')>=500&&stock(m.inventory,'parts')>=100){m.inventory.metal-=500;m.inventory.parts-=100;t.progress-=10*UNIT;t.excavated++;addStock(m.inventory,'rock',1500);if(t.excavated>=t.length){t.complete=true;t.completedAt=w.tick;emit(w,'corridor.completed',t.transport?'A completed tunnel opened its two freight lanes':'An underground utility corridor connected two facilities',{claimId:c.id,corridorId:t.id});}}}
       }
     }
     const researchWork=i.researchPerSecond;c.thought+=researchWork;

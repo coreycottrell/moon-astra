@@ -88,6 +88,9 @@ async function colonyCommand(command){
   finally{colonyBusy=false;renderColony(true);}
 }
 function renderColony(force=false){
+  // Guide answers are snapshots, not a live ledger. Keep the reading surface
+  // intact through world ticks; explicit chat actions/status changes refresh it.
+  if(!force&&$('colony-content').querySelector('[data-current-tab="guide"]'))return;
   if(!force&&(colonyBusy||document.activeElement?.matches('#colony-content input,#colony-content select,#colony-content textarea')))return;
   renderFoundryPanel($('colony-content'),{sim,command:colonyCommand,selectBuild,visit:setLocation,focus:focusFoundry,refresh:()=>renderColony(true),notice:s=>$('colony-notice').textContent=s,utilities:toggleUtilities});
 }

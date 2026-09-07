@@ -1,8 +1,8 @@
-// One read-only polling pass. Schedule with flock + cron; no model or game writes.
+// One read-only game poll. Optional, explicitly bound tmux prompt wakes Codex.
 import {readFileSync,writeFileSync,renameSync,mkdirSync,existsSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {parseArgs} from 'node:util';
-import {spawnSync} from 'node:child_process';
+import {injectBoardAlert} from './lib/tmux-board-alert.mjs';
 import {boardEntries,collectBoard,inboxMarkdown} from './lib/dev-board.mjs';
 const {values}=parseArgs({options:{config:{type:'string'},seed:{type:'string'}}});
 if(!values.config)throw Error('Supply --config with a private watcher configuration');
@@ -30,10 +30,9 @@ try{
   if(due&&config.tmuxTarget){
     if(!/^%\d+$/.test(config.tmuxTarget))throw Error('Use an exact tmux pane ID');
     state.lastNotificationAttempt=Date.now();save(stateFile,state);
-    const message=`Moon dev board: ${state.pendingNotifications} new/edited messages. Read ${inbox}`;
-    // Only a tmux status banner, never keyboard input or board text as commands.
-    const r=spawnSync('/usr/bin/tmux',['display-message','-d','12000','-t',config.tmuxTarget,message],{encoding:'utf8',timeout:2000});
-    if(r.status===0){state.pendingNotifications=0;state.lastNotifiedAt=new Date().toISOString();save(stateFile,state);}
+    const result=injectBoardAlert(config);state.lastNotificationResult=result.reason;
+    if(result.sent){state.lastInjectedCount=state.pendingNotifications;state.pendingNotifications=0;state.lastNotifiedAt=new Date().toISOString();}
+    save(stateFile,state);
   }
   console.log(JSON.stringify({type:'dev-board.checked',tick:state.tick,newMessages:result.changes.length,devMessages:result.changes.filter(e=>e.dev).length,polls:state.polls,at:state.lastPoll}));
 }catch(error){

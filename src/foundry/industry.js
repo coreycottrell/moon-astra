@@ -31,7 +31,7 @@ export function industryFor(w,cid){
   }
   for(const type of MIND.priority)for(const m of machines.filter(m=>m.type===type).sort((a,b)=>a.id-b.id)){
     if(states[m.id])continue;
-    const noWork=(type==='workshop'&&m.mode==='off'&&!m.fabrication)||(type==='replicator'&&replicatorOutput(m)==='off'&&!m.fabrication&&!m.pendingBuild)||(type==='robotfactory'&&!m.fabrication&&!m.queue?.length)||(type==='tunnel'&&!w.corridors.some(t=>t.fromId===m.id&&!t.complete));
+    const noWork=(type==='workshop'&&m.mode==='off'&&!m.fabrication)||(type==='replicator'&&replicatorOutput(m)==='off'&&!m.fabrication&&!m.pendingBuild)||(type==='robotfactory'&&!m.fabrication&&!m.queue?.length)||(type==='tunnel'&&!w.corridors.some(t=>(t.boreId??t.fromId)===m.id&&!t.complete));
     if(noWork){states[m.id]='off';continue;}
     if(type==='miner'&&c.deposit<=0){states[m.id]='deposit-empty';continue;}
     if(type==='miner'&&stock(m.inventory,'rock')>=40000){states[m.id]='output-full';continue;}
@@ -41,6 +41,7 @@ export function industryFor(w,cid){
     if(type==='workshop'&&!m.fabrication)required=m.mode==='spares'?{metal:1000,parts:1000}:{metal:2000};
     if(type==='robotfactory'&&!m.fabrication)required=m.queue?.[0]?.cost;
     if(type==='replicator'&&!m.fabrication&&!m.pendingBuild)required=m.planCost;
+    if(type==='tunnel')required={metal:500,parts:100};
     if(required&&Object.entries(required).some(([item,n])=>stock(m.inventory,item)<n)){states[m.id]='no-feedstock';continue;}
     const cost=BUILDINGS[type].mind;requested+=cost;
     if(used+cost<=capacity){used+=cost;activeIds.push(m.id);states[m.id]='active';demand-=BUILDINGS[type].power*DESIGNS[m.design||'balanced'].heat;}

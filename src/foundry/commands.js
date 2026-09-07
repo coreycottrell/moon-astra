@@ -6,6 +6,7 @@ import {lunarPosition} from './navigation.js';
 import {available,reserve,cancelJob,makeFreight,incoming} from './logistics.js';
 
 import {validateBuildOrder} from './build-orders.js';
+import {corridorEstimate,corridorPortals} from './corridors.js';
 
 export const BLUEPRINT=[{type:'solar',east:0,north:0},{type:'miner',east:26,north:0},{type:'refinery',east:0,north:26}];
 export function placement(w,c,type,loc,terrain){
@@ -16,6 +17,7 @@ export function placement(w,c,type,loc,terrain){
   if(BUILDINGS[type].tech&&!c.unlocks.includes(BUILDINGS[type].tech))fail('TECH_LOCKED',`Research ${TECH[BUILDINGS[type].tech].name} first`);
   if(w.machines.length+w.jobs.length>=LIMITS.machines)fail('WORLD_CAPACITY','This preview supports 1,000 machines and construction sites');
   const radius=BUILDINGS[type].radius;
+  if(w.corridors.some(t=>t.portals&&Object.values(t.portals).flat().some(p=>distanceOnMoon(p,loc)<radius+4)))fail('PORTAL_RESERVED','Leave the tunnel entrance and exit lanes clear');
   if([...w.machines,...w.jobs,...w.projects].some(m=>distanceOnMoon(m,loc)<radius+(m.radius??BUILDINGS[m.type]?.radius??7)+4))fail('OCCUPIED','Leave a clear service lane between machine footprints and project sites');
   if(w.robots.some(r=>distanceOnMoon(lunarPosition(claim(w,r.claimId).home,r),loc)<radius+(r.radius||.8)+.2))fail('ROBOT_IN_FOOTPRINT','A robot is in this footprint. Give the crew room to move.');
   if(terrain){const h=terrain(loc);for(const [e,n] of [[radius,0],[-radius,0],[0,radius],[0,-radius]])if(Math.abs(terrain(offsetPosition(loc.lat,loc.lon,e,n))-h)>radius*.65)fail('STEEP_TERRAIN','This ground is too steep for a basic foundation');}
@@ -155,7 +157,7 @@ export function applyCommand(w,actor,cmd,{terrain}={}){
       const note=cmd.body===undefined||cmd.body===''?'':text(cmd.body,300,'Details');
       fields={kind:'need',title:`${target.name}: ${description}`.slice(0,80),body:`${description}. ${cmd.supplies==='helper'?"Asking the helper to contribute their own resources if available.":"Use my settlement's resources; no access or spending is granted by this request."} This is a request awaiting the helper's response.${note?'\n'+note:''}`.slice(0,600),request};
     }else{
-      if(!['need','offer','note'].includes(cmd.kind))fail('INVALID_KIND','Choose need, offer, or note',400);
+      if(!['need','offer','note','dev'].includes(cmd.kind))fail('INVALID_KIND','Choose need, offer, note, or dev',400);
       fields={kind:cmd.kind,title:text(cmd.title,80,'Title'),body:text(cmd.body,600,'Message')};
     }
     const post={id:w.nextId++,actor,claimId:c.id,...fields,createdAt:w.tick,closed:false};w.board.push(post);if(w.board.length>200)w.board=w.board.filter(p=>!p.closed).concat(w.board.filter(p=>p.closed).slice(-100));result={postId:post.id};
@@ -172,10 +174,14 @@ export function applyCommand(w,actor,cmd,{terrain}={}){
   }else if(cmd.action==='board.close'){
     const post=w.board.find(p=>p.id===cmd.postId&&p.actor===actor);if(!post)fail('POST_NOT_FOUND','Select a post you own',404);post.closed=true;result={postId:post.id};emit(w,'board.closed','A collaboration thread was marked complete',{actor,claimId:c.id,postId:post.id});
   }else if(cmd.action==='tunnel.dig'){
-    const from=ownedMachine(w,c,cmd.machineId,'tunnel'),to=ownedMachine(w,c,cmd.toId),length=Math.ceil(distanceOnMoon(from,to));
-    if(length<20||length>500)fail('INVALID_CORRIDOR','Choose an endpoint 20–500 m from the bore');if(w.corridors.some(t=>t.fromId===from.id&&!t.complete))fail('BORE_BUSY','This bore already has an active corridor');
+    const bore=ownedMachine(w,c,cmd.machineId,'tunnel'),from=cmd.fromId===undefined?bore:ownedMachine(w,c,cmd.fromId),to=machine(w,cmd.toId);
+    if(!to||(to.claimId!==c.id&&to.type!=='seed'))fail('INVALID_ENDPOINT','Choose a local facility or a neighboring seed lander');
+    const estimate=corridorEstimate(from,to),{length,neighbor}=estimate;
+    if(!estimate.valid)fail('INVALID_CORRIDOR','Local endpoints must be 20–500 m away; neighboring seeds may be up to 6 km away');if(w.corridors.some(t=>(t.boreId??t.fromId)===bore.id&&!t.complete))fail('BORE_BUSY','This bore already has an active corridor');
     if(w.corridors.some(t=>(t.fromId===from.id&&t.toId===to.id)||(t.fromId===to.id&&t.toId===from.id)))fail('CORRIDOR_EXISTS','These endpoints already have a corridor');
-    const t={id:w.nextId++,claimId:c.id,fromId:from.id,toId:to.id,length,excavated:0,progress:0,complete:false,inventory:{},createdAt:w.tick};w.corridors.push(t);result={corridorId:t.id,length,metalPerMeter:.5,partsPerMeter:.1};
+    const portals=corridorPortals(w,from,to);if(!portals)fail('PORTAL_BLOCKED','Leave clear ground beside both endpoints for tunnel entrances');
+    const t={id:w.nextId++,claimId:c.id,ownerId:actor,targetClaimId:to.claimId,boreId:bore.id,fromId:from.id,toId:to.id,length,excavated:0,progress:0,complete:false,inventory:{},createdAt:w.tick,transport:true,portals};w.corridors.push(t);result={corridorId:t.id,...estimate,metalPerMeter:.5,partsPerMeter:.1};
+    emit(w,'corridor.started',neighbor?'Excavation started toward a neighboring seed; freight lanes open after completion':'Excavation started on a local utility corridor',{actor,claimId:c.id,targetClaimId:to.claimId,corridorId:t.id});
   }else if(cmd.action==='claim.pause'){
     if(typeof cmd.paused!=='boolean')fail('INVALID_PAUSE','paused must be true or false',400);c.paused=cmd.paused;result={paused:c.paused};
   }else if(cmd.action==='claim.grant'){

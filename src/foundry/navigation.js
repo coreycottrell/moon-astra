@@ -23,12 +23,12 @@ class Heap{
 
 // Meter-scale, bounded A*. Static obstacles use swept circular clearances;
 // diagonal moves are checked as segments rather than hopping through corners.
-// Far travel uses a coarser 4m lattice, with the same continuous clearance test.
-export function findPath(start,end,obstacles,{radius=.65,maxVisited=5000,walkable=()=>true}={}){
+// A finer fallback handles narrow gaps that the default 2m lattice can miss.
+export function findPath(start,end,obstacles,{radius=.65,maxVisited=5000,walkable=()=>true,spacing=2}={}){
   const usable=obstacles.filter(o=>pointSegment(o,start,end)<o.radius+80);
   const clear=(a,b)=>clearSegment(a,b,usable,radius)&&walkable(a,b);
   if(clear(start,end))return [{...end}];
-  const size=2,margin=60;
+  const size=spacing,margin=60;
   const heuristic=p=>{const x=Math.abs(p.x-end.x),y=Math.abs(p.y-end.y);return Math.max(x,y)+(Math.SQRT2-1)*Math.min(x,y);};
   const minX=Math.min(start.x,end.x)-margin,maxX=Math.max(start.x,end.x)+margin,minY=Math.min(start.y,end.y)-margin,maxY=Math.max(start.y,end.y)+margin;
   const key=(x,y)=>`${x},${y}`,nodes=new Map(),heap=new Heap(),origin={x:0,y:0,p:{...start},g:0,parent:null};origin.f=heuristic(start)*1.08;nodes.set('0,0',origin);heap.push(origin);
@@ -56,15 +56,20 @@ export function moveRobot(robot,target,obstacles,others,accepted,{speed,walkable
   const destination=robot.destination;
   if(robot.routeRetry>0&&destination&&distance(destination,target)<.2){robot.routeRetry--;robot.status='route-blocked';return false;}
   if(!destination||distance(destination,target)>.2||!robot.path?.length||robot.blockedTicks>=12){
-    const dynamic=robot.blockedTicks>=12?others.filter(o=>o.id!==robot.id&&distance(o,robot)<12).map(o=>({...o,radius:(o.radius||.8)+.08})):[];
-    robot.path=findPath(robot,target,[...obstacles,...dynamic],{radius,walkable})||[];robot.destination={...target};
-    if(!robot.path.length){robot.blockedTicks=(robot.blockedTicks||0)+1;robot.status='route-blocked';robot.routeRetry=20;return false;}
+    const dynamic=others.filter(o=>o.id!==robot.id&&(distance(o,robot)<24||distance(o,target)<16)).map(o=>({...o,radius:(o.radius||.8)+.08}));
+    const all=[...obstacles,...dynamic];
+    robot.path=findPath(robot,target,all,{radius,walkable})||findPath(robot,target,all,{radius,walkable,spacing:.6,maxVisited:3500})||[];robot.destination={...target};
+    if(!robot.path.length){robot.blockedTicks=(robot.blockedTicks||0)+1;robot.status='route-blocked';robot.routeRetry=6;return false;}
     robot.blockedTicks=0;
   }
   const waypoint=robot.path[0],d=distance(robot,waypoint),fraction=Math.min(1,(speed||1)/Math.max(d,.00001)),next={x:robot.x+(waypoint.x-robot.x)*fraction,y:robot.y+(waypoint.y-robot.y)*fraction};
   const conflict=others.some(o=>o.id!==robot.id&&pointSegment(o,robot,next)<radius+(o.radius||.8)+.08)||accepted.some(s=>segmentsNear(robot,next,s.a,s.b,radius+s.radius+.08));
   if(conflict||!clearSegment(robot,next,obstacles,radius)){
-    robot.blockedTicks=(robot.blockedTicks||0)+1;robot.status='yielding';return false;
+    robot.blockedTicks=(robot.blockedTicks||0)+1;robot.status='yielding';
+    // Replan around traffic promptly. The bounded planner keeps swept
+    // clearance while finding a route around stationary or opposing traffic.
+    if(robot.blockedTicks>=3){robot.path=[];robot.routeRetry=0;}
+    return false;
   }
   accepted.push({a:{x:robot.x,y:robot.y},b:next,radius});robot.x=next.x;robot.y=next.y;robot.blockedTicks=0;robot.distanceTravelled=(robot.distanceTravelled||0)+d*fraction;
   if(fraction>=1)robot.path.shift();return distance(robot,target)<.1;

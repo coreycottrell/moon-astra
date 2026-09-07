@@ -9,6 +9,7 @@ import {freshSharedWorld,addPlayer,applyCommand,stepWorld,observe,preview,GameEr
 import {ECONOMY_VERSION,PRODUCTION,MIND} from '../src/industry.js';
 import {TYPES} from '../src/simulation.js';
 import {BUILD_ORDER_LIMITS,BUILD_GROUPS} from '../src/foundry/build-orders.js';
+import {CORRIDOR_LIMITS} from '../src/foundry/corridors.js';
 import {WORLD_VERSION,ROBOTS,TECH,DESIGNS,PROJECTS,STAGES,LIMITS,ACTIONS} from '../src/foundry/catalog.js';
 import {LunarData,direction} from '../src/geography.js';
 import {createGuide} from './guide.mjs';
@@ -77,7 +78,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
     if(!access.scopes.some(s=>scopes[s]?.includes(input?.action)))throw new GameError('SCOPE_DENIED','This delegated token cannot perform that action',403);
     if(input.claimId!==world.players.find(p=>p.id===access.id).homeClaimId)throw new GameError('SCOPE_DENIED','Delegated tokens are limited to their owner’s home settlement',403);
   }
-  function metrics(){const sorted=[...timings].sort((a,b)=>a-b),cpu=process.cpuUsage(cpuStarted),memory=process.memoryUsage();return {ruleset:RULESET,tick:world.tick,healthy:!failed,uptimeSeconds:Math.floor((performance.now()-started)/1000),commitMs:{samples:sorted.length,p50:sorted[Math.floor(sorted.length*.5)]||0,p95:sorted[Math.floor(sorted.length*.95)]||0,max:sorted.at(-1)||0},memoryBytes:{rss:memory.rss,heapUsed:memory.heapUsed},cpuSeconds:(cpu.user+cpu.system)/1e6,commandsSinceStart:commandCount,activeStreams:viewers.size,worldBytes:Buffer.byteLength(JSON.stringify(world)),counts:{players:world.players.length,machines:world.machines.length,robots:world.robots.length,sites:world.jobs.length,freight:world.freight.length,blockedRobots:world.robots.filter(r=>['route-blocked','yielding','mind-limited','needs-service'].includes(r.status)).length},limits:LIMITS};}
+  function metrics(){const sorted=[...timings].sort((a,b)=>a-b),cpu=process.cpuUsage(cpuStarted),memory=process.memoryUsage();return {ruleset:RULESET,tick:world.tick,healthy:!failed,uptimeSeconds:Math.floor((performance.now()-started)/1000),commitMs:{samples:sorted.length,p50:sorted[Math.floor(sorted.length*.5)]||0,p95:sorted[Math.floor(sorted.length*.95)]||0,max:sorted.at(-1)||0},memoryBytes:{rss:memory.rss,heapUsed:memory.heapUsed},cpuSeconds:(cpu.user+cpu.system)/1e6,commandsSinceStart:commandCount,activeStreams:viewers.size,worldBytes:Buffer.byteLength(JSON.stringify(world)),counts:{players:world.players.length,machines:world.machines.length,robots:world.robots.length,sites:world.jobs.length,freight:world.freight.length,blockedRobots:world.robots.filter(r=>['route-blocked','yielding','mind-limited','crew-limited','waiting-for-berth','needs-service'].includes(r.status)).length},limits:LIMITS};}
   const server=http.createServer(async(req,res)=>{
     try{
       const url=new URL(req.url,'http://localhost'),path=url.pathname;
@@ -86,7 +87,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
         if(origin.origin!==publicOrigin&&origin.host!==req.headers.host)throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);
       }
       if(path==='/api/v1/health')return json(res,failed?503:200,{ok:!failed,ruleset:RULESET,economyVersion:world.economyVersion,tick:world.tick,players:world.players.length});
-      if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,economyVersion:ECONOMY_VERSION,unit:'Inventory is integer milli-units; command amounts use whole resource units. One tick is one simulation second.',production:PRODUCTION,mind:MIND,types:TYPES,robots:ROBOTS,technologies:TECH,designProfiles:DESIGNS,projectTemplates:PROJECTS,constructionStages:STAGES,assemblyWork:BUILD_TIME,blueprint:BLUEPRINT,actions:ACTIONS,buildOrders:{limits:BUILD_ORDER_LIMITS,groups:BUILD_GROUPS,research:'coordinated-builds',ownerOnly:true},limits:LIMITS,whitepaper:'https://ai-civ.com/moon-astra-whitepaper/'});
+      if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,economyVersion:ECONOMY_VERSION,unit:'Inventory is integer milli-units; command amounts use whole resource units. One tick is one simulation second.',production:PRODUCTION,mind:MIND,types:TYPES,robots:ROBOTS,technologies:TECH,designProfiles:DESIGNS,projectTemplates:PROJECTS,constructionStages:STAGES,assemblyWork:BUILD_TIME,blueprint:BLUEPRINT,actions:ACTIONS,corridors:CORRIDOR_LIMITS,boardKinds:['need','offer','note','dev'],buildOrders:{limits:BUILD_ORDER_LIMITS,groups:BUILD_GROUPS,research:'coordinated-builds',ownerOnly:true},limits:LIMITS,whitepaper:'https://ai-civ.com/moon-astra-whitepaper/'});
       if(path==='/api/v1/join'&&req.method==='POST'){
         rate(`join:${req.socket.remoteAddress}`);const input=await body(req);
         if(failed)throw new GameError('WORLD_PAUSED','Persistence is unavailable',503);

@@ -1,0 +1,12 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tunnel control verification</title><link rel="stylesheet" href="/src/style.css"><link rel="stylesheet" href="/src/foundry/style.css"><body style="overflow:auto"><dialog id="colony-dialog" open><h2 id="colony-title"></h2><div id="colony-content"></div></dialog><script type="module">
+import {freshSharedWorld,addPlayer,applyCommand,observe} from '/src/shared-world.js';
+import {createMachine} from '/src/foundry/state.js';
+import {TECH} from '/src/foundry/catalog.js';
+import {offsetPosition} from '/src/geography.js';
+import {renderFoundryPanel} from '/src/foundry/panel.js';
+const w=freshSharedWorld();addPlayer(w,'p1','Ada');addPlayer(w,'p2','Babbage');const c=w.claims[0];c.unlocks=Object.keys(TECH);
+const bore=createMachine(w,c,'tunnel',offsetPosition(c.home.lat,c.home.lon,-40,0));
+const sim={actor:w.players[0],activeClaim:c,state:observe(w,'p1')};let commands=[];
+const refresh=()=>{sim.state=observe(w,'p1');renderFoundryPanel(document.querySelector('#colony-content'),{sim,refresh,command:async cmd=>{commands.push(cmd);applyCommand(w,'p1',cmd);refresh();return true;},focus:()=>{},notice:()=>{},visit:()=>{},utilities:()=>{},selectBuild:()=>{}});};
+window.corridorProbe={boreId:bore.id,neighborSeed:w.machines.find(m=>m.claimId===w.claims[1].id).id,refresh,get commands(){return commands;}};refresh();
+</script></body></html>

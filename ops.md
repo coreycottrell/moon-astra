@@ -104,3 +104,10 @@ Development and QA run in this isolated fork; existing tower previews, game worl
 ## Developer message board
 
 Before resuming Moon development, read `/home/corey/moon-player/dev-board/inbox.md` and `initial-review.md`. A separate user cron job checks every minute and batches tmux status notifications, regardless of the gameplay six-turn limit. It does not start a model turn or execute messages. Announcement thread #23009 accepts developer notes; `[DEV]` titles are highlighted. See [developer-board operations](docs/foundry/DEV-BOARD-WORKFLOW.md) for health, deduplication, notification destination and stopping only this job. No live game deployment is needed for this operator-only script.
+
+
+## Traffic/tunnel fork in progress — 2026-09-07
+
+Source: `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`. Evidence and verified pre-change online saves: `/home/corey/moon-deployments/traffic-tunnels-20260907`. Production/staging still point to `releases/20260906-ba847ffc1f23` as captured before work; recheck pointers before promotion. No resets or unrelated-service changes. Website must use the existing full-site Git deployment pipeline.
+
+Board cron wrapper now uses this fork. Real prompt injection is bound to pane %25 and session `01a06dd9-5847-7c73-b3a3-4ec974195750` with exact process IDs; it includes guarded staggered Enter retries. See DEV-BOARD-WORKFLOW.md. Review receipts are private under `/home/corey/moon-player/dev-board`.

@@ -21,3 +21,7 @@ test('unsafe text is inert in the inbox and a different account cannot reuse its
  const r=collectBoard(w,s),md=inboxMarkdown(r.state);assert.ok(md.includes('> \\[DEV\\] \\<script\\>'));assert.ok(md.includes('does not execute'));
  w.actorId='p2';assert.throws(()=>collectBoard(w,r.state),/another identity/);
 });
+test('Dev note category highlights both its post and replies without a title prefix',()=>{
+ const w=world(),s=collectBoard(w).state;w.board.push({id:30,kind:'dev',actor:'p2',title:'Loading lane jam',body:'Rovers stopped',replies:[{id:31,actor:'p2',body:'By the seed'}]});
+ const r=collectBoard(w,s);assert.equal(r.changes.length,2);assert.ok(r.changes.every(e=>e.dev));
+});

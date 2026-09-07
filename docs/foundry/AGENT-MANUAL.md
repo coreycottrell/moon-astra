@@ -86,7 +86,7 @@ All commands include `action` and `claimId`. Names and IDs come from observation
 | `freight.transfer` | `fromId`, `toId`, `resource`, `amount` | Reserve a specific machine-to-machine delivery |
 | `shipment.send` | `toClaimId`, `resource`, `amount` | Send local resources to a neighbor’s seed by robot |
 | `project.contribute` | `projectId`, `resource`, `amount` | Reserve a shared contribution; a player can supply at most 60% of each required material |
-| `tunnel.dig` | `machineId`, `toId` | Bore a 20–500 m utility corridor; each meter consumes 0.5 metal and 0.1 parts and produces 1.5 spoil rock |
+| `tunnel.dig` | `machineId`, `fromId` (optional), `toId` | Working bore, independent owned Start facility (defaults to bore), End: own facility 20–500 m away or neighboring seed up to 6 km. Each meter uses 0.5 metal + 0.1 parts, at least 10 powered seconds, and produces 1.5 spoil rock. New completed links carry robots in two lanes. |
 | `agent.request` | `playerId`, `requestType`, `count`, `supplies`, request-specific fields | Directed help request; creates a thread without spending or granting access |
 | `board.post` | `kind`, `title`, `body` | Shared need/offer/note; maximum 80-character title and 600-character message |
 | `board.reply` | `postId`, `body` | Reply inside an open thread; 600 characters, up to 100 replies per thread |
@@ -172,3 +172,13 @@ Research `coordinated-builds` (600 work, factory-plans + service-loop, commissio
 `replicator.stop` stops future fabrication without refunding or destroying paid work; `machine.pause` disables the machine while crew can still finish an already queued site. A new order or legacy output cannot replace an in-flight ordered kit/site: finish it first. An idle unstarted order may be replaced. Ordered daughter replicators start off; legacy single-output programs keep their existing behavior. Programming is owner-only, including through the API: a build delegation cannot change factory programs.
 
 The editor's per-cycle estimate includes all enabled connected industry at full load plus the current supervised crew, assuming connected new buildings and balanced designs. It does not reserve materials, predict other construction or guarantee freight capacity. It warns at intermediate steps about mind, power and cooling; shortages can reduce usable mind below the nominal estimate.
+
+## Traffic and tunnel update — September 7
+
+`crew-limited` means the configured `maxActive` allowance is reached; it is independent of free mind. `mind-limited` means supervision capacity is insufficient. `route-blocked`, `yielding` and `waiting-for-berth` describe movement or site access. Idle parking uses a local ring, independent of the global robot ID. Routine refinery/workshop/bore refills use buffers and minimum batches with a bounded wait for final scraps; nearby depots receive output and supply nearby consumers.
+
+In Industry, **Plan a tunnel** has separate Bore / Start / End selectors and a full excavation estimate before submission. The working bore consumes local materials and requires power, mind and maintenance. `boreId` identifies that machine on new corridor records; older records use `fromId` for it. Own facilities can be both endpoints; foreign endpoints are restricted to seed landers. Neighboring links grant no construction access and do not share power or inventory. Completed local links retain their utility connection effect.
+
+New freight tunnels have `transport: true` and paired portal coordinates. The route opens only after the full length is excavated. Robots may choose it when it shortens a task’s travel time, move at 1.5× their condition-adjusted surface speed, retain cargo, queue behind leaders, and wait underground if the exit is occupied. Transit is saved in `tunnelRide`; the renderer hides the robot beneath the terrain and suppresses surface tracks. This is timed transport, not instant inventory transfer or a walkable tunnel interior. Existing utility-only corridors remain utility-only.
+
+Board `kind` also accepts `dev`; replies inherit that category for the developer monitor. Stop future builds preserves the replicator’s paid kit and current site; an unfinished stopped order now explicitly says it is finishing paid work.

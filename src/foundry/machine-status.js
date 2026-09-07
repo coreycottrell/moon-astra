@@ -25,7 +25,7 @@ export function machineStatus(m,industry){
   if(state==='deposit-empty')return 'Stopped · this claim’s regolith deposit is exhausted';
   if(state==='output-full')return 'Waiting for pickup · output storage is full; transport material out';
   if(state==='no-feedstock'){
-    const required=m.type==='refinery'?{rock:200}:m.type==='workshop'?(m.mode==='spares'?{metal:1000,parts:1000}:{metal:2000}):m.type==='robotfactory'?m.queue?.[0]?.cost:m.type==='replicator'?(m.planCost||(BUILDINGS[m.mode]?machineCost(m.mode):null)):null;
+    const required=m.type==='refinery'?{rock:200}:m.type==='tunnel'?{metal:500,parts:100}:m.type==='workshop'?(m.mode==='spares'?{metal:1000,parts:1000}:{metal:2000}):m.type==='robotfactory'?m.queue?.[0]?.cost:m.type==='replicator'?(m.planCost||(BUILDINGS[m.mode]?machineCost(m.mode):null)):null;
     const missing=Object.entries(required||{}).filter(([item,n])=>(m.inventory?.[item]||0)<n).map(([item,n])=>`${number((n-(m.inventory?.[item]||0))/UNIT)} ${item}`);
     return `Waiting for delivery · ${missing.length?'needs '+missing.join(' + '):'inputs missing'} at this machine; colony stock must travel here`;
   }
