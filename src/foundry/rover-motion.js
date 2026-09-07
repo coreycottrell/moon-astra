@@ -45,6 +45,6 @@ export class RoverMotion{
     for(let i=1;i<samples.length;i++){b=samples[i];if(clock<=b.time)break;a=b;b=null;}
     if(clock<=a.time||!b)return {...a.robot,heading:a.robot.rotation,generation:this.generation};
     const p=routeSample(b.route,(clock-a.time)/(b.time-a.time));
-    return {...a.robot,...p,heading:p.heading??a.robot.rotation,generation:this.generation};
+    return {...a.robot,...p,undergroundDepth:(a.robot.undergroundDepth||0)+((b.robot.undergroundDepth||0)-(a.robot.undergroundDepth||0))*Math.max(0,Math.min(1,(clock-a.time)/(b.time-a.time))),heading:p.heading??a.robot.rotation,generation:this.generation};
   }
 }

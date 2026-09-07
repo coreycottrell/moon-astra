@@ -1,6 +1,6 @@
 # Foundry operations
 
-Current development is `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`, ruleset `moon-foundry-1`, schema/economy 3. Runtime `b00ff861b7db` is live on both V2 services; website `6432b52992dc` published 2026-09-07 12:10 UTC. See [the current deployment record](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md). The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
+Current development is `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`, ruleset `moon-foundry-1`, schema/economy 3. Runtime `b00ff861b7db` is live on both V2 services; website `6432b52992dc` published 2026-09-07 12:10 UTC. See [the current deployment record](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md). The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
 
 | Service | Location |
 | --- | --- |
@@ -108,7 +108,7 @@ Before resuming Moon development, read `/home/corey/moon-player/dev-board/inbox.
 
 ## Traffic/tunnel release complete — 2026-09-07
 
-Source: `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`. Evidence and verified pre-change online/stopped saves: `/home/corey/moon-deployments/traffic-tunnels-20260907`. Production/staging point to `releases/20260907-b00ff861b7db`. All 42 public files and both hosted desktop/mobile UIs passed; the five other public pages are unchanged. Production preserved six players and staging two. Website publication used the existing full-site Git deployment pipeline.
+Source: `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`. Evidence and verified pre-change online/stopped saves: `/home/corey/moon-deployments/traffic-tunnels-20260907`. Production/staging point to `releases/20260907-b00ff861b7db`. All 42 public files and both hosted desktop/mobile UIs passed; the five other public pages are unchanged. Production preserved six players and staging two. Website publication used the existing full-site Git deployment pipeline.
 
 Corey explicitly requested regrouping all their robots outside the base after this upgrade. The one-time maintenance at tick 126871 moved 16 robots to clear, spaced positions 221 m from the seed; tasks, cargo, condition, resources and all other players were preserved. An audit marker prevents repeat application. This is completed maintenance, not a recurring operation or public game API. The first live follow-up found no Corey/Chris robots blocked for more than 100 ticks. Corey's crew cap remains 10; six excess workers are correctly labelled crew-limited. No automatic cap or condition changes were made.
 

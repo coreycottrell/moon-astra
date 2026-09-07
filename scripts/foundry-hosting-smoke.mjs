@@ -26,5 +26,5 @@ try{
   await page.goto(url+'machines.html?model=titan');await page.getByRole('heading',{name:'Titan',exact:true}).waitFor({timeout:90000});await page.screenshot({path:resolve(output,'browser-hosted-prefix.png')});
   for(const name of ['phase.html','agent-manual.html','phase','agent-manual']){await page.goto(url+name);await page.locator('h1').waitFor();assert.ok((await page.locator('h1').textContent()).length>10);}
   assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);
-  const report={ok:true,mount:base,checks:['compiled game and proxied identity','16-model gallery and Titan','whitepaper cross-reference page','agent manual','extensionless document paths'],errors,badResponses:bad};writeFileSync(resolve(output,'hosting-smoke.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
+  const report={ok:true,mount:base,checks:['compiled game and proxied identity','18-model gallery and Titan','whitepaper cross-reference page','agent manual','extensionless document paths'],errors,badResponses:bad};writeFileSync(resolve(output,'hosting-smoke.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
 }finally{await browser?.close();await new Promise(r=>front.close(r));await app.close();}

@@ -3,6 +3,7 @@ import {stock,addStock,countStock,claim,machine,emit,fail} from './state.js';
 import {localXY,lunarPosition,distance,moveRobot} from './navigation.js';
 import {distanceOnMoon} from '../geography.js';
 import {belowSurface,stepTunnel} from './corridors.js';
+import {connectedDepot,depotFree,liftSurfaceReservations,DEPOT_LIMITS} from './lift-network.js';
 
 export function endpoint(w,kind,id){if(kind==='machine')return machine(w,id);if(kind==='job')return w.jobs.find(j=>j.id===id);if(kind==='project')return w.projects.find(p=>p.id===id);return null;}
 export function incoming(w,kind,id,item){return w.freight.filter(f=>f.toKind===kind&&f.toId===id&&f.item===item).reduce((n,f)=>n+f.amount,0);}
@@ -10,6 +11,7 @@ export function available(w,cid,item){return w.machines.filter(m=>m.claimId===ci
 export function canFund(w,cid,cost){return Object.entries(cost).every(([item,n])=>available(w,cid,item)>=n);}
 export function makeFreight(w,source,toKind,toId,item,amount,{purpose='supply',ownerId=source.ownerId,fromLocation}={}){
   if(amount<=0)return [];
+  const receiving=toKind==='machine'?machine(w,toId):null;if(receiving&&amount>depotFree(w,receiving,item))fail('DEPOT_FULL','This depot has insufficient free storage; outgoing and reserved incoming cargo count');
   const chunks=Math.ceil(amount/6000);if(w.freight.length+chunks>LIMITS.freight)fail('FREIGHT_CAPACITY','Finish some deliveries before reserving more material');
   if(stock(source.inventory,item)<amount)fail('INSUFFICIENT_MATERIALS',`The source lacks ${item}`);
   source.inventory[item]-=amount;const ids=[];
@@ -35,7 +37,7 @@ export function port(w,r,target,slot=0){
   if(r.berth?.key===key&&free(r.berth.position)&&(r.blockedTicks||0)<6)return r.berth.position;
   // Choose the nearest free service face, rather than assigning robots to
   // opposite sides of an already occupied ring. Reevaluate stale reservations.
-  const candidates=Array.from({length:24},(_,n)=>{const a=(n+slot/8)*Math.PI/12;return {x:p.x+Math.cos(a)*(radius+2.5),y:p.y+Math.sin(a)*(radius+2.5)};}).filter(free).sort((a,b)=>distance(r,a)-distance(r,b));
+  const candidates=Array.from({length:target.type==='depot'&&target.depotHub?2:24},(_,n)=>{const a=target.type==='depot'&&target.depotHub?(target.rotation||0)+Math.PI/6+n*Math.PI:(n+slot/8)*Math.PI/12;return {x:p.x+Math.cos(a)*(radius+2.5),y:p.y+Math.sin(a)*(radius+2.5)};}).filter(free).sort((a,b)=>distance(r,a)-distance(r,b));
   if(candidates.length){r.berth={key,position:candidates[0]};r.holding=null;return candidates[0];}
   r.berth=null;
   // A full loading ring gets a physical waiting area, never a remote pickup.
@@ -52,6 +54,7 @@ export function parkingPoint(r,others,obstacles,{center={x:0,y:0},startRadius=26
 }
 function cancelTask(r){r.task=null;r.path=[];r.destination=null;r.berth=null;r.status='idle';}
 export function cancelJob(w,j){
+  const op=j.infrastructure;if(op){if(op.kind==='depot-bays'){const m=machine(w,op.machineId);if(m?.depotHub){delete m.depotHub.jobId;if(m.depotHub.bays===0)delete m.depotHub;}}else{const t=w.corridors.find(t=>t.id===op.corridorId);if(t){if(op.kind==='lift')t.terminals[op.side].jobId=null;else delete t.upgradeJobId;}}}
   const depot=w.machines.find(m=>m.claimId===j.claimId&&m.type==='seed');
   for(const f of [...w.freight])if(f.toKind==='job'&&f.toId===j.id){
     if(f.status==='waiting'){const source=machine(w,f.fromId)||depot;addStock(source.inventory,f.item,f.amount);w.freight=w.freight.filter(x=>x.id!==f.id);}
@@ -68,13 +71,14 @@ export function cancelJob(w,j){
 }
 
 function requestInputs(w,m,wanted,{buffered=false}={}){
+  const preferred=connectedDepot(w,m);
   for(const [item,target] of Object.entries(wanted)){
     let needed=target-stock(m.inventory,item)-incoming(w,'machine',m.id,item);if(needed<=0)continue;
     // Refill buffers in batches rather than sending another rover every time
     // a recipe consumes a fraction. Exact construction/fabrication bills remain
     // exact. Tiny leftovers still get delivered after a bounded wait.
     if(buffered&&needed<target/2)continue;
-    const sources=w.machines.filter(s=>s.claimId===m.claimId&&s.id!==m.id&&stock(s.inventory,item)>0&&!(s.type==='refinery'&&item==='rock')&&!(s.type==='workshop'&&item==='metal')).sort((a,b)=>distanceOnMoon(a,m)-distanceOnMoon(b,m)||a.id-b.id);
+    const sources=w.machines.filter(s=>s.claimId===m.claimId&&s.id!==m.id&&stock(s.inventory,item)>0&&!(s.type==='refinery'&&item==='rock')&&!(s.type==='workshop'&&item==='metal')).sort((a,b)=>(b.id===preferred?.id)-(a.id===preferred?.id)||distanceOnMoon(a,m)-distanceOnMoon(b,m)||a.id-b.id);
     m.supplyWait??={};
     for(const s of sources){const amount=Math.min(needed,stock(s.inventory,item),12000);if(amount<=0)continue;
       if(buffered&&amount<1000){m.supplyWait[item]??=w.tick;if(w.tick-m.supplyWait[item]<30)continue;}
@@ -94,9 +98,12 @@ export function autoLogistics(w){
       if(m.queue?.length)requestInputs(w,m,m.queue[0].cost);
       if(m.type==='replicator'&&m.planCost)requestInputs(w,m,m.planCost);
       const corridor=w.corridors.find(t=>(t.boreId??t.fromId)===m.id&&!t.complete);if(corridor)requestInputs(w,m,{metal:8000,parts:2000},{buffered:true});
-      const outputs=m.type==='refinery'?['metal']:m.type==='workshop'?['parts','spares']:[];
-      const depot=[...depots].sort((a,b)=>distanceOnMoon(a,m)-distanceOnMoon(b,m)||a.id-b.id)[0];
-      for(const item of outputs)if(stock(m.inventory,item)>=6000&&!m.fabrication?.cost?.[item])makeFreight(w,m,'machine',depot.id,item,stock(m.inventory,item)-2000,{purpose:'warehouse'});
+      const assigned=connectedDepot(w,m),outputs=m.type==='refinery'?['metal']:m.type==='workshop'?['parts','spares']:assigned&&['miner','tunnel'].includes(m.type)?['rock']:[];
+      const depot=assigned||[...depots].sort((a,b)=>distanceOnMoon(a,m)-distanceOnMoon(b,m)||a.id-b.id)[0];
+      for(const item of outputs)if(depot&&stock(m.inventory,item)>=6000&&!m.fabrication?.cost?.[item]){
+        const target={rock:120000,metal:80000,parts:24000,spares:16000}[item],room=depot.depotHub?Math.min(depotFree(w,depot,item),Math.max(0,target-stock(depot.inventory,item)-incoming(w,'machine',depot.id,item))):Infinity;
+        const amount=Math.min(stock(m.inventory,item)-2000,room);if(amount>=1000)makeFreight(w,m,'machine',depot.id,item,amount,{purpose:'warehouse'});
+      }
     }
   }
   }catch(error){if(error.code!=='FREIGHT_CAPACITY')throw error;}
@@ -155,7 +162,7 @@ export function stepRobots(w,industries,{terrain}={}){
     if(inUse>=slots&&!r.reconditioning){r.status=slots>=workClaim.maxActive?'crew-limited':'mind-limited';continue;}perClaim.set(r.workClaimId,inUse+1);
     const others=w.robots.filter(o=>o.id!==r.id&&!belowSurface(o)).map(o=>{const p=lunarPosition(claim(w,o.claimId).home,o);return {...o,...localXY(home,p)};});
     const ownAccepted=accepted.map(s=>({...s,a:localXY(home,s.a),b:localXY(home,s.b)}));
-    const moves=[],obstacles=obstaclesFor(r.claimId);
+    const moves=[],obstacles=[...obstaclesFor(r.claimId),...liftSurfaceReservations(w,home,r.id)];
     const walkable=terrain?(a,b)=>{const d=distance(a,b),steps=Math.max(1,Math.ceil(d/8));let h=terrain(lunarPosition(home,a));for(let i=1;i<=steps;i++){const p={x:a.x+(b.x-a.x)*i/steps,y:a.y+(b.y-a.y)*i/steps},next=terrain(lunarPosition(home,p));if(Math.abs(next-h)>Math.max(1,d/steps*.6))return false;h=next;}return true;}:undefined;
     const go=target=>{
       const old={x:r.x,y:r.y},condition=Math.max(.2,r.condition/10000),speed=ROBOTS[r.role].speed*(.5+.5*condition);
@@ -165,6 +172,7 @@ export function stepRobots(w,industries,{terrain}={}){
       if(target.waiting&&arrived)r.status='waiting-for-berth';
       return arrived&&!target.waiting;
     };
+    if(r.tunnelRide&&r.tunnelRide.stage!=='approach'){go(r.tunnelRide.target);accepted.push(...moves);continue;}
     if(r.reconditioning){
       const lander=w.machines.find(m=>m.claimId===c.id&&m.type==='seed');r.status='reconditioning';
       if(go(port(w,r,lander,r.id%8))&&--r.reconditioning.remaining<=0){r.condition=5000;r.reconditioning=null;cancelTask(r);emit(w,'robot.reconditioned',`${r.name} ${r.id} returned to half condition at the lander`,{claimId:c.id,robotId:r.id});}
@@ -180,11 +188,12 @@ export function stepRobots(w,industries,{terrain}={}){
       if(task?.kind==='haul'){
         const packets=w.freight.filter(f=>task.ids.includes(f.id));
         if(!packets.length)cancelTask(r);
-        else{const first=packets[0],target=task.stage==='pickup'?first.fromLocation:endpoint(w,first.toKind,first.toId);
+        else{const first=packets[0],target=task.stage==='pickup'?(machine(w,first.fromId)||first.fromLocation):endpoint(w,first.toKind,first.toId);
           if(!target){for(const f of packets){f.toKind='machine';f.toId=w.machines.find(m=>m.claimId===f.claimId&&m.type==='seed').id;}r.path=[];}
           else{
             r.status=task.stage==='pickup'?'collecting':'delivering';
             if(go(port(w,r,target,task.slot))){
+              if(target.type==='depot'&&target.depotHub){r.status=task.stage==='pickup'?'loading-at-depot':'unloading-at-depot';task.handling=(task.handling||0)+1;if(task.handling<DEPOT_LIMITS.handlingSeconds){accepted.push(...moves);continue;}task.handling=0;}
               if(task.stage==='pickup'){for(const f of packets)f.status='carried';task.stage='delivery';r.path=[];}
               else{
                 for(const f of packets){const destination=endpoint(w,f.toKind,f.toId);if(f.toKind==='project'){addStock(destination.delivered,f.item,f.amount);destination.contributions[f.ownerId]??={};addStock(destination.contributions[f.ownerId],f.item,f.amount);}else addStock(destination.inventory,f.item,f.amount);w.totals.freightDelivered+=f.amount;}
@@ -199,7 +208,7 @@ export function stepRobots(w,industries,{terrain}={}){
         else{
           const crew=w.robots.filter(x=>x.task?.kind==='build'&&x.task.id===j.id&&x.task.targetKind===task.targetKind),max=['connect','commission'].includes(j.phase)?1:workClaim.crewLimit;
           if(crew.indexOf(r)>=max)cancelTask(r);
-          else{r.status='approaching-site';if(go(port(w,r,{...j,radius:BUILDINGS[j.type]?.radius||7},task.slot))){
+          else{r.status='approaching-site';if(go(port(w,r,{...j,radius:j.radius??BUILDINGS[j.type]?.radius??7},task.slot))){
             const power=industries[workClaim.id].powerFactor,rate=Math.floor(ROBOTS[r.role].assembly*Math.max(.2,r.condition/10000)*(.35+.65*power)/(1+.1*(crew.length-1)));
             r.status='building';r.condition=Math.max(0,r.condition-1);r.workDone+=rate;j.crew??=[];j.crew.push(r.id);
             const key=task.targetKind+':'+j.id;worked.set(key,(worked.get(key)||0)+rate);

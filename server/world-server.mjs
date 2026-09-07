@@ -10,6 +10,7 @@ import {ECONOMY_VERSION,PRODUCTION,MIND} from '../src/industry.js';
 import {TYPES} from '../src/simulation.js';
 import {BUILD_ORDER_LIMITS,BUILD_GROUPS} from '../src/foundry/build-orders.js';
 import {CORRIDOR_LIMITS} from '../src/foundry/corridors.js';
+import {DEPOT_LIMITS,TUNNEL_TIERS,LIFT_SECONDS,LIFT_COST} from '../src/foundry/lift-network.js';
 import {WORLD_VERSION,ROBOTS,TECH,DESIGNS,PROJECTS,STAGES,LIMITS,ACTIONS} from '../src/foundry/catalog.js';
 import {LunarData,direction} from '../src/geography.js';
 import {createGuide} from './guide.mjs';
@@ -87,7 +88,7 @@ export function createWorldServer({database=resolve(ROOT,'.world/world.sqlite'),
         if(origin.origin!==publicOrigin&&origin.host!==req.headers.host)throw new GameError('ORIGIN_REJECTED','Use the same game origin',403);
       }
       if(path==='/api/v1/health')return json(res,failed?503:200,{ok:!failed,ruleset:RULESET,economyVersion:world.economyVersion,tick:world.tick,players:world.players.length});
-      if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,economyVersion:ECONOMY_VERSION,unit:'Inventory is integer milli-units; command amounts use whole resource units. One tick is one simulation second.',production:PRODUCTION,mind:MIND,types:TYPES,robots:ROBOTS,technologies:TECH,designProfiles:DESIGNS,projectTemplates:PROJECTS,constructionStages:STAGES,assemblyWork:BUILD_TIME,blueprint:BLUEPRINT,actions:ACTIONS,corridors:CORRIDOR_LIMITS,boardKinds:['need','offer','note','dev'],buildOrders:{limits:BUILD_ORDER_LIMITS,groups:BUILD_GROUPS,research:'coordinated-builds',ownerOnly:true},limits:LIMITS,whitepaper:'https://ai-civ.com/moon-astra-whitepaper/'});
+      if(path==='/api/v1/catalog')return json(res,200,{ruleset:RULESET,economyVersion:ECONOMY_VERSION,unit:'Inventory is integer milli-units; command amounts use whole resource units. One tick is one simulation second.',production:PRODUCTION,mind:MIND,types:TYPES,robots:ROBOTS,technologies:TECH,designProfiles:DESIGNS,projectTemplates:PROJECTS,constructionStages:STAGES,assemblyWork:BUILD_TIME,blueprint:BLUEPRINT,actions:ACTIONS,corridors:{...CORRIDOR_LIMITS,liftSeconds:LIFT_SECONDS,liftCost:LIFT_COST,tiers:TUNNEL_TIERS},depots:DEPOT_LIMITS,boardKinds:['need','offer','note','dev'],buildOrders:{limits:BUILD_ORDER_LIMITS,groups:BUILD_GROUPS,research:'coordinated-builds',ownerOnly:true},limits:LIMITS,whitepaper:'https://ai-civ.com/moon-astra-whitepaper/'});
       if(path==='/api/v1/join'&&req.method==='POST'){
         rate(`join:${req.socket.remoteAddress}`);const input=await body(req);
         if(failed)throw new GameError('WORLD_PAUSED','Persistence is unavailable',503);

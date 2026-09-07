@@ -94,3 +94,22 @@ test('ordered programs preview without mutation and preserve owner receipts and 
   const catalog=(await call(base,'catalog')).body;assert.equal(catalog.buildOrders.ownerOnly,true);assert.equal(catalog.mind.costPerRobot,.25);
  }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
 });
+
+test('elevator commands preview atomically, remain owner-only and retain paid jobs and receipts across restart',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'foundry-lift-api-')),database=join(dir,'world.sqlite');let app=createWorldServer({database,terrain:()=>0,tickMs:0});
+ try{
+  let base=await listen(app);const joined=(await call(base,'join',{body:{name:'Lift owner'}})).body,token=joined.token;
+  const {createMachine}=await import('../src/foundry/state.js'),{TECH}=await import('../src/foundry/catalog.js');const fixture=app.state,c=fixture.claims[0];c.unlocks=Object.keys(TECH);c.autoLogistics=false;
+  const loc=(x,y)=>offsetPosition(c.home.lat,c.home.lon,x,y),bore=createMachine(fixture,c,'tunnel',loc(-40,0)),depot=createMachine(fixture,c,'depot',loc(80,0)),miner=createMachine(fixture,c,'miner',loc(0,80));
+  await app.close();const db=new DatabaseSync(database);db.prepare('UPDATE world SET data=? WHERE id=1').run(JSON.stringify(fixture));db.close();app=createWorldServer({database,terrain:()=>0,tickMs:0});base=await listen(app);
+  const command={action:'tunnel.dig',claimId:c.id,machineId:bore.id,fromId:miner.id,toId:depot.id},before=app.state;
+  assert.equal((await call(base,'preview',{token,body:command})).status,200);assert.deepEqual(app.state,before);
+  const delegate=(await call(base,'access/delegate',{token,body:{name:'Construction helper',scopes:['build'],ttlSeconds:3600,commandLimit:5}})).body;
+  for(const action of ['tunnel.dig','tunnel.upgrade','tunnel.fitout','tunnel.cancel','depot.expand','depot.assign'])assert.equal((await call(base,'commands',{token:delegate.token,key:'deny-'+action,body:{...command,action}})).body.error,'SCOPE_DENIED');
+  const accepted=await call(base,'commands',{token,key:'lift-once',body:command});assert.equal(accepted.status,200);assert.equal(app.state.jobs.filter(j=>j.infrastructure?.kind==='lift').length,2);
+  const paid=app.state;const invalid=await call(base,'commands',{token,key:'duplicate-endpoints',body:command});assert.equal(invalid.status,409);assert.deepEqual(app.state,paid);
+  await app.close();app=createWorldServer({database,terrain:()=>0,tickMs:0});base=await listen(app);assert.deepEqual(app.state,paid);assert.deepEqual(await call(base,'commands',{token,key:'lift-once',body:command}),accepted);
+  const view=(await call(base,'observe',{token})).body;assert.equal(view.tunnelStatus[view.corridors[0].id].label,'EXCAVATING');
+  const catalog=(await call(base,'catalog')).body;assert.ok(catalog.actions.includes('depot.expand'));assert.equal(catalog.depots.bays,6);
+ }finally{await app.close();rmSync(dir,{recursive:true,force:true});}
+});

@@ -2,7 +2,7 @@ import './machine-gallery.css';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {loadMachineAssets,MACHINE_TYPES,FOUNDRY_TYPES} from './machine-assets.js';
+import {loadMachineAssets,MACHINE_TYPES,FOUNDRY_TYPES,LOGISTICS_TYPES} from './machine-assets.js';
 import {createMachine,animateMachine,disposeMachine} from './machines.js';
 import {BUILDINGS,ROBOTS} from './foundry/catalog.js';
 import {appPath} from './urls.js';
@@ -15,9 +15,11 @@ const descriptions={
  replicator:{name:'Genesis',category:'05 / REPLICATOR',body:'The idea becomes a machine. A precision bridge carries a fabrication head over the build bed, laying down a new chassis under local mind supervision.',specs:[['Construction cycle','24 supervised seconds'],['Mind capacity','4'],['Motion','Gantry + tool + build']]},
  compute:{name:'Nous',category:'06 / MIND NODE',body:'Six cooled compute blades surround an optical core. Counter-rotating routing rings give intelligence a visible center of gravity.',specs:[['Mind capacity','4 supplied'],['Research','1 work / second'],['Motion','Core + dual optical rings']]},
 };
-const galleryTypes=[...MACHINE_TYPES,...FOUNDRY_TYPES];
+const galleryTypes=[...MACHINE_TYPES,...FOUNDRY_TYPES,...LOGISTICS_TYPES];
 for(const [role,r] of Object.entries(ROBOTS))descriptions[r.asset]={name:r.name,category:'FOUNDRY / ROBOT CREW',body:r.description,specs:[['Role',role],['Cargo',r.capacity/1000+' units'],['Rated travel',r.speed+' m/s']]};
 for(const type of FOUNDRY_TYPES)if(BUILDINGS[type]){const b=BUILDINGS[type];descriptions[type]={name:b.name,category:'FOUNDRY / PHYSICAL INDUSTRY',body:b.description,specs:[['Construction',b.cost+' metal / '+b.parts+' parts'],['Power',b.power+' units'],['Mind capacity',b.mind+' required']]};}
+descriptions.lift={name:'Terminus',category:'LOGISTICS / ROBOT ELEVATOR',body:'A grated rover platform follows the live descent and ascent. Both ends stay reserved until the robot clears the exit.',specs:[['Platform','One robot'],['Lift travel','4 seconds each way'],['Depth','8 m']]};
+descriptions['depot-apron']={name:'Six-bay apron',category:'LOGISTICS / DEPOT EXPANSION',body:'Six numbered connection bays surround the depot. Two start installed; research and robot construction open the other four.',specs:[['Reserved radius','19 m'],['Connections','2 → 4 → 6'],['Storage','240 units']]};
 descriptions.replicator.specs[0]=['Kit fabrication','60–240 powered seconds'];
 const $=id=>document.getElementById(id);
 $('return-game').href=appPath('');$('play-link').href=appPath('');
@@ -36,9 +38,9 @@ function pedestal(x,z,r=6){const base=new THREE.Mesh(new THREE.CylinderGeometry(
 function clear(){machines.forEach(g=>disposeMachine(g));machines=[];for(const p of [...pads.children]){p.geometry.dispose();p.material.dispose();pads.remove(p);}$('labels').replaceChildren();}
 function show(type,collection=false){
  if(!ready)return;clear();chosen=type;all=collection;document.body.classList.toggle('lineup',all);
- const types=all?galleryTypes:[type];types.forEach((t,i)=>{const g=createMachine(t),x=all?(i%4-1.5)*14:0,z=all?(Math.floor(i/4)-1.5)*14:0;g.position.set(x,.08,z);g.userData.galleryType=t;scene.add(g);machines.push(g);pedestal(x,z,all?5.8:6.3);if(all){const label=document.createElement('div');label.className='model-label';label.textContent=descriptions[t].name.toUpperCase();$('labels').append(label);}});
+ const types=all?galleryTypes:[type];types.forEach((t,i)=>{const g=createMachine(t),x=all?(i%4-1.5)*14:0,z=all?(Math.floor(i/4)-1.5)*14:0;g.position.set(x,.08,z);g.userData.galleryType=t;if(all&&t==='depot-apron')g.scale.setScalar(.38);scene.add(g);machines.push(g);pedestal(x,z,all?5.8:6.3);if(all){const label=document.createElement('div');label.className='model-label';label.textContent=descriptions[t].name.toUpperCase();$('labels').append(label);}});
  const isRobot=Object.values(ROBOTS).some(r=>r.asset===type);const d=descriptions[type];$('model-name').textContent=d.name;$('category').textContent=d.category;$('model-description').textContent=d.body;$('specs').innerHTML=d.specs.map(([a,b])=>`<div class="spec"><span>${a}</span><b>${b}</b></div>`).join('');
- camera.position.set(...(all?[48,52,66]:innerWidth<620?[14,12,21]:['miner','refinery','compute'].includes(type)?[10,8,13]:[13,10,17]));controls.target.set(all?0:innerWidth<1000?0:2.3,all?0:2.0,0);controls.maxDistance=all?100:45;if(!all&&isRobot){const bounds=new THREE.Box3().setFromObject(machines[0].userData.asset?.root||machines[0]),sphere=bounds.getBoundingSphere(new THREE.Sphere()),halfFov=THREE.MathUtils.degToRad(camera.fov/2),usable=Math.min(.7,camera.aspect*.55),distance=sphere.radius/(Math.sin(halfFov)*usable);controls.target.copy(sphere.center);if(innerWidth>=1000)controls.target.x+=sphere.radius*.12;camera.position.copy(controls.target).add(new THREE.Vector3(3.2,2.5,4).normalize().multiplyScalar(distance));controls.minDistance=1.4;controls.maxDistance=Math.max(18,distance*2);}else controls.minDistance=7;controls.update();
+ camera.position.set(...(all?[48,52,66]:innerWidth<620?[14,12,21]:['miner','refinery','compute'].includes(type)?[10,8,13]:[13,10,17]));controls.target.set(all?0:innerWidth<1000?0:2.3,all?0:2.0,0);controls.maxDistance=all?100:45;if(!all&&(isRobot||LOGISTICS_TYPES.includes(type))){const bounds=new THREE.Box3().setFromObject(machines[0].userData.asset?.root||machines[0]),sphere=bounds.getBoundingSphere(new THREE.Sphere()),halfFov=THREE.MathUtils.degToRad(camera.fov/2),usable=Math.min(.7,camera.aspect*.55),distance=sphere.radius/(Math.sin(halfFov)*usable);controls.target.copy(sphere.center);if(innerWidth>=1000)controls.target.x+=sphere.radius*.12;camera.position.copy(controls.target).add(new THREE.Vector3(3.2,2.5,4).normalize().multiplyScalar(distance));controls.minDistance=1.4;controls.maxDistance=Math.max(18,distance*2);}else controls.minDistance=7;controls.update();
  document.querySelectorAll('.model-tab').forEach(b=>b.classList.toggle('active',b.dataset.type===type&&!all));document.querySelector('.model-tab.active')?.scrollIntoView({block:'nearest',inline:'center'});$('lineup').textContent=all?'Inspect selected machine ↗':'View complete collection ↗';
  $('status').textContent=state==='working'?'LIVE MECHANICAL PREVIEW':state==='paused'?'PAUSED / MOTION HELD':'SUPERVISION NEEDED / MOTION HELD';
 }

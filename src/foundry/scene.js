@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {RoverVisual,robotFallback} from './rover-visual.js';
+import {LiftVisuals} from './lift-visual.js';
 import {RoverTracks} from './rover-tracks.js';
 import {instantiateMachine} from '../machine-assets.js';
 import {positionMachine,disposeMachine} from '../machines.js';
@@ -8,10 +9,10 @@ import {distanceOnMoon,direction} from '../geography.js';
 
 
 export class FoundryScene{
-  constructor(scene){this.scene=scene;this.robots=new Map();this.sites=new Map();this.overlays=new THREE.Group();scene.add(this.overlays);this.showUtilities=false;this.showRoutes=false;this.tracks=new RoverTracks(scene);}
+  constructor(scene){this.scene=scene;this.robots=new Map();this.sites=new Map();this.overlays=new THREE.Group();scene.add(this.overlays);this.showUtilities=false;this.showRoutes=false;this.tracks=new RoverTracks(scene);this.liftVisuals=new LiftVisuals(scene);}
   clearOverlays(){for(const o of [...this.overlays.children]){o.traverse(x=>{x.geometry?.dispose();x.material?.dispose();});o.removeFromParent();}}
   setTerrain(terrain){this.terrain=terrain;this.tracks.setTerrain(terrain);}
-  reset({clearTracks=false}={}){if(clearTracks)this.tracks.clear();for(const g of this.robots.values())disposeMachine(g,true);this.robots.clear();for(const g of this.sites.values())disposeMachine(g,true);this.sites.clear();this.clearOverlays();}
+  reset({clearTracks=false}={}){if(clearTracks)this.tracks.clear();this.liftVisuals.reset();for(const g of this.robots.values())disposeMachine(g,true);this.robots.clear();for(const g of this.sites.values())disposeMachine(g,true);this.sites.clear();this.clearOverlays();}
   sync(state,data,frame,view,received=performance.now()){
     this.data=data;this.frame=frame;const nearby=state.robots.filter(r=>distanceOnMoon(r,view)<1500),ids=new Set(nearby.map(r=>r.id));
     for(const [id,g] of this.robots)if(!ids.has(id)){disposeMachine(g,true);this.robots.delete(id);}
@@ -30,12 +31,13 @@ export class FoundryScene{
     const jobs=state.jobs.filter(j=>distanceOnMoon(j,view)<1500),jobIds=new Set(jobs.map(j=>j.id));
     for(const [id,g] of this.sites)if(!jobIds.has(id)){disposeMachine(g,true);this.sites.delete(id);}
     for(const j of jobs){let g=this.sites.get(j.id);if(!g){
-      g=new THREE.Group();const radius=BUILDINGS[j.type].radius;
+      g=new THREE.Group();const radius=j.radius??BUILDINGS[j.type].radius;
       const slab=new THREE.Mesh(new THREE.BoxGeometry(radius*1.8,.18,radius*1.8),new THREE.MeshStandardMaterial({color:0x353c42,roughness:.9}));slab.position.y=.12;g.add(slab);
       const scaffold=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(radius*1.6,4,radius*1.6)),new THREE.LineBasicMaterial({color:0xd2a372,transparent:true,opacity:.5}));scaffold.position.y=2;g.add(scaffold);g.userData.scaffold=scaffold;
       for(const x of [-1,1])for(const z of [-1,1]){const light=new THREE.Mesh(new THREE.CylinderGeometry(.075,.1,.8,6),new THREE.MeshBasicMaterial({color:0xf6b477}));light.position.set(x*radius,.4,z*radius);g.add(light);}
       this.scene.add(g);this.sites.set(j.id,g);
     }positionMachine(g,j,data,frame);g.userData.scaffold.scale.y=j.phase==='supply'?.08:Math.max(.15,1-j.remaining/j.duration);}
+    this.liftVisuals.sync(state,data,frame,view,received);
     this.clearOverlays();
     const local=p=>new THREE.Vector3(...frame.toLocal(data.point(direction(p.lat,p.lon))));
     const line=(a,b,color,height=.3,opacity=.65)=>{const points=[];for(let i=0;i<=12;i++){const p={lat:a.lat+(b.lat-a.lat)*i/12,lon:a.lon+(b.lon-a.lon)*i/12};points.push(local(p).add(new THREE.Vector3(...frame.vectorToLocal(direction(p.lat,p.lon))).multiplyScalar(height)));}const o=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineBasicMaterial({color,transparent:true,opacity,depthWrite:false,depthTest:height>=0}));this.overlays.add(o);};
@@ -47,7 +49,7 @@ export class FoundryScene{
       const center={lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2};if(distanceOnMoon(center,view)>t.length/2+1500)continue;
       if(!t.complete&&this.showUtilities)line(a,b,0x425f64,-3,.3);
       line(a,end,t.transport?0x78debf:0xc59158,this.showUtilities?-3:.5,.9);
-      if(t.portals)for(const loc of Object.values(t.portals).flat()){
+      if(t.portals&&!t.liftVersion)for(const loc of Object.values(t.portals).flat()){
         if(distanceOnMoon(loc,view)>1500)continue;
         const g=new THREE.Group(),ring=new THREE.Mesh(new THREE.TorusGeometry(2.1,.22,8,32),new THREE.MeshStandardMaterial({color:t.complete?0x78debf:0xc59158,metalness:.5,roughness:.5}));ring.rotation.x=-Math.PI/2;ring.position.y=.12;g.add(ring);
         const shaft=new THREE.Mesh(new THREE.CircleGeometry(1.85,24),new THREE.MeshStandardMaterial({color:0x0b1318,roughness:1}));shaft.rotation.x=-Math.PI/2;shaft.position.y=.06;g.add(shaft);positionMachine(g,{...loc,rotation:0},data,frame);this.overlays.add(g);
@@ -64,7 +66,7 @@ export class FoundryScene{
     }
   }
   animate(delta,camera,connected,time=performance.now()){
-    this.tracks.update(time/1000);
+    this.tracks.update(time/1000);this.liftVisuals.animate(time,camera,this.terrain,connected);
     for(const g of this.robots.values()){
       const a=g.userData.asset,near=camera.position.distanceTo(g.position)<120;
       if(a){a.root.visible=near;g.userData.fallback.visible=!near;}
@@ -72,5 +74,5 @@ export class FoundryScene{
       const distance=camera.position.distanceTo(g.position);g.visible=distance<2500;g.userData.marker.visible=distance<450;
     }
   }
-  get motionStats(){return {trackStrips:this.tracks.count,trackCapacity:this.tracks.capacity,rovers:[...this.robots].map(([id,g])=>({id,position:g.position.toArray(),up:new THREE.Vector3(0,1,0).applyQuaternion(g.quaternion).toArray(),heading:g.userData.visual.heading,speed:g.userData.visual.speed,travel:g.userData.visual.travel,wheelRoll:{...g.userData.visual.roll},detailed:!!g.userData.asset?.root.visible}))};}
+  get motionStats(){return {lifts:this.liftVisuals.stats,trackStrips:this.tracks.count,trackCapacity:this.tracks.capacity,rovers:[...this.robots].map(([id,g])=>({id,position:g.position.toArray(),up:new THREE.Vector3(0,1,0).applyQuaternion(g.quaternion).toArray(),heading:g.userData.visual.heading,speed:g.userData.visual.speed,travel:g.userData.visual.travel,wheelRoll:{...g.userData.visual.roll},detailed:!!g.userData.asset?.root.visible}))};}
 }

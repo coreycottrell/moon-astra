@@ -1,0 +1,25 @@
+{
+  "version": "logistics-01",
+  "source": "art/blender/build_logistics_assets.py",
+  "units": "meters",
+  "models": {
+    "lift": {
+      "file": "lift.glb",
+      "triangles": 7240,
+      "clips": [
+        "Elevator"
+      ],
+      "bytes": 464976,
+      "sha256": "2b2ddcfbf1e648dd6e2ca3e2ab0c12acc643f4b9af2c38d2820443e9b7e9abb6"
+    },
+    "depot-apron": {
+      "file": "depot-apron.glb",
+      "triangles": 10576,
+      "clips": [
+        "Idle"
+      ],
+      "bytes": 689152,
+      "sha256": "a79df6c3775db98a0c8aad50ac93799f5a08b0428a4e5864a16ec9d535bc29d6"
+    }
+  }
+}

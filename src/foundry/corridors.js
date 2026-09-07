@@ -1,5 +1,6 @@
 import {distanceOnMoon,offsetPosition} from '../geography.js';
 import {BUILDINGS} from './catalog.js';
+import {selectLiftTunnel,stepLift} from './lift-transit.js';
 import {localXY,distance,clearSegment,segmentsNear} from './navigation.js';
 
 export const CORRIDOR_LIMITS={local:500,neighbor:6000,minimum:20,metalPerMeter:.5,partsPerMeter:.1,secondsPerMeter:10,travelMultiplier:1.5};
@@ -22,11 +23,11 @@ export function corridorPortals(w,from,to){
   }
   return {from:pair[0],to:pair[1]};
 }
-export const belowSurface=r=>!!r.tunnelRide&&r.tunnelRide.stage!=='approach';
+export const belowSurface=r=>!!r.tunnelRide&&(r.tunnelRide.liftVersion?['transit','passing','exit-wait','calling-lift'].includes(r.tunnelRide.stage):r.tunnelRide.stage!=='approach');
 export function selectTunnel(w,r,target,home){
   if(r.reconditioning||!r.task||distance(r,target)<30)return null;
   let best=null,cost=distance(r,target)*.9;
-  for(const t of w.corridors){if(!t.complete||!t.transport||!t.portals)continue;
+  for(const t of w.corridors){if(t.liftVersion||!t.complete||!t.transport||!t.portals)continue;
     for(const reverse of [false,true]){
       const entry=(reverse?t.portals.to:t.portals.from)[0],exit=(reverse?t.portals.from:t.portals.to)[1];
       const a=localXY(home,entry),b=localXY(home,exit),length=distance(a,b),candidate=distance(r,a)+length/CORRIDOR_LIMITS.travelMultiplier+distance(b,target);
@@ -39,7 +40,8 @@ export function selectTunnel(w,r,target,home){
 export function stepTunnel(w,r,target,{home,speed,surfaceMove,obstacles,others,accepted}){
   let ride=r.tunnelRide;
   if(ride?.stage==='approach'&&distance(ride.target,target)>60){r.tunnelRide=null;r.path=[];ride=null;}
-  if(!ride){ride=selectTunnel(w,r,target,home);if(!ride)return null;r.tunnelRide=ride;r.path=[];r.routeRetry=0;}
+  if(!ride){ride=selectLiftTunnel(w,r,target,home,speed)||selectTunnel(w,r,target,home);if(!ride)return null;r.tunnelRide=ride;r.path=[];r.routeRetry=0;}
+  if(ride.liftVersion)return stepLift(w,r,target,{home,speed,surfaceMove,obstacles,others,accepted});
   const entry=localXY(home,ride.entry),exit=localXY(home,ride.exit);
   if(ride.stage==='approach'){
     r.status='approaching-tunnel';

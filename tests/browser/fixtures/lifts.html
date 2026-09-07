@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Depot elevator integration</title><style>body{margin:0;background:#101417;color:#fff;font:16px sans-serif}aside{position:absolute;top:20px;left:24px;pointer-events:none}small{color:#a4cdbf}</style><aside>DEPOT ELEVATORS / LIVE TRANSIT<br><small id="status">Loading Blender assets</small></aside><script type="module">
+import * as THREE from 'three';
+import {FoundryScene} from '/src/foundry/scene.js';
+import {loadMachineAssets} from '/src/machine-assets.js';
+import {createMachine as renderMachine,positionMachine} from '/src/machines.js';
+import {MoonTerrain} from '/src/terrain.js';
+import {frameAt,offsetPosition,RADIUS} from '/src/geography.js';
+import {freshSharedWorld,addPlayer,createMachine} from '/src/foundry/state.js';
+import {applyCommand} from '/src/foundry/commands.js';
+import {observe,stepWorld} from '/src/foundry/world.js';
+import {makeFreight} from '/src/foundry/logistics.js';
+import {localXY} from '/src/foundry/navigation.js';
+import {TECH} from '/src/foundry/catalog.js';
+const renderer=new THREE.WebGLRenderer({antialias:true,logarithmicDepthBuffer:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(1);renderer.setClearColor(0x101417);renderer.toneMapping=THREE.ACESFilmicToneMapping;document.body.append(renderer.domElement);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(45,innerWidth/innerHeight,.1,10000);camera.position.set(68,55,70);camera.lookAt(0,0,0);scene.add(new THREE.HemisphereLight(0xc3daef,0x38322a,1.5));const sun=new THREE.DirectionalLight(0xffefd7,4);sun.position.set(-20,38,12);scene.add(sun);
+const w=freshSharedWorld();addPlayer(w,'demo','Elevator demo');const c=w.claims[0],home=c.home,loc=(x,y)=>offsetPosition(home.lat,home.lon,x,y);c.unlocks=Object.keys(TECH);c.autoLogistics=false;Object.assign(w.machines[0],loc(-50,-50));
+const bore=createMachine(w,c,'tunnel',loc(-50,40)),miner=createMachine(w,c,'miner',loc(-30,0)),depot=createMachine(w,c,'depot',loc(30,0));miner.enabled=false;
+applyCommand(w,'demo',{action:'tunnel.dig',claimId:c.id,machineId:bore.id,fromId:miner.id,toId:depot.id});const t=w.corridors[0];t.complete=true;t.excavated=t.length;t.terminals.from.installed=t.terminals.to.installed=true;w.jobs=[];w.freight=[];miner.depotId=depot.id;miner.inventory.rock=6000;const ids=makeFreight(w,miner,'machine',depot.id,'rock',6000),r=w.robots.find(r=>r.role==='hauler');w.robots=[r];Object.assign(r,localXY(home,t.terminals.from.loc));r.x-=7;r.y-=7;r.task={kind:'haul',stage:'delivery',ids,slot:0};for(const f of w.freight){f.status='carried';f.robotId=r.id;}
+const snapshots=[observe(w,'demo')];for(let n=0;n<150;n++){stepWorld(w);snapshots.push(observe(w,'demo'));}
+const frame=frameAt(home.lat,home.lon),data={height:()=>0,point:d=>d.map(v=>v*RADIUS)},terrain=new MoonTerrain(scene,data,frame,null);terrain.update(camera,true);while(terrain.pending.length)terrain.process(100);terrain.process(10);const loaded=await loadMachineAssets();for(const m of w.machines){const g=renderMachine(m.type);positionMachine(g,m,data,frame);scene.add(g);}
+const foundry=new FoundryScene(scene);foundry.setTerrain(terrain);let tick=-1,start=performance.now(),last=0;const samples=[];
+window.liftProbe={ready:true,loaded,phases:snapshots.map((s,i)=>({tick:i,phase:s.robots[0]?.tunnelRide?.stage})),get samples(){return samples;},get stats(){return foundry.motionStats;},seek(n){start=performance.now()-n*1000;tick=-1;foundry.reset();},focus(side){const p=localXY(home,t.terminals[side].loc);camera.position.set(p.x+12,11,-p.y+16);camera.lookAt(p.x,0,-p.y);},get depot(){return snapshots[tick]?.machines.find(m=>m.id===depot.id);}};
+function draw(now){const next=Math.max(0,Math.min(150,Math.floor((now-start)/1000))),delta=last?Math.min(.1,(now-last)/1000):0;last=now;if(next!==tick){tick=next;foundry.sync(snapshots[tick],data,frame,home,now);document.querySelector('#status').textContent=snapshots[tick].robots[0].status.replaceAll('-',' ');}
+ foundry.animate(delta,camera,true,now);renderer.render(scene,camera);if(samples.length<6000)samples.push({time:now,tick,phase:snapshots[tick].robots[0].tunnelRide?.stage,...foundry.motionStats});requestAnimationFrame(draw);
+}requestAnimationFrame(draw);
+</script></html>

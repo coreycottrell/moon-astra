@@ -2,6 +2,7 @@ import './style.css';
 import './ui.css';
 import './colony.css';
 import './foundry/style.css';
+import {tunnelStatus,tierFor,DEPOT_LIMITS} from './foundry/lift-network.js';
 import {FoundryScene} from './foundry/scene.js';
 import {renderFoundryPanel,openFoundryGuide} from './foundry/panel.js';
 import {machineStatus as describeMachineStatus} from './foundry/machine-status.js';
@@ -41,7 +42,7 @@ $('waveform').innerHTML=Array.from({length:48},()=>'<i></i>').join('');
 $('destinations').innerHTML=sites.map((s,i)=>`<button class="destination" data-site="${i}"><strong>${s.name} ↗</strong><small>${coordText(s)}</small></button>`).join('');
 
 let sim,renderer,scene,camera,controls,data,terrain,frame,texture,rocks,ghost,ghostRing,markers;
-let foundryScene,inspectedRobotId=null,selectedProfile='balanced';
+let foundryScene,inspectedRobotId=null,inspectedLiftId=null,selectedProfile='balanced';
 let mode='surface',selected=null,rotation=0,hover=null,inspected=null,tween=null,sound=false,audioContext,focusedLayout=null;
 let lastSave=0,lastUI=0,lastLod=0,now=0,lastFrame=0;
 let modelMap=new Map(),pointerDown=null,toastTimeout,claimLines,jobMarkers,placing=false;
@@ -95,7 +96,7 @@ function renderColony(force=false){
   renderFoundryPanel($('colony-content'),{sim,command:colonyCommand,selectBuild,visit:setLocation,focus:focusFoundry,refresh:()=>renderColony(true),notice:s=>$('colony-notice').textContent=s,utilities:toggleUtilities});
 }
 function toggleUtilities(){foundryScene.showUtilities=!foundryScene.showUtilities;$('utilities-toggle').setAttribute('aria-pressed',String(foundryScene.showUtilities));foundryScene.sync(sim.state,data,frame,sim.world.view);toast(foundryScene.showUtilities?'Power and data routes visible. Buried corridors appear through the surface.':'Utility overlay hidden.');}
-function inspectRobot(r){inspected=null;inspectedRobotId=r.id;$('inspect').hidden=false;$('inspect-type').textContent=`ROBOT CREW / ${r.id}`;$('inspect-title').textContent=r.name;$('inspect-body').textContent=ROBOTS[r.role].description;$('inspect-model').href=appPath('machines.html?model='+ROBOTS[r.role].asset);}
+function inspectRobot(r){inspectedLiftId=null;inspected=null;inspectedRobotId=r.id;$('inspect').hidden=false;$('inspect-type').textContent=`ROBOT CREW / ${r.id}`;$('inspect-title').textContent=r.name;$('inspect-body').textContent=ROBOTS[r.role].description;$('inspect-model').href=appPath('machines.html?model='+ROBOTS[r.role].asset);}
 function focusFoundry(target,isRobot=false){
   $('colony-dialog').close();setLocation(target,isRobot?target.name:target.type?TYPES[target.type].name:target.name);
   camera.position.set(...(isRobot?[7,5,10]:[28,22,34]));controls.target.set(0,isRobot?.5:1,0);controls.minDistance=isRobot?2:8;controls.update();
@@ -114,7 +115,7 @@ function rebuildMarkers(){
   markers=new THREE.Points(geo,new THREE.PointsMaterial({color:0xffc185,size:6,sizeAttenuation:false,depthTest:true}));markers.visible=mode!=='surface';scene.add(markers);
 }
 function setLocation(loc,name,requestedMode='surface'){
-  cancelBuild();clearLayoutFocus();inspected=null;inspectedRobotId=null;$('inspect').hidden=true;foundryScene?.reset();
+  cancelBuild();clearLayoutFocus();inspected=null;inspectedRobotId=null;inspectedLiftId=null;$('inspect').hidden=true;foundryScene?.reset();
   sim.world.view={lat:loc.lat,lon:loc.lon};
   sim.setView(loc);
   frame=frameAt(loc.lat,loc.lon,data.height(direction(loc.lat,loc.lon)));
@@ -161,7 +162,8 @@ function selectBuild(type,profile='balanced'){
   if(selected===type){cancelBuild();return;}
   cancelBuild();selected=type;selectedProfile=profile;rotation=0;
   if(type==='factory'){ghost=new THREE.Group();for(const p of BLUEPRINT){const g=createMachine(p.type);g.position.set(p.east,0,-p.north);ghost.add(g);}}
-  else ghost=createMachine(type);
+  else{ghost=createMachine(type);if(type==='depot')ghost.add(createMachine('depot-apron'));}
+  ghostRing.scale.setScalar(type==='depot'?DEPOT_LIMITS.apronRadius/6.6:1);
   ghost.traverse(o=>{if(o.isMesh){o.material=o.material.clone();o.material.transparent=true;o.material.opacity=.35;o.material.depthWrite=false;o.castShadow=false;}});ghost.visible=false;scene.add(ghost);
   document.querySelectorAll('[data-build]').forEach(b=>{b.classList.toggle('selected',b.dataset.build===type);b.setAttribute('aria-pressed',String(b.dataset.build===type));});
   const definition=type==='factory'?FACTORY:TYPES[type];
@@ -176,12 +178,14 @@ function updateGhost(){
   const definition=selected==='factory'?FACTORY:TYPES[selected];
   $('placement-text').textContent=reason||`Click to place ${definition.name.toLowerCase()} · ${definition.cost} metal`;
 }
-function inspectMachine(m){$('inspect-model').href=appPath(`machines.html?model=${m.type}`);clearLayoutFocus();inspected=m;$('inspect').hidden=false;$('inspect-type').textContent=`GENERATION ${String(m.generation).padStart(2,'0')} · MACHINE ${String(m.id).padStart(3,'0')}`;$('inspect-title').textContent=TYPES[m.type].name;$('inspect-body').textContent=TYPES[m.type].description;}
+function inspectLift(id){inspected=null;inspectedRobotId=null;inspectedLiftId=id;clearLayoutFocus();$('inspect').hidden=false;$('inspect-type').textContent='UNDERGROUND FREIGHT / '+id;$('inspect-title').textContent='Robot elevator';$('inspect-model').href=appPath('machines.html?model=lift');updateLiftInspector();}
+function updateLiftInspector(){const t=sim.state.corridors.find(t=>t.id===inspectedLiftId);if(!t)return;const s=tunnelStatus(sim.state,t);$('inspect-body').textContent=`Connection #${t.fromId} ↔ #${t.toId} · ${tierFor(t).name}. One lift at each end. A robot rides down, travels underground with its cargo, then rides up and drives clear.`;$('inspect-progress').textContent=`${s.label} · ${s.occupied} / ${s.capacity} robots · ${s.waiting||0} waiting${s.robotId?' · Robot #'+s.robotId:''}${s.eta!==null&&s.eta!==undefined?' · about '+s.eta+'s travel left (queues can add time)':''}`;}
+function inspectMachine(m){inspectedLiftId=null;inspectedRobotId=null;$('inspect-model').href=appPath(`machines.html?model=${m.type}`);clearLayoutFocus();inspected=m;$('inspect').hidden=false;$('inspect-type').textContent=`GENERATION ${String(m.generation).padStart(2,'0')} · MACHINE ${String(m.id).padStart(3,'0')}`;$('inspect-title').textContent=TYPES[m.type].name;$('inspect-body').textContent=TYPES[m.type].description;}
 function bind(){
   document.querySelectorAll('[data-build]').forEach(b=>b.onclick=()=>selectBuild(b.dataset.build));
   document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>setMode(b.dataset.view));
   $('cancel-build').onclick=cancelBuild;$('home').onclick=()=>setLocation(sim.actor.home,sim.actor.name+' · home');
-  $('close-inspect').onclick=()=>{inspected=null;clearLayoutFocus();$('inspect').hidden=true;};
+  $('close-inspect').onclick=()=>{inspectedLiftId=null;inspectedRobotId=null;inspected=null;clearLayoutFocus();$('inspect').hidden=true;};
   $('inspect-guide').onclick=()=>{openFoundryGuide(sim.actor.id,inspected?{machineId:inspected.id}:inspectedRobotId?{robotId:inspectedRobotId}:{});renderColony(true);$('colony-dialog').showModal();};
   const reflectPause=()=>{document.body.classList.toggle('paused',sim.paused);$('pause').textContent=sim.paused?'▷':'Ⅱ';$('pause').setAttribute('aria-label',sim.paused?'Resume simulation':'Pause simulation');};
   reflectPause();
@@ -218,9 +222,9 @@ function bind(){
     const hit=pick(e);if(!hit)return;
     if(mode!=='surface'){setLocation(hit.loc);toast('Surface reached. Begin building here.');return;}
     if(selected){if(placing)return;placing=true;const type=selected;try{const result=await sim.build(type,hit.loc,{rotation,profile:selectedProfile});if(result.ok){beep(640);toast(type==='factory'?'Three construction sites reserved. Your crew will deliver and assemble each machine.':`${TYPES[type].name} reserved. Watch the crew deliver its supplies.`);save();if(selected&&hover)updateGhost();rebuildJobs();}else{toast(result.reason);beep(140);}}finally{placing=false;}return;}
-    raycaster.setFromCamera(pointer,camera);const machineHit=raycaster.intersectObjects([...modelMap.values(),...foundryScene.robots.values()],true)[0];
-    if(machineHit){let o=machineHit.object;while(o&&!o.userData.machine)o=o.parent;if(o?.userData.robot)inspectRobot(o.userData.robot);else if(o?.userData.machine){inspectedRobotId=null;inspectMachine(o.userData.machine);}}
-    else{$('inspect').hidden=true;inspected=null;inspectedRobotId=null;clearLayoutFocus();}
+    raycaster.setFromCamera(pointer,camera);const machineHit=raycaster.intersectObjects([...modelMap.values(),...foundryScene.robots.values(),...foundryScene.liftVisuals.lifts.values()],true)[0];
+    if(machineHit){let o=machineHit.object;while(o&&!o.userData.machine&&!o.userData.lift)o=o.parent;if(o?.userData.lift)inspectLift(o.userData.lift.corridorId);else if(o?.userData.robot)inspectRobot(o.userData.robot);else if(o?.userData.machine){inspectedRobotId=null;inspectMachine(o.userData.machine);}}
+    else{$('inspect').hidden=true;inspected=null;inspectedRobotId=null;inspectedLiftId=null;clearLayoutFocus();}
   });
   window.addEventListener('resize',resize);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)save();});window.addEventListener('pagehide',save);
@@ -248,6 +252,7 @@ function updateUI(){
   $('crew-hud-text').textContent=`${busy} / ${crew.length} crew working · ${industry.used} / ${industry.capacity} mind slots`;
   $('crew-hud-text').classList.toggle('warning',industry.blockedIds.length>0||p.factor<1);
   if(inspected){const current=sim.state.machines.find(m=>m.id===inspected.id)||inspected;const contents=Object.entries(current.inventory||{}).filter(([,n])=>n>0).map(([k,n])=>`${resourceFormat.format(n/UNIT)} ${k}`).join(' · ');$('inspect-progress').textContent=`${machineStatus(current)} · ${Math.round(current.condition/100)}% condition · ${current.design||'balanced'} design${contents?' · '+contents:''}`;}
+  if(inspectedLiftId)updateLiftInspector();
   if(inspectedRobotId){const r=sim.state.robots.find(r=>r.id===inspectedRobotId);if(r)$('inspect-progress').textContent=`${r.status.replaceAll('-',' ')} · ${Math.round(r.condition/100)}% condition · ${Math.round(r.distanceTravelled)} m traveled${r.cargo.length?' · carrying '+r.cargo.map(c=>`${c.amount/UNIT} ${c.item}`).join(', '):''}`;}
   if(focusedLayout){
     const parts=[...sim.state.machines,...sim.state.jobs],complete=new Set(sim.state.machines.map(m=>m.id));

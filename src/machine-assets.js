@@ -4,7 +4,8 @@ import {appPath} from './urls.js';
 
 export const MACHINE_TYPES=['seed','solar','miner','refinery','replicator','compute'];
 export const FOUNDRY_TYPES=['mason','atlas','suture','titan','depot','workshop','robotfactory','relay','tunnel','radiator'];
-const ALL_TYPES=[...MACHINE_TYPES,...FOUNDRY_TYPES];
+export const LOGISTICS_TYPES=['lift','depot-apron'];
+const ALL_TYPES=[...MACHINE_TYPES,...FOUNDRY_TYPES,...LOGISTICS_TYPES];
 const templates=new Map(),sharedGeometry=new WeakSet(),sharedMaterials=new WeakSet();
 let loading;
 export function loadMachineAssets(onProgress=()=>{}){
@@ -12,7 +13,7 @@ export function loadMachineAssets(onProgress=()=>{}){
   let done=0;const loader=new GLTFLoader();
   loading=Promise.allSettled(ALL_TYPES.map(async type=>{
     // Versioned folder makes the art release safe for cached and older open tabs.
-    const gltf=await loader.loadAsync(appPath(`models/${FOUNDRY_TYPES.includes(type)?'foundry-01':'industrial-01'}/${type}.glb`));
+    const gltf=await loader.loadAsync(appPath(`models/${LOGISTICS_TYPES.includes(type)?'logistics-01':FOUNDRY_TYPES.includes(type)?'foundry-01':'industrial-01'}/${type}.glb`));
     if(!gltf.scene||!gltf.animations.length)throw Error(`${type}: missing model or animation`);
     gltf.scene.traverse(o=>{if(o.isMesh){sharedGeometry.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])sharedMaterials.add(m);o.castShadow=true;o.receiveShadow=true;}});
     templates.set(type,gltf);onProgress(++done,ALL_TYPES.length);

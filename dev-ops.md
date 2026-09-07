@@ -1,6 +1,6 @@
 # Foundry development and release entrypoint
 
-Active source: `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`. The preserved local preview still uses `/home/corey/projects/moon-foundry`, branch `development/physical-industry`; do not restart it against this fork without choosing a separate database and ports.
+Active source: `/home/corey/projects/moon-depot-lifts`, branch `development/depot-lifts`. The preserved local preview still uses `/home/corey/projects/moon-foundry`, branch `development/physical-industry`; do not restart it against this fork without choosing a separate database and ports.
 
 The current runbook is [ops.md](ops.md). Hosting instructions are [docs/foundry/HOSTING-ACG.md](docs/foundry/HOSTING-ACG.md). Scope and measured evidence are in [docs/foundry/RELEASE.md](docs/foundry/RELEASE.md).
 

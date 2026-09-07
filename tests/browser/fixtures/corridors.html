@@ -6,7 +6,9 @@ import {offsetPosition} from '/src/geography.js';
 import {renderFoundryPanel} from '/src/foundry/panel.js';
 const w=freshSharedWorld();addPlayer(w,'p1','Ada');addPlayer(w,'p2','Babbage');const c=w.claims[0];c.unlocks=Object.keys(TECH);
 const bore=createMachine(w,c,'tunnel',offsetPosition(c.home.lat,c.home.lon,-40,0));
+const depot=createMachine(w,c,'depot',offsetPosition(c.home.lat,c.home.lon,90,0)),miner=createMachine(w,c,'miner',offsetPosition(c.home.lat,c.home.lon,0,90));
+const legacy={id:w.nextId++,claimId:c.id,fromId:bore.id,toId:miner.id,length:99,excavated:99,complete:true};w.corridors.push(legacy);
 const sim={actor:w.players[0],activeClaim:c,state:observe(w,'p1')};let commands=[];
 const refresh=()=>{sim.state=observe(w,'p1');renderFoundryPanel(document.querySelector('#colony-content'),{sim,refresh,command:async cmd=>{commands.push(cmd);applyCommand(w,'p1',cmd);refresh();return true;},focus:()=>{},notice:()=>{},visit:()=>{},utilities:()=>{},selectBuild:()=>{}});};
-window.corridorProbe={boreId:bore.id,neighborSeed:w.machines.find(m=>m.claimId===w.claims[1].id).id,refresh,get commands(){return commands;}};refresh();
+window.corridorProbe={depotId:depot.id,minerId:miner.id,legacyId:legacy.id,get state(){return observe(w,'p1');},startId:w.machines[0].id,boreId:bore.id,neighborSeed:w.machines.find(m=>m.claimId===w.claims[1].id).id,refresh,get commands(){return commands;}};refresh();
 </script></body></html>

@@ -6,7 +6,9 @@ import {lunarPosition} from './navigation.js';
 import {available,reserve,cancelJob,makeFreight,incoming} from './logistics.js';
 
 import {validateBuildOrder} from './build-orders.js';
-import {corridorEstimate,corridorPortals} from './corridors.js';
+import {corridorEstimate} from './corridors.js';
+import {DEPOT_LIMITS,depotEnvelope,planLiftTerminals,activeRides,liftReady} from './lift-network.js';
+import {queueLiftFitout,expandDepot,upgradeTunnel} from './infrastructure.js';
 
 export const BLUEPRINT=[{type:'solar',east:0,north:0},{type:'miner',east:26,north:0},{type:'refinery',east:0,north:26}];
 export function placement(w,c,type,loc,terrain){
@@ -16,9 +18,9 @@ export function placement(w,c,type,loc,terrain){
   if(distanceOnMoon(c.home,loc)>LIMITS.localBuildRadius)fail('OUTSIDE_SERVICE_AREA','This phase supports physical construction within 900 m of the seed. Use relays to extend utilities.');
   if(BUILDINGS[type].tech&&!c.unlocks.includes(BUILDINGS[type].tech))fail('TECH_LOCKED',`Research ${TECH[BUILDINGS[type].tech].name} first`);
   if(w.machines.length+w.jobs.length>=LIMITS.machines)fail('WORLD_CAPACITY','This preview supports 1,000 machines and construction sites');
-  const radius=BUILDINGS[type].radius;
+  const radius=type==='depot'?DEPOT_LIMITS.apronRadius:BUILDINGS[type].radius;
   if(w.corridors.some(t=>t.portals&&Object.values(t.portals).flat().some(p=>distanceOnMoon(p,loc)<radius+4)))fail('PORTAL_RESERVED','Leave the tunnel entrance and exit lanes clear');
-  if([...w.machines,...w.jobs,...w.projects].some(m=>distanceOnMoon(m,loc)<radius+(m.radius??BUILDINGS[m.type]?.radius??7)+4))fail('OCCUPIED','Leave a clear service lane between machine footprints and project sites');
+  if([...w.machines,...w.jobs,...w.projects].some(m=>distanceOnMoon(m,loc)<radius+depotEnvelope(m)+4))fail('OCCUPIED','Leave a clear service lane between machine footprints and project sites');
   if(w.robots.some(r=>distanceOnMoon(lunarPosition(claim(w,r.claimId).home,r),loc)<radius+(r.radius||.8)+.2))fail('ROBOT_IN_FOOTPRINT','A robot is in this footprint. Give the crew room to move.');
   if(terrain){const h=terrain(loc);for(const [e,n] of [[radius,0],[-radius,0],[0,radius],[0,-radius]])if(Math.abs(terrain(offsetPosition(loc.lat,loc.lon,e,n))-h)>radius*.65)fail('STEEP_TERRAIN','This ground is too steep for a basic foundation');}
 }
@@ -29,6 +31,7 @@ export function createJob(w,c,type,loc,{rotation=0,generation=0,design='balanced
   if(maxMetal!==undefined&&(!Number.isFinite(maxMetal)||maxMetal<0||maxMetal<(cost.metal||0)/UNIT))fail('BUDGET_EXCEEDED','This plan exceeds its metal budget');
   const stageWork=[0,(prefab?12:24)*UNIT,Math.ceil(BUILDINGS[type].work*UNIT*(prefab?.25:1)*(w.projects[2]?.complete?.9:1)),12*UNIT,16*UNIT];
   const j={id:w.nextId++,type,...loc,rotation,generation,design,mode,claimId:c.id,ownerId:c.ownerId,inventory:{},cost,prefab,phase:'supply',stage:0,stageWork,work:0,crew:[],duration:stageWork.reduce((a,b)=>a+b,0)/UNIT,remaining:stageWork.reduce((a,b)=>a+b,0)/UNIT,createdAt:w.tick};
+  if(type==='depot')j.depotHub={bays:2,version:1};
   reserve(w,c.id,cost,'job',j.id,{purpose:'construction'});w.jobs.push(j);
   emit(w,'construction.queued',`${BUILDINGS[type].name}: ${prefab?'prefabricated kit':'metal and components'} reserved for physical delivery`,{claimId:c.id,jobId:j.id});return j;
 }
@@ -39,7 +42,7 @@ function ownedRobot(w,c,id){const r=w.robots.find(r=>r.id===id&&r.claimId===c.id
 function spendLocal(m,cost){if(Object.entries(cost).some(([k,n])=>stock(m.inventory,k)<n))fail('LOCAL_MATERIALS_REQUIRED','Deliver the upgrade materials to this machine first');for(const [k,n] of Object.entries(cost))m.inventory[k]-=n;}
 export function applyCommand(w,actor,cmd,{terrain}={}){
   player(w,actor);if(!cmd||typeof cmd!=='object'||Array.isArray(cmd)||!ACTIONS.includes(cmd.action))fail('UNKNOWN_ACTION','Choose a supported command action',400);
-  const known=['action','claimId','type','lat','lon','rotation','amount','toClaimId','machineId','mode','playerId','paused','maxMetal','jobId','robotId','role','count','maxActive','workers','autoLogistics','targetClaimId','duration','techId','profile','resource','fromId','toId','projectId','title','body','kind','postId','enabled','requestType','supplies','steps','repeat','group'];
+  const known=['action','claimId','type','lat','lon','rotation','amount','toClaimId','machineId','mode','playerId','paused','maxMetal','jobId','robotId','role','count','maxActive','workers','autoLogistics','targetClaimId','duration','techId','profile','resource','fromId','toId','projectId','title','body','kind','postId','enabled','requestType','supplies','steps','repeat','group','corridorId','tier','depotId'];
   if(Object.keys(cmd).some(k=>!known.includes(k)))fail('INVALID_COMMAND','Unknown command field',400);
   const c=own(w,actor,cmd.claimId,['build.place','blueprint.deploy'].includes(cmd.action));let result={};
   if(cmd.action==='build.place'){
@@ -179,9 +182,26 @@ export function applyCommand(w,actor,cmd,{terrain}={}){
     const estimate=corridorEstimate(from,to),{length,neighbor}=estimate;
     if(!estimate.valid)fail('INVALID_CORRIDOR','Local endpoints must be 20–500 m away; neighboring seeds may be up to 6 km away');if(w.corridors.some(t=>(t.boreId??t.fromId)===bore.id&&!t.complete))fail('BORE_BUSY','This bore already has an active corridor');
     if(w.corridors.some(t=>(t.fromId===from.id&&t.toId===to.id)||(t.fromId===to.id&&t.toId===from.id)))fail('CORRIDOR_EXISTS','These endpoints already have a corridor');
-    const portals=corridorPortals(w,from,to);if(!portals)fail('PORTAL_BLOCKED','Leave clear ground beside both endpoints for tunnel entrances');
-    const t={id:w.nextId++,claimId:c.id,ownerId:actor,targetClaimId:to.claimId,boreId:bore.id,fromId:from.id,toId:to.id,length,excavated:0,progress:0,complete:false,inventory:{},createdAt:w.tick,transport:true,portals};w.corridors.push(t);result={corridorId:t.id,...estimate,metalPerMeter:.5,partsPerMeter:.1};
+    const plan=planLiftTerminals(w,from,to);if(plan.error)fail(plan.error,plan.message);
+    const t={id:w.nextId++,claimId:c.id,ownerId:actor,targetClaimId:to.claimId,boreId:bore.id,fromId:from.id,toId:to.id,length,excavated:0,progress:0,complete:false,inventory:{},createdAt:w.tick,transport:true,liftVersion:1,tier:'basic',...plan};w.corridors.push(t);const fitout=queueLiftFitout(w,c,t);result={corridorId:t.id,...estimate,metalPerMeter:.5,partsPerMeter:.1,liftJobs:fitout.jobIds,liftCost:fitout.cost};
     emit(w,'corridor.started',neighbor?'Excavation started toward a neighboring seed; freight lanes open after completion':'Excavation started on a local utility corridor',{actor,claimId:c.id,targetClaimId:to.claimId,corridorId:t.id});
+  }else if(['tunnel.upgrade','tunnel.fitout','tunnel.cancel'].includes(cmd.action)){
+    const t=w.corridors.find(t=>t.id===cmd.corridorId&&t.claimId===c.id);if(!t)fail('CORRIDOR_NOT_FOUND','Choose a tunnel owned by this settlement');
+    if(cmd.action==='tunnel.upgrade')result=upgradeTunnel(w,c,t,cmd.tier);
+    else if(cmd.action==='tunnel.fitout'){if(!t.liftVersion)fail('FIT_LIFTS_FIRST','Convert the legacy route to basic elevator transport first');result=queueLiftFitout(w,c,t);}
+    else{
+      if(t.complete)fail('CORRIDOR_COMPLETE','Completed connections are preserved; switch the bore off to pause excavation');
+      if(w.robots.some(r=>r.tunnelRide?.corridorId===t.id))fail('TUNNEL_OCCUPIED','Wait for the connection to clear');
+      for(const j of [...w.jobs])if(j.infrastructure?.corridorId===t.id)cancelJob(w,j);
+      w.corridors=w.corridors.filter(x=>x.id!==t.id);result={corridorId:t.id,spentLinersReturned:false};emit(w,'corridor.cancelled','Excavation stopped; unused construction supplies returned, spent liners remain consumed',{claimId:c.id,corridorId:t.id});
+    }
+  }else if(cmd.action==='depot.expand'){
+    result=expandDepot(w,c,ownedMachine(w,c,cmd.machineId,'depot'));
+  }else if(cmd.action==='depot.assign'){
+    const m=ownedMachine(w,c,cmd.machineId);
+    if(['seed','depot','solar','compute','relay','radiator'].includes(m.type))fail('INVALID_MACHINE','Assign a producer or consumer to a depot');
+    if(cmd.depotId===null){delete m.depotId;result={machineId:m.id,depotId:null};}
+    else{const d=ownedMachine(w,c,cmd.depotId,'depot');if(!w.corridors.some(t=>liftReady(t)&&(t.fromId===m.id&&t.toId===d.id||t.toId===m.id&&t.fromId===d.id)))fail('CONNECTION_REQUIRED','Complete a freight connection before assigning its depot');m.depotId=d.id;result={machineId:m.id,depotId:d.id};}
   }else if(cmd.action==='claim.pause'){
     if(typeof cmd.paused!=='boolean')fail('INVALID_PAUSE','paused must be true or false',400);c.paused=cmd.paused;result={paused:c.paused};
   }else if(cmd.action==='claim.grant'){

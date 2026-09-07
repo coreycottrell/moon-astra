@@ -6,6 +6,8 @@ import {placement,createJob} from './commands.js';
 import {offsetPosition,distanceOnMoon} from '../geography.js';
 import {lunarPosition,localXY} from './navigation.js';
 import {replicatorOutput,advanceBuildOrders} from './build-orders.js';
+import {finishInfrastructure} from './infrastructure.js';
+import {stepEmptyElevators,tunnelStatus} from './lift-network.js';
 const funded=(inventory,cost)=>Object.entries(cost).every(([k,n])=>stock(inventory,k)>=n);
 function consume(inventory,cost){for(const [k,n] of Object.entries(cost))inventory[k]-=n;}
 function startBatch(m,batch){consume(m.inventory,batch.cost);m.fabrication={...batch,progress:0};}
@@ -22,6 +24,7 @@ function robotBay(w,c,m,role){
 }
 function prepareJobs(w){
   for(const j of w.jobs){j.crew=[];const c=claim(w,j.claimId);if(c.paused)continue;
+    if(j.infrastructure?.kind==='lift'&&!w.corridors.find(t=>t.id===j.infrastructure.corridorId)?.complete)continue;
     if(j.phase==='supply'&&funded(j.inventory,j.cost)){
       consume(j.inventory,j.cost);j.embodied={...j.cost};j.stage=1;j.phase=STAGES[1];j.work=0;
       emit(w,'construction.supplied',`${BUILDINGS[j.type].name} supplies arrived. Crew can prepare the site.`,{claimId:j.claimId,jobId:j.id});
@@ -36,7 +39,8 @@ function finishJobs(w,worked){
     if(j.work>=j.stageWork[j.stage]){
       j.work=0;j.stage++;
       if(j.stage>=STAGES.length){
-        const c=claim(w,j.claimId),m=createMachine(w,c,j.type,{lat:j.lat,lon:j.lon},{id:j.id,rotation:j.rotation,generation:j.generation,design:j.design,inventory:{...j.inventory},mode:j.type==='workshop'?'parts':j.mode,embodied:j.embodied});
+        if(j.infrastructure){finishInfrastructure(w,j);w.jobs=w.jobs.filter(x=>x.id!==j.id);continue;}
+        const c=claim(w,j.claimId),m=createMachine(w,c,j.type,{lat:j.lat,lon:j.lon},{id:j.id,rotation:j.rotation,generation:j.generation,design:j.design,inventory:{...j.inventory},mode:j.type==='workshop'?'parts':j.mode,embodied:j.embodied,...(j.depotHub?{depotHub:j.depotHub}:{})});
         w.jobs=w.jobs.filter(x=>x.id!==j.id);w.totals.machinesBuilt++;emit(w,'construction.completed',`${BUILDINGS[j.type].name} commissioned by its robot crew`,{claimId:c.id,machineId:m.id});continue;
       }
       j.phase=STAGES[j.stage];emit(w,'construction.stage',`${BUILDINGS[j.type].name}: ${j.phase}`,{claimId:j.claimId,jobId:j.id});
@@ -75,7 +79,7 @@ function production(w,industries,{terrain}={}){
       }
       if(m.type==='tunnel'){
         const t=w.corridors.find(t=>(t.boreId??t.fromId)===m.id&&!t.complete);
-        if(t){t.progress=Math.min(10*UNIT,t.progress+Math.floor(f*UNIT));if(t.progress>=10*UNIT&&stock(m.inventory,'metal')>=500&&stock(m.inventory,'parts')>=100){m.inventory.metal-=500;m.inventory.parts-=100;t.progress-=10*UNIT;t.excavated++;addStock(m.inventory,'rock',1500);if(t.excavated>=t.length){t.complete=true;t.completedAt=w.tick;emit(w,'corridor.completed',t.transport?'A completed tunnel opened its two freight lanes':'An underground utility corridor connected two facilities',{claimId:c.id,corridorId:t.id});}}}
+        if(t){t.progress=Math.min(10*UNIT,t.progress+Math.floor(f*UNIT));if(t.progress>=10*UNIT&&stock(m.inventory,'metal')>=500&&stock(m.inventory,'parts')>=100){m.inventory.metal-=500;m.inventory.parts-=100;t.progress-=10*UNIT;t.excavated++;addStock(m.inventory,'rock',1500);if(t.excavated>=t.length){t.complete=true;t.completedAt=w.tick;emit(w,'corridor.completed',t.liftVersion?'Excavation complete; robot crew can install both elevators':t.transport?'A completed tunnel opened its two freight lanes':'An underground utility corridor connected two facilities',{claimId:c.id,corridorId:t.id});}}}
       }
     }
     const researchWork=i.researchPerSecond;c.thought+=researchWork;
@@ -91,7 +95,7 @@ function production(w,industries,{terrain}={}){
   }
 }
 export function stepWorld(w,options={}){
-  w.tick++;prepareJobs(w);advanceBuildOrders(w);
+  w.tick++;stepEmptyElevators(w);prepareJobs(w);advanceBuildOrders(w);
   for(const m of w.machines)if(m.type==='replicator'&&!m.fabrication&&!m.pendingBuild){const output=replicatorOutput(m);if(output!=='off')m.planCost=machineCost(output);else if(m.buildOrder)m.planCost=null;}
   if(w.tick%3===0)autoLogistics(w);
   const industries=Object.fromEntries(w.claims.map(c=>[c.id,industryFor(w,c.id)]));
@@ -101,5 +105,5 @@ export function stepWorld(w,options={}){
 export function observe(w,actor){
   player(w,actor);const copy=structuredClone(w);syncClaims(copy);
   const industries=Object.fromEntries(w.claims.map(c=>[c.id,industryFor(w,c.id)]));
-  return {...copy,actorId:actor,robots:copy.robots.map(r=>({...r,...lunarPosition(claim(w,r.claimId).home,r),cargo:w.freight.filter(f=>f.robotId===r.id&&f.status==='carried').map(f=>({item:f.item,amount:f.amount}))})),powers:Object.fromEntries(Object.entries(industries).map(([id,i])=>[id,i.power])),industry:industries};
+  return {...copy,actorId:actor,tunnelStatus:Object.fromEntries(copy.corridors.map(t=>[t.id,tunnelStatus(copy,t)])),robots:copy.robots.map(r=>({...r,...lunarPosition(claim(w,r.claimId).home,r),cargo:w.freight.filter(f=>f.robotId===r.id&&f.status==='carried').map(f=>({item:f.item,amount:f.amount}))})),powers:Object.fromEntries(Object.entries(industries).map(([id,i])=>[id,i.power])),industry:industries};
 }

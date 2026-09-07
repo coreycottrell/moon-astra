@@ -14,13 +14,13 @@ The published design is at [ai-civ.com/moon-astra-whitepaper](https://ai-civ.com
 | A quick beginning that becomes physical industry | Four landing robots and seven prefabricated kits; later construction reserves full metal and component bills | A tuned multi-day campaign with authored chapter pacing |
 | Construction you can watch | Supply → prepare → assemble → connect → commission; physical cargo, work sites, limited crew and visible progress | Excavation geometry, cranes, terrain grading and detailed building interiors |
 | Robot crews | Mason, Atlas, Suture and Titan; continuous buffered driving, distance-matched wheels, slope contact and fading session-local regolith tracks; work and sensor animation; pathfinding, yielding and parking | Wheel-soil physics, articulated walking, arbitrary robot assemblies |
-| Located materials | Inventory at each machine; cargo packets reserved once and carried to their destination | Continuous conveyors, fluid networks, mass drivers and deep storage throughput models |
+| Located materials | Inventory at each machine; cargo packets reserved once and carried to their destination | Continuous conveyors, fluid networks, mass drivers and advanced storage throughput models |
 | Maintenance and replacement | Wear, service spares, service travel, foundry queues and manufactured new chassis | Component-level failure modes, cannibalization and destructive accidents |
 | Avoid an unrecoverable start | Lander attention reserve and slow reconditioning of an exhausted idle robot | Formal proof of recovery from every possible player-created layout |
-| Minds change capability | Nine research capabilities, supervision costs, a used/free mind HUD, supported mind nodes, crew budgets and heat limits | Actual model inference inside the simulation, distributed research markets and emergent design discovery |
+| Minds change capability | Research capabilities, supervision costs, a used/free mind HUD, supported mind nodes, crew budgets and heat limits | Actual model inference inside the simulation, distributed research markets and emergent design discovery |
 | New machine designs | Bounded profiles with material, throughput and wear tradeoffs; certification and physical retrofits | Freeform machine engineering, topology search, experimentally certified CAD |
 | Neighbors build together | Claim permissions, cargo deliveries, crew loans, a threaded board with retained drafts and replies, three staged common projects | Contracts with escrow, diplomacy, elected institutions and multi-world federations |
-| Underground infrastructure | Independent bore/start/end planner; measured excavation with liners and spoil; local utility links; new two-lane timed robot freight routes to local facilities and neighboring seeds | Walkable underground volumes, soil mechanics, conveyors/pipelines and shared utility accounting |
+| Underground infrastructure | Independent bore/start/end planner; measured excavation with liners and spoil; local utility links; visible robot elevators, occupied basic lines, researched convoy/passing/twin upgrades, six-bay depot aprons and timed cargo routes | Walkable underground volumes, soil mechanics, conveyors/pipelines and shared utility accounting |
 | Factories reproduce | Finite counted build orders, researched repeating cycles and fixed support-first templates; kits create physical jobs and advance after commissioning. Ordered daughters start off | Adaptive support insertion, a closed semiconductor/tooling supply chain, autonomous new landings, planetary-scale reproduction |
 | A playground for AICIVs | Authenticated observation, preview and command APIs; scoped expiring agent tokens, durable allowances, receipts, audit and deterministic gym scripts | Reward hosting, tournaments, arbitrary third-party agent execution and model training infrastructure |
 | Operator visibility | Tick, queues, persistence latency, process memory, world size, blocked crews and limits | Production capacity commitments, multi-process simulation and hosted dashboards |
@@ -32,7 +32,7 @@ The published design is at [ai-civ.com/moon-astra-whitepaper](https://ai-civ.com
 
 Mason is the generalist builder. Atlas carries larger loads. Suture fetches spares and services the colony. Titan is a heavier construction chassis unlocked by design research. These are actual exported Blender models with separate mechanical animations, used by the game renderer.
 
-The supporting collection adds a service workshop, freight depot, robot foundry, utility relay, utility bore and radiator field. The original six animated machines are retained. Open the [rotating equipment collection](machines.html?model=mason) to inspect all sixteen assets.
+The supporting collection adds a service workshop, freight depot, robot foundry, utility relay, utility bore and radiator field. The original six animated machines are retained. Open the [rotating equipment collection](machines.html?model=mason) to inspect all eighteen assets.
 
 ![Robot foundry](images/foundry/robotfactory.webp)
 
@@ -74,3 +74,29 @@ Board threads now hold replies and completed conversations. A simple help form c
 ## Explain the colony
 
 Machine inspection and the Industry list now distinguish an idle output program or empty robot queue from a disabled machine, missing inputs, full storage, maintenance, grid, mind, power or cooling problems. The MiniMax Moon Guide adds a conversation inside Settlement, with focused machine/robot questions, fresh server-derived context, and numerical snapshot facts beneath each answer. It offers advice through an authenticated, bounded, read-only service. It does not perform the player's game commands. Mixed historical recipes and completed shipments are not a complete accounting ledger; the guide reports those visibility limits.
+
+
+## Robot elevators and depot networks · September 7
+
+![Blender robot elevator](images/logistics/lift.png)
+
+Choose **Start** and **End** in Industry. The bore is assigned separately and does not dictate the route. Excavation still consumes liners and powered work. Two small elevators then require real material deliveries, robot assembly and commissioning. Watch a hauler drive on, lower four seconds, travel underground at 1.5× its condition-adjusted speed, wait for the exit platform, rise, and drive clear. Cargo remains aboard. Click a lift for its live status.
+
+A basic connection reads **OCCUPIED** until that robot clears the exit. Research unlocks paid infrastructure upgrades:
+
+| Upgrade | Traffic rule | Connection capacity |
+| --- | --- | --- |
+| Basic elevators | One robot across both directions | 1 |
+| Scheduled convoys | Same direction; drain the convoy for an opposing request | 3 |
+| Passing bay | Exclusive half-sections and separate midpoint waiting pockets | 4 total, 2 per direction |
+| Twin tunnels | Separate tubes with protected merges at the shared elevators | 8 total, 4 per direction |
+
+![Six-bay depot apron](images/logistics/depot-apron.png)
+
+A new depot reserves a 19 m radius apron for six fixed terminus bays. Two start available. Research and two paid crew expansions unlock four, then six. Each expansion costs 16 metal and 4 parts; capacity changes only at commissioning. An older depot can request an apron retrofit when surrounding ground is clear. Existing buildings stay in place, so a crowded base may need another depot nearby.
+
+New depot hubs hold 240 combined resource units, including incoming reservations, and have two loading positions with three seconds of handling. Connected producers send surplus to their assigned depot; consumers prefer their assigned depot for inputs. Robots perform every delivery. The connection list suggests nearby producers and consumers, shows full route costs, and fills the planner without ordering construction. Useful journeys can chain multiple tunnel links through depot transfers on the surface.
+
+Older utility routes keep their endpoints and utility function. **Fit 2 elevators** explicitly reserves 12 metal and 4 parts and queues both installations. An unfinished excavation can be stopped with the normal construction return/salvage rules; spent liners are consumed. No automatic retrofit, relocation, resource gift or save reset occurs.
+
+Validation includes complete excavation/crew installation/cargo delivery, eight opposing haulers across all four tiers with underground collision and cargo-conservation checks, API permissions and restart receipts, and synchronized Blender platform/rover browser motion. A copy of the existing six-player world ran 600 ticks on measured lunar terrain without a simulation error; Corey and Chris had no robot blocked for over 100 ticks at the final snapshot. These are bounded scenarios, not a proof against every possible traffic jam. Roads, fluid pipelines and walkable underground interiors remain future work.
