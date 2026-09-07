@@ -143,3 +143,10 @@ Staging hosted checks passed all 47 files, cache/gzip/model/404 controls and des
 ## 2026-09-07 13:40 UTC — depot elevators LIVE
 
 Production Netlify 6a9ebe925858ae0008179a88 published 2026-09-07T13:40:38.295Z, full-site commit e41a9932701131dea08f4a01d7107b0a181df311. Runtime aa91824cc6c24f70d67646d7996f94e3b2627d65 on both V2 services. All 47 live files and both hosted UIs passed; no game writes during QA. Five existing public page hashes and original Moon services stayed unchanged. Board Dev release #58331 verified at tick 132504; actual full-board review remains current and bounded gameplay was not restarted. Shared ACG notes and canonical transport idea status updated. Final private recovery archive follows the operator-only commit and includes all fresh save copies and publication receipts.
+
+
+## 2026-09-07 — Advanced API disclosure repair (in preparation)
+
+Corey could not click the agent manual because live snapshots collapsed Advanced API access. The disclosure lacked the existing `data-thread` state key; added `advanced-api`, and preserved delegation-form values alongside other drafts. Source branch `fix/access-panel-persistence`, checkout `/home/corey/projects/moon-access-panel`. A DOM-only replay reproduced the failure on the previous source and passed twelve updates, open/closed state, all four delegation fields and the manual link with this correction. No browser, network or GPU use in that check. Public build passes; isolated website branch `fix/moon-api-panel` changes only the V2 index reference and adds the new game bundle, retaining old hashed assets. Deployment pending backup and preview verification. Backend and traffic rules are unchanged.
+
+Corey’s standing friction-as-engineering principle is recorded in the top-level project MISSION.md and canonical `moon-civilization/ideas/friction-as-engineering.md`: meaningful bottlenecks should have in-world recovery and researchable improvements, including larger shafts and automated dispatch. Infinite capacity remains a proposal; existing convoy/passing/twin upgrades are live. The current circular reservation bug is documented separately and not patched here.
