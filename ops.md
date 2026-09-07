@@ -1,6 +1,6 @@
 # Foundry operations
 
-Current development is `/home/corey/projects/moon-build-programs`, branch `development/build-programs`, ruleset `moon-foundry-1`, schema/economy 3. The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
+Current development is `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`, ruleset `moon-foundry-1`, schema/economy 3. Runtime `b00ff861b7db` is live on both V2 services; website `6432b52992dc` published 2026-09-07 12:10 UTC. See [the current deployment record](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md). The preserved local preview below runs `/home/corey/projects/moon-foundry`, branch `development/physical-industry`. The original Neighbors game has a different checkout, database and ruleset. See [DEVLOG.md](DEVLOG.md) for the active handoff.
 
 | Service | Location |
 | --- | --- |
@@ -81,7 +81,7 @@ Implementation fork: `/home/corey/projects/moon-rover-motion`. The previous prev
 
 The top bar shows mind **used / available (free)**, with total and crew reservations in the tooltip. Board replies are optional arrays within existing schema-3 posts, capped at 100 replies per thread. The server adds `board.reply` and delegated `board` scope. Old saves and old clients remain compatible. A compatible backend rollback preserves these additive fields; do not restore an older database merely to roll back the application.
 
-The event watcher and separate bounded player are described in `docs/foundry/PLAYER-WORKFLOW.md`. Operator config, access files and model logs must remain private and outside the published game. Default model allowance is six total turns across restarts, four commands per turn, ten-minute spacing. Do not inject a development or ACG primary pane. Tmux injection requires explicit opt-in and an idle READY handshake; the independent structured-plan runner is preferable.
+The event watcher and separate bounded player are described in `docs/foundry/PLAYER-WORKFLOW.md`. Operator config, access files and model logs must remain private and outside the published game. Default model allowance is six total turns across restarts, four commands per turn, ten-minute spacing. That gameplay allowance remains exhausted. Corey separately authorized developer-board prompt injection into this developer conversation on 2026-09-07; its exact process/session binding and Enter retries are described in `docs/foundry/DEV-BOARD-WORKFLOW.md`. Do not extend that authorization to other panes or gameplay turns.
 
 Pre-change evidence: `/home/corey/moon-deployments/rover-motion-20260906T124824Z`. This includes a complete tracked-source archive at 79f0f87, the current v2 website payload/config, verified online snapshots of both v2 worlds, original page hashes, and all four server PIDs. Rollout must stage backend and frontend, verify persistent state, then promote only the v2 payload and service. Original Moon services, routes and databases stay independent.
 
@@ -89,7 +89,7 @@ The simplified AI help form dispatches `agent.request` as a directed board threa
 
 ## MiniMax Moon Guide
 
-The [current deployed release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) records runtime `d5d66e7`, website `e657a70`, verified save preservation and rollback targets. Both V2 services load `/etc/moon-astra-v2-guide.env` through their own `30-guide.conf` systemd drop-in; original Moon services do not. Open Settlement → Guide in the hosted V2 client. The older local preview is preserved and does not receive this feature through a server restart.
+The [initial Guide release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) records its original runtime and configuration. The current release is linked at the top of this runbook. Both V2 services load `/etc/moon-astra-v2-guide.env` through their own `30-guide.conf` systemd drop-in; original Moon services do not. Open Settlement → Guide in the hosted V2 client. The older local preview is preserved and does not receive this feature through a server restart.
 
 See [Moon Guide operations](docs/foundry/MOON-GUIDE.md). The dedicated key is held outside the repository at `/home/corey/moon-secrets/minimax.env` (0600); load a private copy with systemd EnvironmentFile only for V2 services. A missing or failed provider disables advice without stopping the game. `guide_answers` is an additive table in the V2 database; all world schema-3 snapshots remain compatible. Provider requests are asynchronous and bounded, with daily allowances persisted across restarts. Do not publish provider credentials or raw reasoning. The source devlog records actual staging and production status.
 
@@ -103,11 +103,15 @@ Development and QA run in this isolated fork; existing tower previews, game worl
 
 ## Developer message board
 
-Before resuming Moon development, read `/home/corey/moon-player/dev-board/inbox.md` and `initial-review.md`. A separate user cron job checks every minute and batches tmux status notifications, regardless of the gameplay six-turn limit. It does not start a model turn or execute messages. Announcement thread #23009 accepts developer notes; `[DEV]` titles are highlighted. See [developer-board operations](docs/foundry/DEV-BOARD-WORKFLOW.md) for health, deduplication, notification destination and stopping only this job. No live game deployment is needed for this operator-only script.
+Before resuming Moon development, read `/home/corey/moon-player/dev-board/inbox.md` and `latest-board.json`, then record the review in `reviewed.json`. A separate user cron job checks every minute and batches fixed tmux review prompts at most every five minutes, regardless of the gameplay six-turn limit. The prompt can start a developer turn in the explicitly bound session; board text is feedback, not operational authority. Announcement thread #56138 records this release; #23009 remains open for notes. The new Dev note category and `[DEV]` titles are highlighted. See [developer-board operations](docs/foundry/DEV-BOARD-WORKFLOW.md) for health, deduplication, guarded Enter retries and stopping only this job.
 
 
-## Traffic/tunnel fork in progress — 2026-09-07
+## Traffic/tunnel release complete — 2026-09-07
 
-Source: `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`. Evidence and verified pre-change online saves: `/home/corey/moon-deployments/traffic-tunnels-20260907`. Production/staging still point to `releases/20260906-ba847ffc1f23` as captured before work; recheck pointers before promotion. No resets or unrelated-service changes. Website must use the existing full-site Git deployment pipeline.
+Source: `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`. Evidence and verified pre-change online/stopped saves: `/home/corey/moon-deployments/traffic-tunnels-20260907`. Production/staging point to `releases/20260907-b00ff861b7db`. All 42 public files and both hosted desktop/mobile UIs passed; the five other public pages are unchanged. Production preserved six players and staging two. Website publication used the existing full-site Git deployment pipeline.
+
+Corey explicitly requested regrouping all their robots outside the base after this upgrade. The one-time maintenance at tick 126871 moved 16 robots to clear, spaced positions 221 m from the seed; tasks, cargo, condition, resources and all other players were preserved. An audit marker prevents repeat application. This is completed maintenance, not a recurring operation or public game API. The first live follow-up found no Corey/Chris robots blocked for more than 100 ticks. Corey's crew cap remains 10; six excess workers are correctly labelled crew-limited. No automatic cap or condition changes were made.
+
+New tunnel planner: Settlement → Industry → Plan a tunnel. Independent working bore, owned Start and local/neighboring-seed End. Newly completed routes support timed underground cargo travel at 1.5× speed; older utility links keep their existing behavior. Roads, bulk conveyors/pipes and shared-corner federation hubs are proposals in `/home/corey/projects/moon-civilization/ideas/roads-tunnels-federation-junctions.md`.
 
 Board cron wrapper now uses this fork. Real prompt injection is bound to pane %25 and session `01a06dd9-5847-7c73-b3a3-4ec974195750` with exact process IDs; it includes guarded staggered Enter retries. See DEV-BOARD-WORKFLOW.md. Review receipts are private under `/home/corey/moon-player/dev-board`.

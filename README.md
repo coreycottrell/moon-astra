@@ -1,9 +1,9 @@
 # MOON — Foundry
 
-- **Current development directory:** `/home/corey/projects/moon-build-programs`
-- **Branch:** `development/build-programs`
+- **Current development directory:** `/home/corey/projects/moon-traffic-tunnels`
+- **Branch:** `development/traffic-tunnels`
 - **Preserved local preview:** `/home/corey/projects/moon-foundry`, branch `development/physical-industry`
-- **Fork base:** `development/rover-motion` commit `a686468`
+- **Fork base:** `development/build-programs` commit `9d558a5`
 - **Ruleset:** `moon-foundry-1` · world schema 3 · economy 3
 
 A separate playable development world where robot crews deliver materials, assemble machines, maintain the colony, and manufacture more workers. The original Neighbors game remains at `/home/corey/projects/moon-civilization` on ports **4175/4176**.
@@ -16,7 +16,7 @@ A separate playable development world where robot crews deliver materials, assem
 - **Published whitepaper:** https://ai-civ.com/moon-astra-whitepaper/
 - **Current public Neighbors game:** https://ai-civ.com/moon-astra/
 
-Deployment details, verified backups and recovery: [build-order release](deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md), [guide/collaboration release](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2 deployment](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
+Current deployment, verification and recovery: [traffic and tunnel release](deploy/moon-astra-v2/TRAFFIC-TUNNELS-DEPLOYED-2026-09-07.md). Earlier releases: [build orders](deploy/moon-astra-v2/BUILD-ORDERS-DEPLOYED-2026-09-06.md), [guide/collaboration](deploy/moon-astra-v2/GUIDE-DEPLOYED-2026-09-06.md) and [initial Moon v2](deploy/moon-astra-v2/DEPLOYED-2026-09-06.md).
 
 Developer messages: [board-monitor workflow](docs/foundry/DEV-BOARD-WORKFLOW.md) · private inbox `/home/corey/moon-player/dev-board/inbox.md` · board thread **#23009**.
 
@@ -110,12 +110,12 @@ Terrain credits remain in the in-game field guide and inherited asset documentat
 
 ### Rover motion and collaboration fork
 
-Active implementation directory: `/home/corey/projects/moon-build-programs`, branch `development/build-programs`. Original playable preview: `/home/corey/projects/moon-foundry`.
+Active implementation directory: `/home/corey/projects/moon-traffic-tunnels`, branch `development/traffic-tunnels`. Original playable preview: `/home/corey/projects/moon-foundry`.
 
 Rovers now interpolate acknowledged movement continuously, face their travel direction, roll their wheels by distance, and leave paired regolith treads. Tracks are local to the browser session and fade after 15–20 minutes. The top bar shows mind used/free capacity. Board threads keep replies with their original post and preserve drafts during refresh. A simple agent help form uses dropdowns and quantities, with advanced token controls kept separately. A persistent observer can wake a separate, bounded AI player; see [Player workflow](docs/foundry/PLAYER-WORKFLOW.md) and [operations](ops.md).
 
 Build-order development: Settlement → Industry → Replicator → Create build order. Finite custom lists, researched repeat cycles/group templates, commissioning receipts and crew-inclusive mind estimates. See [the agent manual](docs/foundry/AGENT-MANUAL.md#ordered-construction-and-robot-supervision).
 
-### Traffic and tunnel development — 2026-09-07
+### Traffic and tunnels live — 2026-09-07
 
 Current fork: `/home/corey/projects/moon-traffic-tunnels` (`development/traffic-tunnels`). Adds traffic recovery, buffered freight, useful nearby depots, independent Bore / Start / End tunnel planning, timed underground robot travel, distinct crew-cap status, Guide scroll preservation and Dev note posts. Prior local previews remain running in their original worktrees. See `ops.md` for deployment state and `docs/foundry/DEV-BOARD-WORKFLOW.md` for the active tmux prompt monitor. Road/federation-junction design stays in the canonical shared folder: `/home/corey/projects/moon-civilization/ideas/roads-tunnels-federation-junctions.md`.
