@@ -1,5 +1,22 @@
 # MOON — The first machine
 
+## Start here with no prior context — September 7, 2026
+
+This folder is the **top-level Moon project entrypoint and preserved original prototype**. The current multiplayer game and learning engine live in separate worktrees. Read [the mission](MISSION.md), [current operations](ops.md), and [latest development log](DEVLOG.md) before running the older prototype commands below.
+
+- **Live game:** https://ai-civ.com/moon-astra-v2/
+- **Live learning-engine report and interactive lab:** https://ai-civ.com/moon-mind-learning-engine/
+- **Current game source:** /home/corey/projects/moon-depot-lifts, development/depot-lifts; deployed runtime aa91824.
+- **Learning engine source:** /home/corey/projects/moon-learning-engine, development/mind-learning-engine; M3-only standalone v1 implemented and tested.
+- **Cold-context engine handoff:** /home/corey/projects/moon-learning-engine/ACTIVE-HANDOFF.md.
+- **Shared ACG notebook:** /home/corey/projects/moon-civilization/SHARED-NOTEPAD.md.
+- **Player Dev board:** read /home/corey/moon-player/dev-board/inbox.md and latest-board.json; latest release post #62051.
+- **Recovery and exact deployments:** see ops.md. The latest report/engine backup is separate from the game recovery and original prototype backups.
+
+The report is published; live in-game learning research and automation remain proposed. Existing game rules/saves were preserved. ACG is investigating GPU crashes, so do not open the game for hardware rendering tests or restart graphics services as part of resuming this project.
+
+The remainder of this README documents the preserved original prototype and its earlier proposal. Its “latest backup” and local commands apply to that prototype, not current V2.
+
 A fresh, playable 3D prototype: turn lunar rock into machines that build more machines, and grow a lunar mind. Built independently from the two-sentence concept, with new code and procedural machine models.
 
 **Project directory:** `/home/corey/projects/moon-astra`  

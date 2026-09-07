@@ -1,5 +1,7 @@
 # MOON — development and operations handoff
 
+**Archived prototype runbook.** Current project state, deployment, backups, M3 learning engine and GPU constraints are in [ops.md](ops.md), with [MISSION.md](MISSION.md) and [DEVLOG.md](DEVLOG.md). This repository is already initialized and hosted; do not rerun the historical Git setup or deploy this prototype over the current multiplayer world.
+
 Prepared for ACG on September 4, 2026.
 
 ## Project and baseline
