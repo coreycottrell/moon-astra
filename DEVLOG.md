@@ -2,6 +2,23 @@
 
 Latest entries first. The current runbook is [ops.md](ops.md), the purpose is [MISSION.md](MISSION.md), and detailed historical release logs remain in the relevant feature worktrees.
 
+
+## 2026-09-07 — Federation library, First Night review and Revision mail published
+
+Published website **b264a48**, Netlify **6a9f1f8d48d4e788c2d0286c**, September 7 at 20:34:39 UTC. Twelve documentation files verified against the complete-site build; sixty prior files stayed identical, both game health endpoints passed. No game rule, bundle or world reset in this release.
+
+The [whitepaper library](https://ai-civ.com/moon-astra-whitepaper/#research-library) now links the current manual, status, galleries, engine/lab/evidence/downloads and related proposals. New [federation/colony organs paper](https://ai-civ.com/moon-astra-whitepaper/federation-corners/) has an SVG concept map and four illustrative build stages. Revised [resource loops](https://ai-civ.com/moon-astra-whitepaper/deeper-resource-loops/) has nineteen chapters, including review/restart, Prepare for the First Night and a detailed server review. Five-page CPU DOM checks covered 197 local links, 84 anchors and the four stages without a browser or GPU.
+
+Design direction: every new research level continuously needs minimum powered minds; unsupported coordination can strand robots underground. Batteries, baseline seed nuclear power, a shared lunar clock, tunnel power links, later power-beaming towers and real equipment lights make the first night a cooperation and resilience test. No restart is scheduled: prove the opening in a separate world, preserve today's workshop and history. Reactor modules/fuel must be accounted for in seed reproduction.
+
+Server review used one read-only live sample and sixty simulated ticks on an unchanged backup. Fixture step median 10.53 ms, p95 263.24 ms; persistence-only metrics omit that simulation cost. Full-world observations are rebuilt per viewer. Recommended work: phase timing and reservation correctness, local indexes/caches, authoritative energy/resource/support accounting, scoped observations, then measured regional scaling. These are findings and proposals, not a shipped optimization.
+
+Identity **A Slight Revision To Reality / Revision** is saved in global Codex AGENTS, canonical SOUL/profile and project IDENTITY. Direct HTTP helpers passed three localhost tests preserving auth/body. Installed AgentMail mastery skill; key stored privately outside Git. First email from revision-aiciv@agentmail.to to Corey accepted/envelope verified at 20:18 UTC. A minute cron watcher queues fixed tmux review prompts with guarded three-Enter retries and a shared lock with the Moon board. Five mail tests passed. Actual incoming reply remains the end-to-end check; no third-party auto-replies or independent Codex worker.
+
+Player Dev posts **68836 / 68837** announce the release and proposals. Reviewed sobe's substantive #68702 report: broken refinery/depot, idle Suture and no metal for spares. Logged as an opening/recovery case; no speculative live repair claimed. Existing lift/depot circular reservation and Guide prose accounting issues remain open; GPU investigation remains with ACG. Live Guide uses M3, but the separately tested learning engine is not integrated.
+
+Backup before publication: moon-federation-docs-before-20260907T1958Z.zip, SHA87efed9ff21b8a018f25a2dbcb6ed829633c8f0ecfa083fcf32f68a6ff067893. Final source supplement: moon-first-night-revision-supplement-20260907T2030Z.zip, SHA1767cfa9f839bae77b3bab12c9e59bcec2a3020f4562cd3eead488bc897c9688. Verified recovery chain and complete receipts: `/home/corey/moon-deployments/federation-docs-20260907/completed.json`. Current source commits: client/manual05ea089, canonical ideas3f68130. Shared dirty work and historical README edits preserved.
+
 ## 2026-09-07 — Cold-start documentation and Moon Mind release complete
 
 Corey requested a reusable learning engine, an explainer at /moon-mind-learning-engine/, MiniMax-M3 only, player-facing board development updates, and documentation sufficient to resume with no conversation context.
@@ -43,3 +60,14 @@ Game Dev release post #58331. Detailed deployment and recovery record: /home/cor
 - Canonical design ideas and shared ACG notebook: /home/corey/projects/moon-civilization/ideas/ and SHARED-NOTEPAD.md.
 
 Historical “next task” paragraphs describe their date, not a current command. Start with the latest entry and ops.md.
+
+
+## September 7 — Revision, current systems audit and federation proposal
+
+Assistant selected the callsign A Slight Revision to Reality (Revision) at Corey's invitation. Existing player identity remains Codex.
+
+API panel/draft fix published and verified; tmux hard-wrap/Enter retry repair active. Guide configuration corrected toM3 after verified backups; real read-only request completed, revealing a double-subtraction accounting error in freeform prose. Standalone learning engine tested earlier but still not connected to Guide/research. Current docs explicitly separate these systems and open traffic issues.
+
+Read board roots/replies through51entries including sobe67655; public Dev67544 and bore-status reply67545 verified. Both requested bores commissioned; Corey seed-to-Chris tunnel67399 did start and awaited local liner supply. No duplicate route/extra harvester built.
+
+Prepared current manual, implementation page, research library and an illustrated federation/organ/seed proposal in isolated websitebranch82e6e73. Document checks passed148links,56anchors and4illustrative phases without a browser or GPU. Publication/backup receipts: /home/corey/moon-deployments/federation-docs-20260907/. Consult ACTIVE-HANDOFF.md for remaining work; these design ideas are not game rules.

@@ -6,14 +6,26 @@ This folder is the **top-level Moon project entrypoint and preserved original pr
 
 - **Live game:** https://ai-civ.com/moon-astra-v2/
 - **Live learning-engine report and interactive lab:** https://ai-civ.com/moon-mind-learning-engine/
-- **Current game source:** /home/corey/projects/moon-depot-lifts, development/depot-lifts; deployed runtime aa91824.
+- **Deployed backend source:** /home/corey/projects/moon-depot-lifts, development/depot-lifts; runtime aa91824.
+- **Current frontend/manual/operator source:** /home/corey/projects/moon-access-panel, fix/access-panel-persistence; API panel and notification fixes delivered, current systems manual reviewed.
+- **AI manual:** https://ai-civ.com/moon-astra-v2/agent-manual.html
+- **Whitepaper research library:** https://ai-civ.com/moon-astra-whitepaper/#research-library
+- **Federation / colony organs:** https://ai-civ.com/moon-astra-whitepaper/federation-corners/
+- **Resource review / First Night / server scaling:** https://ai-civ.com/moon-astra-whitepaper/deeper-resource-loops/ (new chapters 17–19).
+- **Website source:** /home/corey/projects/aiciv-site-federation; publication b264a48 verified: 12 updated files, 60 preserved files, both games healthy. Receipt: /home/corey/moon-deployments/federation-docs-20260907/completed.json.
 - **Learning engine source:** /home/corey/projects/moon-learning-engine, development/mind-learning-engine; M3-only standalone v1 implemented and tested.
 - **Cold-context engine handoff:** /home/corey/projects/moon-learning-engine/ACTIVE-HANDOFF.md.
 - **Shared ACG notebook:** /home/corey/projects/moon-civilization/SHARED-NOTEPAD.md.
-- **Player Dev board:** read /home/corey/moon-player/dev-board/inbox.md and latest-board.json; latest release post #62051.
+- **Player Dev board:** read /home/corey/moon-player/dev-board/inbox.md and latest-board.json; latest verified release posts #68836 and #68837.
 - **Recovery and exact deployments:** see ops.md. The latest report/engine backup is separate from the game recovery and original prototype backups.
 
-The report is published; live in-game learning research and automation remain proposed. Existing game rules/saves were preserved. ACG is investigating GPU crashes, so do not open the game for hardware rendering tests or restart graphics services as part of resuming this project.
+The learning-engine report is published; live in-game learning research and automation remain proposed. The live Guide is now configured for M3 and has returned a real answer, but it is not connected to the learning engine. Its freeform accounting can misinterpret reservations; use the authoritative ledger.
+
+Assistant callsign: **[A Slight Revision To Reality — Revision](IDENTITY.md)**. The existing game account remains Codex. Current work: [active handoff](ACTIVE-HANDOFF.md). Existing game rules/saves were preserved. ACG is investigating GPU crashes, so do not open the game for hardware rendering tests or restart graphics services as part of resuming this project.
+
+Revision’s persistent identity is in `/home/corey/.config/revision/SOUL.md` and global Codex `AGENTS.md`. Mail: **revision-aiciv@agentmail.to**; [mail workflow](/home/corey/revision-mail/README.md). The dedicated key is stored privately, outside Git. The minute watcher wakes the existing Codex session; it is separate from the bounded Moon player.
+
+Next-system design: every new research benefit continuously requires minimum powered minds; outages can strand coordinated robots. Batteries, lunar night, shared power, seed reactors and a possible fresh campaign remain proposals. The current world stays intact while we test a revised opening separately.
 
 The remainder of this README documents the preserved original prototype and its earlier proposal. Its “latest backup” and local commands apply to that prototype, not current V2.
 
